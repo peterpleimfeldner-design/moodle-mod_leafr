@@ -70,9 +70,23 @@ define([
             await initFlipbook(config);
         }
 
-        // Resume reading toast.
+        // Resume reading position.
         if (cfg.savedPage > 1) {
-            scheduleResumeToast(cfg.savedPage, cfg.strings);
+            setTimeout(() => {
+                if (cfg.config.simpleView || preferReducedMotion) {
+                    scrollToPage(cfg.savedPage);
+                } else {
+                    goToPage(cfg.savedPage);
+                }
+            }, 300);
+        } else if (cfg.startPage > 1) {
+            setTimeout(() => {
+                if (cfg.config.simpleView || preferReducedMotion) {
+                    scrollToPage(cfg.startPage);
+                } else {
+                    goToPage(cfg.startPage);
+                }
+            }, 300);
         }
 
         // Global keyboard navigation.
@@ -713,77 +727,6 @@ define([
         }
     }
 
-    /**
-     * Show the "resume reading" toast notification.
-     *
-     * @param {number} savedPage The saved page number
-     * @param {Object} strings Language strings
-     */
-    function scheduleResumeToast(savedPage, strings) {
-        if (toastHandled) {
-            return;
-        }
-
-        setTimeout(() => {
-            const toast = document.getElementById('leafr-resume-toast');
-            if (!toast || toastHandled) {
-                return;
-            }
-
-            const pageLabel = toast.querySelector('.leafr-toast-page');
-            if (pageLabel) {
-                pageLabel.textContent = strings.pageof.replace('{page}', savedPage).replace('{total}', totalPages);
-            }
-
-            toast.style.display = 'flex';
-            toast.setAttribute('aria-hidden', 'false');
-
-            // Auto-dismiss after 8 seconds.
-            const timer = setTimeout(() => dismissToast(1), 8000);
-
-            const btnContinue = toast.querySelector('.leafr-toast-continue');
-            const btnRestart = toast.querySelector('.leafr-toast-restart');
-
-            if (btnContinue) {
-                btnContinue.addEventListener('click', () => {
-                    clearTimeout(timer);
-                    goToPage(savedPage);
-                    dismissToast();
-                });
-            }
-            if (btnRestart) {
-                btnRestart.addEventListener('click', () => {
-                    clearTimeout(timer);
-                    dismissToast();
-                    goToPage(1);
-                });
-            }
-
-            // ESC key dismisses toast.
-            document.addEventListener('keydown', function escHandler(e) {
-                if (e.key === 'Escape') {
-                    clearTimeout(timer);
-                    dismissToast();
-                    document.removeEventListener('keydown', escHandler);
-                }
-            });
-
-        }, 800);
-    }
-
-    /**
-     * Dismiss the resume toast.
-     *
-     * @param {number} goPage Optional: page to navigate to after dismiss
-     */
-    function dismissToast(goPage) {
-        toastHandled = true;
-        const toast = document.getElementById('leafr-resume-toast');
-        if (toast) {
-            toast.style.display = 'none';
-            toast.setAttribute('aria-hidden', 'true');
-        }
-    }
 
     /**
      * Set up global keyboard navigation.

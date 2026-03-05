@@ -14,7 +14,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define([], function() {
+define([], function () {
 
     'use strict';
 
@@ -71,7 +71,7 @@ define([], function() {
     }
 
     /**
-     * Save the current reading position via Web Service.
+     * Save the current reading position via user preferences.
      *
      * @param {number} cmid Course module ID
      * @param {number} pageNum Current page number
@@ -79,10 +79,9 @@ define([], function() {
     function savePosition(cmid, pageNum) {
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => {
-            callWebService('mod_leafr_save_position', {
-                cmid:   cmid,
-                pageno: pageNum,
-            });
+            if (typeof M !== 'undefined' && M.util && M.util.set_user_preference) {
+                M.util.set_user_preference('leafr_pos_' + cmid, pageNum);
+            }
         }, 1000);
     }
 
@@ -96,7 +95,7 @@ define([], function() {
 
         let shouldComplete = false;
         const config = cfg.config;
-        const total  = cfg.totalPages;
+        const total = cfg.totalPages;
 
         switch (config.completionType) {
             case 1:
@@ -126,7 +125,7 @@ define([], function() {
      */
     async function sendCompletionEvent(seenPagesArr) {
         const result = await callWebService('mod_leafr_page_viewed', {
-            cmid:       cfg.cmid,
+            cmid: cfg.cmid,
             seen_pages: seenPagesArr,
         });
 
@@ -193,9 +192,9 @@ define([], function() {
     async function callWebService(methodname, args) {
         try {
             const response = await fetch(M.cfg.wwwroot + '/lib/ajax/service.php?sesskey=' + M.cfg.sesskey, {
-                method:  'POST',
-                headers: {'Content-Type': 'application/json'},
-                body:    JSON.stringify([{methodname, args}]),
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify([{ methodname, args }]),
             });
 
             if (!response.ok) {
