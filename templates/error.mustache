@@ -1,0 +1,12 @@
+{{!
+    Template: mod_leafr/error
+    Shows an error state (e.g., no PDF uploaded).
+    @copyright 2026 Leafr
+    @license   GNU GPL v3 or later
+}}
+<div class="leafr-no-file" role="alert">
+    <svg class="leafr-no-file-icon" aria-hidden="true" width="64" height="64" viewBox="0 0 256 256">
+        <path fill="currentColor" d="M213.66 82.34l-56-56A8 8 0 0 0 152 24H56A16 16 0 0 0 40 40v176a16 16 0 0 0 16 16h144a16 16 0 0 0 16-16V88a8 8 0 0 0-2.34-5.66ZM160 51.31L188.69 80H160ZM200 216H56V40h88v48a8 8 0 0 0 8 8h48V216Zm-48-84H104a8 8 0 0 0 0 16h48a8 8 0 0 0 0-16Zm0 32H104a8 8 0 0 0 0 16h48a8 8 0 0 0 0-16Z"/>
+    </svg>
+    <p class="leafr-no-file-message">{{message}}</p>
+</div>
