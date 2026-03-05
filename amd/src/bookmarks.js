@@ -36,7 +36,7 @@ define([], function () {
      * @param {Function} options.onNavigate Navigation callback(pageNum)
      */
     async function init(options) {
-        console.log('Leafr Bookmarks v1.0.5 loaded');
+        console.log('Leafr Bookmarks v1.0.6 loaded');
         cfg = options;
         onNavigateCallback = options.onNavigate;
 

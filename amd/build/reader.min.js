@@ -46,51 +46,53 @@ define([
      * @param {Object} config Configuration object from PHP
      */
     async function init(config) {
-        console.log('Leafr Reader v1.0.5 loaded');
-        cfg = config;
+        try {
+            console.log('Leafr Reader v1.0.6 loaded');
+            cfg = config;
 
-        const container = document.getElementById('leafr-reader-container');
-        if (!container) {
-            return;
+            const container = document.getElementById('leafr-reader-container');
+            if (!container) {
+                return;
+            }
+
+            // Measure and apply Moodle navbar height as CSS variable.
+            // This allows the reader to fill exactly the remaining viewport.
+            measureNavHeight();
+
+            // Accessibility: simple view detection.
+            const preferReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+            if (cfg.config.simpleView || preferReducedMotion) {
+                await initSimpleView(config);
+            } else {
+                await initFlipbook(config);
+            }
+
+            // Resume reading position.
+            if (cfg.savedPage > 1) {
+                setTimeout(() => {
+                    if (cfg.config.simpleView || preferReducedMotion) {
+                        scrollToPage(cfg.savedPage);
+                    } else {
+                        goToPage(cfg.savedPage);
+                    }
+                }, 300);
+            } else if (cfg.startPage > 1) {
+                setTimeout(() => {
+                    if (cfg.config.simpleView || preferReducedMotion) {
+                        scrollToPage(cfg.startPage);
+                    } else {
+                        goToPage(cfg.startPage);
+                    }
+                }, 300);
+            }
+
+            // Global keyboard navigation.
+            setupKeyboardNavigation();
+
+        } catch (e) {
+            console.error('Leafr Reader Init Error:', e);
         }
-
-        // Measure and apply Moodle navbar height as CSS variable.
-        // This allows the reader to fill exactly the remaining viewport.
-        measureNavHeight();
-
-        // Accessibility: simple view detection.
-        const preferReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-        if (cfg.config.simpleView || preferReducedMotion) {
-            await initSimpleView(config);
-        } else {
-            await initFlipbook(config);
-        }
-
-        // Resume reading position.
-        if (cfg.savedPage > 1) {
-            setTimeout(() => {
-                if (cfg.config.simpleView || preferReducedMotion) {
-                    scrollToPage(cfg.savedPage);
-                } else {
-                    goToPage(cfg.savedPage);
-                }
-            }, 300);
-        } else if (cfg.startPage > 1) {
-            setTimeout(() => {
-                if (cfg.config.simpleView || preferReducedMotion) {
-                    scrollToPage(cfg.startPage);
-                } else {
-                    goToPage(cfg.startPage);
-                }
-            }, 300);
-        }
-
-        // Global keyboard navigation.
-        setupKeyboardNavigation();
-
-        // Mouse wheel zoom.
-        setupWheelZoom();
     }
 
     /**
