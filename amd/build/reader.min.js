@@ -30,11 +30,7 @@ define([
     /** @type {number} Total pages in the PDF */
     let totalPages = 0;
 
-    /** @type {Object} Completion UI instance */
-    let Completion = null;
 
-    /** @type {Object} Bookmarks UI instance */
-    let Bookmarks = null;
 
     let zoomLevel = 1.0;
     const MIN_ZOOM = 0.5;
@@ -50,7 +46,7 @@ define([
      * @param {Object} config Configuration object from PHP
      */
     async function init(config) {
-        console.log('Leafr Reader v1.0.4 loaded');
+        console.log('Leafr Reader v1.0.5 loaded');
         cfg = config;
 
         const container = document.getElementById('leafr-reader-container');

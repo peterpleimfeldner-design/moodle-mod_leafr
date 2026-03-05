@@ -24,8 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2026030504;        // YYYYMMDDXX
+$plugin->version   = 2026030505;        // YYYYMMDDXX
 $plugin->requires  = 2023042400;        // Moodle 4.1 LTS minimum
 $plugin->component = 'mod_leafr';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.0.4';
+$plugin->release   = '1.0.5';
