@@ -52,6 +52,10 @@ define([
             return;
         }
 
+        // Measure and apply Moodle navbar height as CSS variable.
+        // This allows the reader to fill exactly the remaining viewport.
+        measureNavHeight();
+
         // Accessibility: simple view detection.
         const preferReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -567,6 +571,22 @@ define([
         if (help) {
             help.style.display = help.style.display === 'none' ? 'flex' : 'none';
         }
+    }
+
+    /**
+     * Measure the Moodle page header/navbar height and set --leafr-nav-height.
+     * Checks common selectors used across Moodle themes.
+     */
+    function measureNavHeight() {
+        // Try common Moodle navbar selectors (Boost, Classic, Moove, etc.).
+        const headerEl = document.querySelector(
+            '#page-header, .navbar.fixed-top, .navbar, header[role="banner"], #header'
+        );
+        const offsetTop = document.getElementById('leafr-reader-container')
+            ? document.getElementById('leafr-reader-container').getBoundingClientRect().top
+            : (headerEl ? headerEl.offsetHeight : 64);
+        const navH = Math.max(offsetTop, 56); // at least 56px
+        document.documentElement.style.setProperty('--leafr-nav-height', navH + 'px');
     }
 
     /**
