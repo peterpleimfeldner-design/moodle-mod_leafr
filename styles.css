@@ -368,41 +368,58 @@
     overflow: hidden;
 }
 
-/* ── Bottom Toolbar ───────────────────────────────────────────────────────────── */
+/* ── Bottom Toolbar ─────────────────────────────────────────────────────────────── */
 .leafr-toolbar {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    height: var(--leafr-toolbar-height);
-    background: var(--leafr-bg);
-    border-top: 1px solid var(--leafr-border);
+    height: calc(var(--leafr-toolbar-height) + 4px);
+    /* +4px for progress bar */
+    background: #1E293B;
+    /* dark slate — institutional look */
     z-index: var(--leafr-zindex-toolbar);
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.25);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Progress bar — 4px strip at top of toolbar */
+.leafr-progress-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.leafr-progress-fill {
+    height: 100%;
+    background: #0F766E;
+    /* teal accent */
+    transition: width 0.25s ease;
+    border-radius: 0 2px 2px 0;
+    pointer-events: none;
 }
 
 .leafr-toolbar-inner {
     display: flex;
     align-items: center;
-    height: 100%;
-    padding: 0 0.5rem;
-    gap: 0.25rem;
-}
-
-.leafr-toolbar-group {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-}
-
-.leafr-toolbar-group--center {
     flex: 1;
-    justify-content: center;
-    gap: 0.5rem;
+    padding: 0 0.5rem;
+    gap: 0.125rem;
     overflow: hidden;
 }
 
-/* ── Toolbar Buttons ──────────────────────────────────────────────────────────── */
+/* Vertical separator */
+.leafr-toolbar-separator {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
+    margin: 0 0.25rem;
+}
+
+/* ── Toolbar Buttons ───────────────────────────────────────────────────────── */
 .leafr-btn {
     display: inline-flex;
     align-items: center;
@@ -414,50 +431,65 @@
     border: 1px solid transparent;
     border-radius: var(--leafr-radius);
     cursor: pointer;
-    color: var(--leafr-text);
-    transition: background var(--leafr-transition), color var(--leafr-transition);
+    color: #FFFFFF;
+    /* white icons on dark toolbar */
+    transition: background 0.2s ease, color 0.2s ease;
     text-decoration: none;
     line-height: 1;
+    flex-shrink: 0;
 }
 
 .leafr-btn:hover:not(:disabled) {
-    background: var(--leafr-primary-light);
-    color: var(--leafr-primary);
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
 }
 
 .leafr-btn:focus-visible {
-    outline: 2px solid var(--leafr-primary);
+    outline: 2px solid #0F766E;
     outline-offset: 2px;
 }
 
 .leafr-btn:disabled,
 .leafr-btn[aria-disabled="true"] {
-    opacity: 0.35;
+    opacity: 0.3;
     cursor: default;
 }
 
 .leafr-btn svg {
     pointer-events: none;
+    flex-shrink: 0;
 }
 
-/* ── Page Indicator ───────────────────────────────────────────────────────────── */
+/* Toggle active state: teal accent background */
+.leafr-btn--toggle[aria-pressed="true"] {
+    background: #0F766E;
+    color: #FFFFFF;
+}
+
+.leafr-btn--toggle[aria-pressed="true"]:hover {
+    background: #0D6B64;
+}
+
+/* ── Page Indicator ─────────────────────────────────────────────────────────────── */
 .leafr-page-indicator {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.35rem;
     font-size: 0.875rem;
-    color: var(--leafr-text);
+    color: #FFFFFF;
     white-space: nowrap;
+    flex: 1;
+    justify-content: center;
 }
 
 .leafr-page-input {
     width: 3.5rem;
     padding: 0.2rem 0.4rem;
     text-align: center;
-    border: 1px solid var(--leafr-border);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 4px;
-    background: var(--leafr-bg);
-    color: var(--leafr-text);
+    background: rgba(255, 255, 255, 0.08);
+    color: #FFFFFF;
     font-size: 0.875rem;
     line-height: 1.4;
     /* Remove spinner arrows */
