@@ -20,7 +20,7 @@ define([
     'mod_leafr/toolbar',
     'mod_leafr/completion',
     'mod_leafr/bookmarks'
-], function(PdfLoader, Flipbook, Toolbar, Completion, Bookmarks) {
+], function (PdfLoader, Flipbook, Toolbar, Completion, Bookmarks) {
 
     'use strict';
 
@@ -90,33 +90,33 @@ define([
             // Update toolbar with total pages.
             Toolbar.init({
                 totalPages,
-                startPage:   config.startPage,
+                startPage: config.startPage,
                 downloadAllowed: config.config.downloadAllowed,
-                fileurl:     config.fileurl,
-                strings:     config.strings,
-                onPageChange:   goToPage,
-                onFullscreen:   toggleFullscreen,
+                fileurl: config.fileurl,
+                strings: config.strings,
+                onPageChange: goToPage,
+                onFullscreen: toggleFullscreen,
                 onToggleSimple: switchToSimpleView,
-                onToggleToc:    toggleToc,
+                onToggleToc: toggleToc,
             });
 
             // Initialize StPageFlip.
             flipbookInstance = await Flipbook.init({
-                container:   document.getElementById('leafr-flipbook'),
+                container: document.getElementById('leafr-flipbook'),
                 pdfDoc,
-                startPage:   config.startPage,
+                startPage: config.startPage,
                 totalPages,
-                strings:     config.strings,
-                onFlip:      onPageFlipped,
-                onReady:     onFlipbookReady,
+                strings: config.strings,
+                onFlip: onPageFlipped,
+                onReady: onFlipbookReady,
             });
 
             // Initialize completion tracking.
             Completion.init({
-                cmid:             config.cmid,
+                cmid: config.cmid,
                 totalPages,
-                config:           config.config,
-                wwwroot:          config.wwwroot,
+                config: config.config,
+                wwwroot: config.wwwroot,
             });
 
             // Initialize TOC if enabled.
@@ -127,7 +127,7 @@ define([
             // Initialize bookmarks if Pro available.
             if (config.config.proAvailable) {
                 Bookmarks.init({
-                    cmid:    config.cmid,
+                    cmid: config.cmid,
                     strings: config.strings,
                     onNavigate: goToPage,
                 });
@@ -172,24 +172,24 @@ define([
             // Toolbar with simplified controls.
             Toolbar.init({
                 totalPages,
-                startPage:       config.startPage,
+                startPage: config.startPage,
                 downloadAllowed: config.config.downloadAllowed,
-                fileurl:         config.fileurl,
-                strings:         config.strings,
-                simpleView:      true,
-                onPageChange:    scrollToPage,
-                onFullscreen:    null,
-                onToggleSimple:  null,
-                onToggleToc:     config.config.showToc ? toggleToc : null,
+                fileurl: config.fileurl,
+                strings: config.strings,
+                simpleView: true,
+                onPageChange: scrollToPage,
+                onFullscreen: null,
+                onToggleSimple: null,
+                onToggleToc: config.config.showToc ? toggleToc : null,
             });
 
             // Completion via IntersectionObserver.
             Completion.init({
-                cmid:             config.cmid,
+                cmid: config.cmid,
                 totalPages,
-                config:           config.config,
-                wwwroot:          config.wwwroot,
-                simpleView:       true,
+                config: config.config,
+                wwwroot: config.wwwroot,
+                simpleView: true,
             });
 
             showLoading(false);
@@ -212,7 +212,7 @@ define([
      */
     async function renderSimplePage(pdfDoc, pageNum, totalPagesCount) {
         const page = await pdfDoc.getPage(pageNum);
-        const viewport = page.getViewport({scale: 1.5});
+        const viewport = page.getViewport({ scale: 1.5 });
 
         const wrapper = document.createElement('div');
         wrapper.className = 'leafr-simple-page';
@@ -222,11 +222,11 @@ define([
         wrapper.setAttribute('tabindex', '-1');
 
         const canvas = document.createElement('canvas');
-        canvas.width  = viewport.width;
+        canvas.width = viewport.width;
         canvas.height = viewport.height;
 
         const ctx = canvas.getContext('2d');
-        await page.render({canvasContext: ctx, viewport}).promise;
+        await page.render({ canvasContext: ctx, viewport }).promise;
 
         // Add text layer for accessibility and selection.
         const textContent = await page.getTextContent();
@@ -294,7 +294,7 @@ define([
     function scrollToPage(pageNum) {
         const el = document.getElementById('leafr-page-' + pageNum);
         if (el) {
-            el.scrollIntoView({behavior: 'smooth', block: 'start'});
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
             el.focus();
         }
     }
@@ -305,25 +305,106 @@ define([
     function toggleFullscreen() {
         const readerEl = document.getElementById('leafr-reader-container');
         if (!document.fullscreenElement) {
-            readerEl.requestFullscreen().catch(() => {});
+            readerEl.requestFullscreen().catch(() => { });
         } else {
-            document.exitFullscreen().catch(() => {});
+            document.exitFullscreen().catch(() => { });
         }
     }
 
     /**
-     * Switch to simple view.
+     * Toggle between flipbook and simple (scrollable) view without a page reload.
+     */
+    async function toggleSimpleView() {
+        const simpleViewEl = document.getElementById('leafr-simple-view');
+        const flipbookEl = document.getElementById('leafr-flipbook');
+        const btn = document.getElementById('leafr-btn-simple');
+        const isNowSimple = !simpleViewEl || simpleViewEl.style.display === 'none' ||
+            !simpleViewEl.classList.contains('is-active');
+
+        if (isNowSimple) {
+            // --- Switch TO simple view ---
+
+            // Destroy the flipbook to free memory.
+            if (flipbookInstance) {
+                try { flipbookInstance.destroy(); } catch (e) { /* silent */ }
+                flipbookInstance = null;
+            }
+            if (flipbookEl) {
+                flipbookEl.style.display = 'none';
+            }
+
+            // Clear any previous simple-view pages and show container.
+            if (simpleViewEl) {
+                simpleViewEl.innerHTML = '';
+                simpleViewEl.style.display = 'block';
+                simpleViewEl.classList.add('is-active');
+            }
+
+            // Re-use cached PDF doc or reload.
+            let pdfDoc;
+            try {
+                pdfDoc = await PdfLoader.load(cfg.fileurl);
+            } catch (e) {
+                showError(cfg.strings.errordocument + ' (' + e.message + ')', cfg.fileurl, cfg.config.downloadAllowed);
+                return;
+            }
+
+            // Render all pages as stacked canvases.
+            for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+                const pageEl = await renderSimplePage(pdfDoc, pageNum, totalPages);
+                if (simpleViewEl) { simpleViewEl.appendChild(pageEl); }
+            }
+
+            // Scroll back to current page.
+            scrollToPage(currentPage);
+
+        } else {
+            // --- Switch BACK to flipbook ---
+
+            if (simpleViewEl) {
+                simpleViewEl.innerHTML = '';
+                simpleViewEl.style.display = 'none';
+                simpleViewEl.classList.remove('is-active');
+            }
+            if (flipbookEl) {
+                flipbookEl.style.display = '';
+            }
+
+            // Re-initialise the flipbook.
+            await initFlipbook(cfg);
+        }
+
+        // Update button state: aria-pressed + icon swap (eye / eye-slash).
+        if (btn) {
+            btn.setAttribute('aria-pressed', isNowSimple ? 'true' : 'false');
+            const iconEye = btn.querySelector('.leafr-icon-eye');
+            const iconEyeSlash = btn.querySelector('.leafr-icon-eye-slash');
+            // Fallback: swap opacity on the single SVG if no named variants.
+            if (iconEye && iconEyeSlash) {
+                iconEye.style.display = isNowSimple ? 'none' : '';
+                iconEyeSlash.style.display = isNowSimple ? '' : 'none';
+            }
+        }
+
+        // Persist preference via Moodle Web Services (fire-and-forget).
+        try {
+            fetch(M.cfg.wwwroot + '/lib/ajax/service.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify([{
+                    methodname: 'core_user_update_user_preferences',
+                    args: { preferences: [{ type: 'leafr_simpleview_' + cfg.cmid, value: isNowSimple ? '1' : '0' }] }
+                }])
+            });
+        } catch (e) { /* preference save failure is non-critical */ }
+    }
+
+    /**
+     * Switch to simple view (legacy – kept for toolbar callback compatibility).
+     * Now delegates to toggleSimpleView.
      */
     function switchToSimpleView() {
-        // Save preference and reload.
-        fetch(M.cfg.wwwroot + '/lib/ajax/service.php', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify([{
-                methodname: 'core_user_update_user_preferences',
-                args: {preferences: [{type: 'leafr_simpleview_' + cfg.cmid, value: '1'}]}
-            }])
-        }).then(() => window.location.reload());
+        toggleSimpleView();
     }
 
     /**
@@ -470,7 +551,7 @@ define([
             const timer = setTimeout(() => dismissToast(1), 8000);
 
             const btnContinue = toast.querySelector('.leafr-toast-continue');
-            const btnRestart  = toast.querySelector('.leafr-toast-restart');
+            const btnRestart = toast.querySelector('.leafr-toast-restart');
 
             if (btnContinue) {
                 btnContinue.addEventListener('click', () => {
@@ -605,5 +686,5 @@ define([
         }
     }
 
-    return {init};
+    return { init };
 });
