@@ -608,6 +608,22 @@
     pointer-events: none;
 }
 
+/* ── Zoom Controls & Fullscreen ────────────────────────────────────────────────── */
+.leafr-fullscreen-only {
+    display: none !important;
+}
+
+:fullscreen .leafr-fullscreen-only,
+:-webkit-full-screen .leafr-fullscreen-only,
+:-ms-fullscreen .leafr-fullscreen-only {
+    display: flex !important;
+}
+
+.leafr-zoom-wrapper {
+    transform-origin: top center;
+    transition: transform 0.2s ease;
+}
+
 /* ── Resume Toast ─────────────────────────────────────────────────────────────── */
 .leafr-toast {
     position: fixed;

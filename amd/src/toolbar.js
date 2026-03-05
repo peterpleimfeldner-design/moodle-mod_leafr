@@ -14,7 +14,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define([], function() {
+define([], function () {
 
     'use strict';
 
@@ -49,8 +49,8 @@ define([], function() {
      * @param {Function|null} options.onToggleToc
      */
     function init(options) {
-        total        = options.totalPages;
-        current      = options.startPage || 1;
+        total = options.totalPages;
+        current = options.startPage || 1;
         onPageChange = options.onPageChange;
 
         const toolbar = document.getElementById('leafr-toolbar');
@@ -59,10 +59,10 @@ define([], function() {
         }
 
         // Wire up buttons.
-        wireButton('leafr-btn-first',  () => options.onPageChange(1));
-        wireButton('leafr-btn-prev',   () => options.onPageChange(current - (options.simpleView ? 1 : 2)));
-        wireButton('leafr-btn-next',   () => options.onPageChange(current + (options.simpleView ? 1 : 2)));
-        wireButton('leafr-btn-last',   () => options.onPageChange(total));
+        wireButton('leafr-btn-first', () => options.onPageChange(1));
+        wireButton('leafr-btn-prev', () => options.onPageChange(current - (options.simpleView ? 1 : 2)));
+        wireButton('leafr-btn-next', () => options.onPageChange(current + (options.simpleView ? 1 : 2)));
+        wireButton('leafr-btn-last', () => options.onPageChange(total));
 
         if (options.onFullscreen) {
             wireButton('leafr-btn-fullscreen', options.onFullscreen);
@@ -86,6 +86,12 @@ define([], function() {
 
         if (options.onToggleSimple) {
             wireButton('leafr-btn-simple', options.onToggleSimple);
+        }
+
+        if (options.onZoomIn) {
+            wireButton('leafr-btn-zoom-in', options.onZoomIn);
+            wireButton('leafr-btn-zoom-out', options.onZoomOut);
+            wireButton('leafr-btn-zoom-reset', options.onZoomReset);
         }
 
         // Page number input.
@@ -159,8 +165,8 @@ define([], function() {
     function updatePage(pageNum) {
         current = pageNum;
 
-        const pageInput  = document.getElementById('leafr-page-input');
-        const totalEl    = document.getElementById('leafr-total-pages');
+        const pageInput = document.getElementById('leafr-page-input');
+        const totalEl = document.getElementById('leafr-total-pages');
         const progressFill = document.getElementById('leafr-progress-fill');
         const progressTrack = document.getElementById('leafr-progress-track');
 
@@ -182,9 +188,9 @@ define([], function() {
 
         // Enable/disable first/prev/next/last buttons.
         setDisabled('leafr-btn-first', pageNum <= 1);
-        setDisabled('leafr-btn-prev',  pageNum <= 1);
-        setDisabled('leafr-btn-next',  pageNum >= total);
-        setDisabled('leafr-btn-last',  pageNum >= total);
+        setDisabled('leafr-btn-prev', pageNum <= 1);
+        setDisabled('leafr-btn-next', pageNum >= total);
+        setDisabled('leafr-btn-last', pageNum >= total);
 
         // Update next button aria-label for accessibility.
         const nextBtn = document.getElementById('leafr-btn-next');
@@ -248,8 +254,8 @@ define([], function() {
         }
 
         // Show on touch.
-        document.addEventListener('touchstart', showToolbar, {passive: true});
-        document.addEventListener('touchmove',  showToolbar, {passive: true});
+        document.addEventListener('touchstart', showToolbar, { passive: true });
+        document.addEventListener('touchmove', showToolbar, { passive: true });
 
         // Initially show.
         showToolbar();

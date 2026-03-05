@@ -23,7 +23,7 @@ define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function (PdfLoad
     'use strict';
 
     /** Render scale for PDF pages */
-    const RENDER_SCALE = 1.5;
+    const RENDER_SCALE = 2.5;
 
     /** Buffer: pre-render N pages ahead/behind */
     const RENDER_BUFFER = 3;

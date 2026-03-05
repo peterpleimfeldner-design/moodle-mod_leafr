@@ -30,11 +30,16 @@ define([
     /** @type {number} Total pages in the PDF */
     let totalPages = 0;
 
-    /** @type {number} Current visible page */
-    let currentPage = 1;
+    /** @type {Object} Completion UI instance */
+    let Completion = null;
 
-    /** @type {Object} Flipbook instance */
-    let flipbookInstance = null;
+    /** @type {Object} Bookmarks UI instance */
+    let Bookmarks = null;
+
+    let zoomLevel = 1.0;
+    const MIN_ZOOM = 0.5;
+    const MAX_ZOOM = 3.0;
+    const ZOOM_STEP = 0.2;
 
     /** @type {boolean} Resume toast already handled */
     let toastHandled = false;
@@ -72,6 +77,9 @@ define([
 
         // Global keyboard navigation.
         setupKeyboardNavigation();
+
+        // Mouse wheel zoom.
+        setupWheelZoom();
     }
 
     /**
@@ -98,6 +106,9 @@ define([
                 onFullscreen: toggleFullscreen,
                 onToggleSimple: switchToSimpleView,
                 onToggleToc: toggleToc,
+                onZoomIn: () => setZoom(zoomLevel + ZOOM_STEP),
+                onZoomOut: () => setZoom(zoomLevel - ZOOM_STEP),
+                onZoomReset: () => setZoom(1.0),
             });
 
             // Initialize StPageFlip.
@@ -199,9 +210,12 @@ define([
                 strings: config.strings,
                 simpleView: true,
                 onPageChange: scrollToPage,
-                onFullscreen: null,
-                onToggleSimple: null,
+                onFullscreen: toggleFullscreen,
+                onToggleSimple: switchToSimpleView,
                 onToggleToc: config.config.showToc ? toggleToc : null,
+                onZoomIn: () => setZoom(zoomLevel + ZOOM_STEP),
+                onZoomOut: () => setZoom(zoomLevel - ZOOM_STEP),
+                onZoomReset: () => setZoom(1.0),
             });
 
             // Completion via IntersectionObserver.
@@ -233,7 +247,7 @@ define([
      */
     async function renderSimplePage(pdfDoc, pageNum, totalPagesCount) {
         const page = await pdfDoc.getPage(pageNum);
-        const viewport = page.getViewport({ scale: 1.5 });
+        const viewport = page.getViewport({ scale: 2.5 });
 
         const wrapper = document.createElement('div');
         wrapper.className = 'leafr-simple-page';
@@ -357,6 +371,44 @@ define([
             el.scrollIntoView({ behavior: 'smooth', block: 'start' });
             el.focus();
         }
+    }
+
+    /**
+     * Set zoom level of the flipbook area.
+     *
+     * @param {number} level New zoom level
+     */
+    function setZoom(level) {
+        zoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, level));
+        const area = document.querySelector('.leafr-flipbook-area') || document.getElementById('leafr-simple-view');
+        if (area) {
+            // Only apply transform if we are zoomed in/out, otherwise remove it to avoid blurry text on 1.0 scale
+            if (zoomLevel === 1.0) {
+                area.style.transform = '';
+            } else {
+                area.style.transform = `scale(${zoomLevel})`;
+                area.classList.add('leafr-zoom-wrapper');
+            }
+        }
+    }
+
+    /**
+     * Setup wheel zoom handling.
+     */
+    function setupWheelZoom() {
+        const container = document.getElementById('leafr-reader-container');
+        if (!container) return;
+        container.addEventListener('wheel', (e) => {
+            // Only zoom on Ctrl+Wheel
+            if (e.ctrlKey) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    setZoom(zoomLevel + ZOOM_STEP);
+                } else {
+                    setZoom(zoomLevel - ZOOM_STEP);
+                }
+            }
+        }, { passive: false });
     }
 
     /**
