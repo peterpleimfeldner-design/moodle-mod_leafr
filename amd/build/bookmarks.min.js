@@ -36,6 +36,7 @@ define([], function () {
      * @param {Function} options.onNavigate Navigation callback(pageNum)
      */
     async function init(options) {
+        console.log('Leafr Bookmarks v1.0.4 loaded');
         cfg = options;
         onNavigateCallback = options.onNavigate;
 
@@ -344,5 +345,8 @@ define([], function () {
         return null;
     }
 
-    return { init };
+    return {
+        init,
+        renderBookmarkFlags,
+    };
 });

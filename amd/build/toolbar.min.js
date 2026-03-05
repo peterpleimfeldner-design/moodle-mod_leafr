@@ -49,6 +49,7 @@ define([], function () {
      * @param {Function|null} options.onToggleToc
      */
     function init(options) {
+        console.log('Leafr Toolbar v1.0.4 loaded');
         total = options.totalPages;
         current = options.startPage || 1;
         onPageChange = options.onPageChange;
@@ -151,7 +152,13 @@ define([], function () {
         // Fullscreen change event.
         document.addEventListener('fullscreenchange', () => {
             const isFS = !!document.fullscreenElement;
+            const container = document.getElementById('leafr-reader-container');
             const btn = document.getElementById('leafr-btn-fullscreen');
+
+            if (container) {
+                container.classList.toggle('is-fullscreen', isFS);
+            }
+
             if (btn) {
                 btn.setAttribute('aria-pressed', isFS ? 'true' : 'false');
                 const outIcon = btn.querySelector('.leafr-icon-arrows-out');

@@ -50,6 +50,7 @@ define([
      * @param {Object} config Configuration object from PHP
      */
     async function init(config) {
+        console.log('Leafr Reader v1.0.4 loaded');
         cfg = config;
 
         const container = document.getElementById('leafr-reader-container');
@@ -155,6 +156,9 @@ define([
                 strings: config.strings,
                 onNavigate: goToPage,
             });
+
+            // Re-render flags after a short delay to ensure canvasses are in DOM
+            setTimeout(() => Bookmarks.renderBookmarkFlags(), 1000);
 
             showLoading(false);
 

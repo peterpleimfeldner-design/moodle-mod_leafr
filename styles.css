@@ -633,9 +633,7 @@
     display: none !important;
 }
 
-:fullscreen .leafr-fullscreen-only,
-:-webkit-full-screen .leafr-fullscreen-only,
-:-ms-fullscreen .leafr-fullscreen-only {
+.is-fullscreen .leafr-fullscreen-only {
     display: flex !important;
 }
 
