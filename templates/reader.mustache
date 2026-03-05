@@ -50,54 +50,49 @@
     </div>
 
     {{! Main reader layout }}
-    <div class="leafr-layout">
+    <div class="leafr-reader-body">
 
-        {{! TOC Panel (left drawer) }}
+        {{! TOC Drawer — slide-in from left, pushes document right }}
         {{#showtoc}}
-        <nav id="leafr-toc-panel" class="leafr-toc-panel" aria-label="{{#str}}toc_title, leafr{{/str}}" aria-hidden="true">
+        <nav id="leafr-toc-drawer" class="leafr-toc-drawer" aria-label="{{#str}}toc_title, leafr{{/str}}" aria-hidden="true">
             <div class="leafr-toc-header">
-                <h2 class="leafr-toc-title">{{#str}}toc_title, leafr{{/str}}</h2>
-                <button class="leafr-toc-close" aria-label="Inhaltsverzeichnis schließen" onclick="document.getElementById('leafr-toc-panel').classList.remove('is-open');this.closest('[aria-hidden]').setAttribute('aria-hidden','true');">
-                    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 256 256">
-                        <path fill="currentColor" d="M205.66 194.34a8 8 0 0 1-11.32 11.32L128 139.31l-66.34 66.35a8 8 0 0 1-11.32-11.32L116.69 128L50.34 61.66a8 8 0 0 1 11.32-11.32L128 116.69l66.34-66.35a8 8 0 0 1 11.32 11.32L139.31 128Z"/>
+                <h2 class="leafr-toc-heading">{{#str}}toc_title, leafr{{/str}}</h2>
+                <button class="leafr-toc-close" id="leafr-toc-close-btn" aria-label="Inhaltsverzeichnis schließen">
+                    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
+                        <path d="M205.66 194.34a8 8 0 0 1-11.32 11.32L128 139.31l-66.34 66.35a8 8 0 0 1-11.32-11.32L116.69 128L50.34 61.66a8 8 0 0 1 11.32-11.32L128 116.69l66.34-66.35a8 8 0 0 1 11.32 11.32L139.31 128Z"/>
                     </svg>
                 </button>
             </div>
-            <ul class="leafr-toc-list" role="list">
-                {{! Populated dynamically by reader.js }}
-            </ul>
+
+            {{! TOC entries populated by reader.js }}
+            <ul class="leafr-toc-list" role="list"></ul>
+
+            {{! Bookmark section (below divider) }}
             <div class="leafr-toc-bookmarks">
-                <h3 class="leafr-toc-bookmark-title">Lesezeichen</h3>
+                <div class="leafr-toc-divider" aria-hidden="true"></div>
+                <h3 class="leafr-toc-bookmarks-heading">Lesezeichen</h3>
                 <ul id="leafr-bookmark-list" class="leafr-bookmark-list" role="list">
-                    {{! Populated dynamically by bookmarks.js }}
+                    {{! Populated by bookmarks.js }}
                 </ul>
             </div>
         </nav>
         {{/showtoc}}
 
-        {{! Flipbook area }}
-        <div class="leafr-flipbook-area">
-            <div id="leafr-flipbook" class="leafr-flipbook" aria-label="PDF Flipbook Inhalt">
-                {{! StPageFlip canvas pages injected here by flipbook.js }}
-            </div>
+        {{! Flipbook container — shifts right when drawer opens }}
+        <div class="leafr-flipbook-container">
+            {{! Flipbook area }}
+            <div class="leafr-flipbook-area">
+                <div id="leafr-flipbook" class="leafr-flipbook" aria-label="PDF Flipbook Inhalt">
+                    {{! StPageFlip canvas pages injected here by flipbook.js }}
+                </div>
 
-            {{! Simple view (accessible scrollable) }}
-            <div id="leafr-simple-view" class="leafr-simple-view" style="display:none;" aria-label="PDF Inhalt – einfache Ansicht">
-                {{! Pages rendered here by reader.js initSimpleView }}
+                {{! Simple view (accessible scrollable) }}
+                <div id="leafr-simple-view" class="leafr-simple-view" style="display:none;" aria-label="PDF Inhalt – einfache Ansicht">
+                    {{! Pages rendered here by reader.js initSimpleView }}
+                </div>
             </div>
         </div>
 
-        {{! Pro: Bookmark panel (right) }}
-        {{#proavailable}}
-        <aside class="leafr-bookmark-panel" aria-label="Lesezeichen">
-            <button id="leafr-bookmark-add" class="leafr-bookmark-add-btn btn btn-sm btn-outline-secondary" aria-label="{{#str}}bookmark_add, leafr{{/str}}">
-                <svg aria-hidden="true" width="16" height="16" viewBox="0 0 256 256">
-                    <path fill="currentColor" d="M184 32H72a16 16 0 0 0-16 16v176a8 8 0 0 0 12.65 6.51L128 193.83l59.35 36.68A8 8 0 0 0 200 224V48a16 16 0 0 0-16-16Zm0 177.57l-51.35-31.72a8 8 0 0 0-9.3 0L72 209.57V48h112Z"/>
-                </svg>
-                {{#str}}bookmark_add, leafr{{/str}}
-            </button>
-        </aside>
-        {{/proavailable}}
     </div>
 
     {{! Bottom Toolbar — always visible }}

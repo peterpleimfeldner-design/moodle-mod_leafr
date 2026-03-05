@@ -265,7 +265,36 @@ define([
 
         // ARIA announcement.
         announcePageChange(pageNum, totalPages, cfg.strings);
+
+        // Auto-highlight the matching TOC entry (nearest chapter ≤ current page).
+        syncTocHighlight(pageNum);
     }
+
+    /**
+     * Highlight the TOC entry whose page is closest to (but not exceeding) pageNum.
+     *
+     * @param {number} pageNum Current page
+     */
+    function syncTocHighlight(pageNum) {
+        const drawer = document.getElementById('leafr-toc-drawer');
+        if (!drawer || !drawer.classList.contains('is-open')) {
+            return; // don't touch DOM if drawer is not visible
+        }
+        const items = Array.from(drawer.querySelectorAll('.leafr-toc-item[data-page]'));
+        let best = null;
+        let bestPage = 0;
+        items.forEach((btn) => {
+            const p = parseInt(btn.dataset.page, 10);
+            if (p <= pageNum && p > bestPage) {
+                bestPage = p;
+                best = btn;
+            }
+        });
+        if (best) {
+            highlightActiveTOCItem(best);
+        }
+    }
+
 
     /**
      * Called when flipbook is fully ready.
@@ -408,20 +437,26 @@ define([
     }
 
     /**
-     * Toggle the TOC panel.
+     * Toggle the TOC drawer open/closed.
+     * Targets the new #leafr-toc-drawer element.
      */
     function toggleToc() {
-        const panel = document.getElementById('leafr-toc-panel');
-        if (!panel) {
+        const drawer = document.getElementById('leafr-toc-drawer');
+        const tocBtn = document.getElementById('leafr-btn-toc');
+        if (!drawer) {
             return;
         }
-        const isOpen = panel.classList.contains('is-open');
-        panel.classList.toggle('is-open', !isOpen);
-        panel.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
+        const isOpen = drawer.classList.contains('is-open');
+        drawer.classList.toggle('is-open', !isOpen);
+        drawer.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
+
+        if (tocBtn) {
+            tocBtn.setAttribute('aria-pressed', isOpen ? 'false' : 'true');
+        }
 
         if (!isOpen) {
-            // Focus first TOC item.
-            const first = panel.querySelector('.leafr-toc-item');
+            // Focus first item when opening.
+            const first = drawer.querySelector('.leafr-toc-item');
             if (first) {
                 first.focus();
             }
@@ -429,55 +464,116 @@ define([
     }
 
     /**
-     * Initialize the TOC from PDF bookmarks.
+     * Highlight a TOC item as active and scroll it into view.
      *
-     * @param {Object} pdfDoc
+     * @param {HTMLElement} item The button element to activate
      */
-    async function initToc(pdfDoc) {
-        const panel = document.getElementById('leafr-toc-panel');
-        if (!panel) {
+    function highlightActiveTOCItem(item) {
+        const drawer = document.getElementById('leafr-toc-drawer');
+        if (!drawer) {
             return;
         }
+        drawer.querySelectorAll('.leafr-toc-item').forEach((el) => el.classList.remove('is-active'));
+        item.classList.add('is-active');
+        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
 
-        const outline = await pdfDoc.getOutline();
-        const list = panel.querySelector('.leafr-toc-list');
+    /**
+     * Render TOC entries as button elements in the drawer.
+     *
+     * @param {Array<{title:string, page:number}>} entries
+     */
+    function renderTOC(entries) {
+        const drawer = document.getElementById('leafr-toc-drawer');
+        if (!drawer) {
+            return;
+        }
+        const list = drawer.querySelector('.leafr-toc-list');
         if (!list) {
             return;
         }
+        list.innerHTML = '';
 
-        if (!outline || outline.length === 0) {
-            list.innerHTML = '<li class="leafr-toc-empty">' + cfg.strings.toc_empty + '</li>';
+        if (!entries || entries.length === 0) {
+            const empty = document.createElement('li');
+            empty.className = 'leafr-toc-empty';
+            empty.textContent = cfg.strings.toc_empty || 'Kein Inhaltsverzeichnis verfügbar';
+            list.appendChild(empty);
             return;
         }
 
-        list.innerHTML = '';
-        for (const item of outline) {
+        entries.forEach((entry) => {
             const li = document.createElement('li');
-            li.className = 'leafr-toc-item';
-            li.setAttribute('tabindex', '0');
-            li.setAttribute('role', 'button');
+            const btn = document.createElement('button');
+            btn.className = 'leafr-toc-item';
+            btn.setAttribute('tabindex', '0');
+            btn.setAttribute('title', entry.title + ' — Seite ' + entry.page);
+            btn.dataset.page = entry.page; // required for auto-highlight filter
 
-            if (item.dest) {
-                try {
-                    const ref = await pdfDoc.getDestination(item.dest);
-                    const pageIndex = await pdfDoc.getPageIndex(ref[0]);
-                    li.dataset.page = pageIndex + 1;
-                    li.textContent = item.title;
-                    li.addEventListener('click', () => goToPage(parseInt(li.dataset.page)));
-                    li.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            goToPage(parseInt(li.dataset.page));
-                        }
-                    });
-                } catch (e) {
-                    li.textContent = item.title;
-                }
-            } else {
-                li.textContent = item.title;
-            }
+            // Title span (truncated)
+            const titleSpan = document.createElement('span');
+            titleSpan.className = 'leafr-toc-item-title';
+            titleSpan.textContent = entry.title;
 
+            // Page number span (right-aligned, muted)
+            const pageSpan = document.createElement('span');
+            pageSpan.className = 'leafr-toc-item-page';
+            pageSpan.textContent = entry.page;
+
+            btn.appendChild(titleSpan);
+            btn.appendChild(pageSpan);
+
+            btn.addEventListener('click', () => {
+                goToPage(entry.page);
+                highlightActiveTOCItem(btn);
+            });
+
+            li.appendChild(btn);
             list.appendChild(li);
+        });
+    }
+
+    /**
+     * Load TOC from PDF outline/bookmarks and render into the drawer.
+     *
+     * @param {Object} pdfDoc PDF.js document
+     */
+    async function initToc(pdfDoc) {
+        const drawer = document.getElementById('leafr-toc-drawer');
+        if (!drawer) {
+            return;
         }
+
+        // Wire up close button.
+        const closeBtn = document.getElementById('leafr-toc-close-btn');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', toggleToc);
+        }
+
+        const outline = await pdfDoc.getOutline();
+
+        if (!outline || outline.length === 0) {
+            renderTOC([]);
+            return;
+        }
+
+        // Resolve page numbers from PDF.js destinations.
+        const entries = [];
+        for (const item of outline) {
+            if (!item.dest) {
+                entries.push({ title: item.title, page: 1 });
+                continue;
+            }
+            try {
+                const dest = await pdfDoc.getDestination(item.dest);
+                const pageIndex = await pdfDoc.getPageIndex(dest[0]);
+                entries.push({ title: item.title, page: pageIndex + 1 });
+            } catch (e) {
+                entries.push({ title: item.title, page: 1 });
+            }
+        }
+
+        renderTOC(entries);
     }
 
     /**

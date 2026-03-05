@@ -195,36 +195,35 @@
     opacity: 0.5;
 }
 
-/* ── Main Layout ──────────────────────────────────────────────────────────────── */
-.leafr-layout {
+/* ── Main Layout (flex-row: drawer | content) ──────────────────────────────────── */
+.leafr-reader-body {
     display: flex;
+    flex-direction: row;
     flex: 1;
     min-height: 0;
-    /* critical: allows flex-child to shrink below content size */
-    position: relative;
     overflow: hidden;
-    padding-bottom: var(--leafr-toolbar-height);
+    padding-bottom: calc(var(--leafr-toolbar-height) + 4px);
+    /* room for toolbar + progress bar */
 }
 
-/* ── TOC Panel ────────────────────────────────────────────────────────────────── */
-.leafr-toc-panel {
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: var(--leafr-toc-width);
-    background: var(--leafr-secondary-bg);
-    border-right: 1px solid var(--leafr-border);
-    transform: translateX(-100%);
-    transition: transform var(--leafr-transition);
-    z-index: var(--leafr-zindex-panel);
+/* ── TOC Drawer ────────────────────────────────────────────────────────────── */
+.leafr-toc-drawer {
+    width: 0;
+    overflow: hidden;
     overflow-y: auto;
+    flex-shrink: 0;
+    background: #1E293B;
+    color: #FFFFFF;
+    transition: width 300ms ease-out;
     display: flex;
     flex-direction: column;
+    /* contain within reader-body, never overlaps toolbar */
+    max-height: 100%;
 }
 
-.leafr-toc-panel.is-open {
-    transform: translateX(0);
+.leafr-toc-drawer.is-open {
+    width: 280px;
+    min-width: 280px;
 }
 
 .leafr-toc-header {
@@ -232,17 +231,22 @@
     align-items: center;
     justify-content: space-between;
     padding: 1rem;
-    border-bottom: 1px solid var(--leafr-border);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     position: sticky;
     top: 0;
-    background: var(--leafr-secondary-bg);
+    background: #1E293B;
+    z-index: 1;
+    flex-shrink: 0;
 }
 
-.leafr-toc-title {
-    font-size: 1rem;
+.leafr-toc-heading {
+    font-size: 0.875rem;
     font-weight: 600;
     margin: 0;
-    color: var(--leafr-text);
+    color: #FFFFFF;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
 }
 
 .leafr-toc-close {
@@ -250,53 +254,114 @@
     border: none;
     cursor: pointer;
     padding: 4px;
-    color: var(--leafr-text);
+    color: rgba(255, 255, 255, 0.7);
     border-radius: 4px;
     line-height: 1;
+    flex-shrink: 0;
 }
 
 .leafr-toc-close:hover,
 .leafr-toc-close:focus-visible {
-    background: var(--leafr-primary-light);
-    color: var(--leafr-primary);
+    background: rgba(255, 255, 255, 0.1);
+    color: #FFFFFF;
 }
 
+/* TOC list */
 .leafr-toc-list,
 .leafr-bookmark-list {
     list-style: none;
     margin: 0;
     padding: 0.5rem 0;
+    flex: 1;
 }
 
+/* TOC items: full-width buttons */
 .leafr-toc-item {
-    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.6rem 1rem;
     cursor: pointer;
-    color: var(--leafr-text);
-    font-size: 0.9rem;
-    border-radius: 4px;
-    margin: 0 0.5rem;
-    transition: background var(--leafr-transition);
+    color: rgba(255, 255, 255, 0.85);
+    background: transparent;
+    border: none;
+    font-size: 0.875rem;
+    text-align: left;
+    transition: background 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .leafr-toc-item:hover,
 .leafr-toc-item:focus-visible {
-    background: var(--leafr-primary-light);
-    color: var(--leafr-primary);
+    background: rgba(15, 118, 110, 0.3);
+    /* teal hover */
+    color: #FFFFFF;
     outline: none;
 }
 
 .leafr-toc-item.is-active {
-    color: var(--leafr-primary);
+    background: #0F766E;
+    /* teal accent */
+    color: #FFFFFF;
     font-weight: 600;
-    background: var(--leafr-primary-light);
+}
+
+.leafr-toc-item-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.leafr-toc-item-page {
+    color: #94A3B8;
+    /* muted slate */
+    font-size: 0.8rem;
+    margin-left: 0.75rem;
+    flex-shrink: 0;
+}
+
+/* Active item: page number turns white */
+.leafr-toc-item.is-active .leafr-toc-item-page {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 .leafr-toc-empty {
     padding: 1rem;
-    color: var(--leafr-text);
-    opacity: 0.6;
+    color: rgba(255, 255, 255, 0.5);
     font-size: 0.875rem;
 }
+
+/* Divider between TOC and bookmarks */
+.leafr-toc-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0.5rem 0;
+}
+
+.leafr-toc-bookmarks-heading {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 0.5rem 1rem 0.25rem;
+    margin: 0;
+}
+
+/* ── Flipbook Container (flex: 1 — fills remaining space) ────────────────────── */
+.leafr-flipbook-container {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 300ms ease-out;
+}
+
 
 /* ── Flipbook Area ────────────────────────────────────────────────────────────── */
 .leafr-flipbook-area {
