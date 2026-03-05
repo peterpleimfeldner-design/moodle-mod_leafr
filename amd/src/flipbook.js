@@ -132,7 +132,8 @@ define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function (PdfLoad
             drawShadow: true,
             flippingTime: 800,
             useMouseEvents: true,
-            swipeDistance: 30,
+            swipeDistance: 50,   // 50px reduces accidental swipes
+            disableFlipByClick: true, // only corner/drag — no tap flip
             clickEventForward: true,
         });
 
