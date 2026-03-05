@@ -108,6 +108,7 @@ define([], function () {
             });
             pageInput.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
+                    e.preventDefault();
                     e.target.blur();
                 }
             });
@@ -171,7 +172,9 @@ define([], function () {
         const progressTrack = document.getElementById('leafr-progress-track');
 
         if (pageInput) {
-            pageInput.value = pageNum;
+            if (document.activeElement !== pageInput) {
+                pageInput.value = pageNum;
+            }
             pageInput.setAttribute('aria-label', 'Seite ' + pageNum + ' von ' + total);
         }
         if (totalEl) {

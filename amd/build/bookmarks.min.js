@@ -53,7 +53,7 @@ define([], function () {
         }
     }
 
-    const MAX_BOOKMARKS_FREE = 1;
+    const MAX_BOOKMARKS_FREE = 5;
 
     /**
      * Load bookmarks from Moodle user preferences.
@@ -70,9 +70,59 @@ define([], function () {
     }
 
     /**
+     * Render bookmark flags on the actual pages in the DOM.
+     */
+    function renderBookmarkFlags() {
+        // Remove existing flags.
+        document.querySelectorAll('.leafr-bookmark-flag').forEach(el => el.remove());
+
+        const bookmarkedPages = bookmarks.map(b => parseInt(b.pageno, 10));
+
+        // Flipbook pages: StPageFlip uses .stf__page or we can target our .leafr-page
+        // Or simpler: target elements with data-page attribute (if we add it in flipbook.js) or just iterate by querySelector
+        // In simple view: .leafr-simple-page[data-page="X"]
+        bookmarkedPages.forEach(pageNum => {
+            // Find simple view page
+            const simplePage = document.getElementById('leafr-page-' + pageNum);
+            if (simplePage) {
+                simplePage.appendChild(createFlagElement(pageNum));
+            }
+
+            // For flipbook, StPageFlip handles pages natively. We might need to add it to the container if we know the page.
+            // Flipbook initializes its pages as .leafr-page. We can add data-page to them in flipbook.js or just find them by index if they exist.
+            const flipPages = document.querySelectorAll('.leafr-page');
+            if (flipPages.length >= pageNum) {
+                // pageNum is 1-based, index is 0-based
+                const fp = flipPages[pageNum - 1];
+                if (fp && !fp.querySelector('.leafr-bookmark-flag')) {
+                    fp.appendChild(createFlagElement(pageNum));
+                }
+            }
+        });
+    }
+
+    /**
+     * Helper to create a flag element.
+     * @param {number} pageNum
+     */
+    function createFlagElement(pageNum) {
+        const flag = document.createElement('div');
+        flag.className = 'leafr-bookmark-flag';
+        flag.title = 'Lesezeichen auf Seite ' + pageNum;
+        flag.innerHTML = '<svg width="24" height="24" viewBox="0 0 256 256" fill="currentColor"><path d="M192,24H96A16,16,0,0,0,80,40V212.87L112,201.47l43.35,31.26a8,8,0,0,0,9.3,0L208,206.21V40A16,16,0,0,0,192,24Z"/></svg>';
+        flag.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (onNavigateCallback) onNavigateCallback(pageNum);
+        });
+        return flag;
+    }
+
+    /**
      * Render the bookmark list in the panel.
      */
     function renderBookmarkList() {
+        renderBookmarkFlags();
+
         const list = document.getElementById('leafr-bookmark-list');
         if (!list) {
             return;
@@ -178,7 +228,7 @@ define([], function () {
      */
     async function createBookmark(pageNum, label, note) {
         if (bookmarks.length >= MAX_BOOKMARKS_FREE) {
-            showSnackbar('Nur 1 Lesezeichen im Free-Tier. Upgrade auf Pro für mehr.');
+            showSnackbar('Nur ' + MAX_BOOKMARKS_FREE + ' Lesezeichen im Free-Tier möglich. In der Pro Version sind unbegrenzt viele Lesezeichen möglich – Bitte wenden Sie sich an Ihren Administrator.');
             return;
         }
 

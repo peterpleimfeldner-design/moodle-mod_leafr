@@ -135,14 +135,12 @@ define([
                 await initToc(pdfDoc);
             }
 
-            // Initialize bookmarks if Pro available.
-            if (config.config.proAvailable) {
-                Bookmarks.init({
-                    cmid: config.cmid,
-                    strings: config.strings,
-                    onNavigate: goToPage,
-                });
-            }
+            // Initialize bookmarks.
+            Bookmarks.init({
+                cmid: config.cmid,
+                strings: config.strings,
+                onNavigate: goToPage,
+            });
 
             showLoading(false);
 
@@ -591,7 +589,10 @@ define([
         if (!entries || entries.length === 0) {
             const empty = document.createElement('li');
             empty.className = 'leafr-toc-empty';
-            empty.textContent = cfg.strings.toc_empty || 'Kein Inhaltsverzeichnis verfügbar';
+            empty.innerHTML = cfg.strings.toc_empty || '<span>Leider konnten keine Überschriften gefunden werden. Bitte achten Sie beim PDF-Export auf <br/><strong>"Lesezeichen"</strong> bzw. <strong>"Gliederung"</strong> (Bookmarks/Outline).</span>';
+            empty.style.padding = '1rem';
+            empty.style.color = '#ccc';
+            empty.style.lineHeight = '1.5';
             list.appendChild(empty);
             return;
         }
