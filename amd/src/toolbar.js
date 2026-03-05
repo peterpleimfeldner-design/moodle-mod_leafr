@@ -154,6 +154,12 @@ define([], function () {
             const btn = document.getElementById('leafr-btn-fullscreen');
             if (btn) {
                 btn.setAttribute('aria-pressed', isFS ? 'true' : 'false');
+                const outIcon = btn.querySelector('.leafr-icon-arrows-out');
+                const inIcon = btn.querySelector('.leafr-icon-arrows-in');
+                if (outIcon && inIcon) {
+                    outIcon.style.display = isFS ? 'none' : '';
+                    inIcon.style.display = isFS ? '' : 'none';
+                }
             }
         });
     }
