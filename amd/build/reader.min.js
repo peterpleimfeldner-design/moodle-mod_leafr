@@ -478,8 +478,19 @@ define([
                 simpleViewEl.style.display = 'none';
                 simpleViewEl.classList.remove('is-active');
             }
-            if (flipbookEl) {
-                flipbookEl.style.display = '';
+
+            // StPageFlip destroys the DOM structure. We need to recreate the empty #leafr-flipbook div
+            // inside the flipbook-area if it was completely removed, or just clear it.
+            let flipArea = document.querySelector('.leafr-flipbook-area');
+            let newFlipbookEl = document.getElementById('leafr-flipbook');
+            if (flipArea) {
+                if (!newFlipbookEl) {
+                    newFlipbookEl = document.createElement('div');
+                    newFlipbookEl.id = 'leafr-flipbook';
+                    flipArea.appendChild(newFlipbookEl);
+                }
+                newFlipbookEl.innerHTML = '';
+                newFlipbookEl.style.display = '';
             }
 
             // Re-initialise the flipbook.
