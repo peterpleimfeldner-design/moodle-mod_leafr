@@ -161,11 +161,32 @@ define([
                 flipbookEl.style.display = 'none';
             }
 
+            // Set up an observer to update current page and TOC while scrolling
+            const pageObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        const pageNum = parseInt(entry.target.dataset.page, 10);
+                        if (!isNaN(pageNum) && pageNum !== currentPage) {
+                            currentPage = pageNum;
+                            Toolbar.updatePage(pageNum);
+                            syncTocHighlight(pageNum);
+                            Completion.trackPage(pageNum);
+                            Completion.savePosition(cfg.cmid, pageNum);
+                        }
+                    }
+                });
+            }, {
+                root: container,
+                threshold: 0.5 // trigger when page is 50% visible
+            });
+
             // Render all pages as stacked canvases (scrollable).
             for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
                 const pageEl = await renderSimplePage(pdfDoc, pageNum, totalPages);
                 if (container) {
+                    pageEl.dataset.page = pageNum; // Add data attribute for the observer
                     container.appendChild(pageEl);
+                    pageObserver.observe(pageEl);
                 }
             }
 
@@ -310,6 +331,16 @@ define([
      */
     function goToPage(pageNum) {
         const target = Math.max(1, Math.min(pageNum, totalPages));
+
+        const simpleViewEl = document.getElementById('leafr-simple-view');
+        if (simpleViewEl && simpleViewEl.classList.contains('is-active')) {
+            scrollToPage(target);
+            currentPage = target;
+            Toolbar.updatePage(target);
+            syncTocHighlight(target);
+            return;
+        }
+
         if (flipbookInstance) {
             Flipbook.goToPage(flipbookInstance, target);
         }
