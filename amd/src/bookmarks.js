@@ -14,7 +14,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define([], function() {
+define([], function () {
 
     'use strict';
 
@@ -53,15 +53,17 @@ define([], function() {
         }
     }
 
+    const MAX_BOOKMARKS_FREE = 1;
+
     /**
-     * Load bookmarks from the server.
+     * Load bookmarks from Moodle user preferences.
      *
      * @return {Promise<Array>}
      */
     async function loadBookmarks() {
         try {
-            const result = await callWebService('mod_leafr_bookmark_list', {cmid: cfg.cmid});
-            return result || [];
+            const raw = M.util.get_user_preference('leafr_bookmarks_' + cfg.cmid, '[]');
+            return JSON.parse(raw);
         } catch (e) {
             return [];
         }
@@ -127,15 +129,15 @@ define([], function() {
             return;
         }
 
-        const pageInput  = modal.querySelector('#leafr-bm-page');
+        const pageInput = modal.querySelector('#leafr-bm-page');
         const labelInput = modal.querySelector('#leafr-bm-label');
-        const noteInput  = modal.querySelector('#leafr-bm-note');
-        const saveBtn    = modal.querySelector('#leafr-bm-save');
-        const cancelBtn  = modal.querySelector('#leafr-bm-cancel');
+        const noteInput = modal.querySelector('#leafr-bm-note');
+        const saveBtn = modal.querySelector('#leafr-bm-save');
+        const cancelBtn = modal.querySelector('#leafr-bm-cancel');
 
-        if (pageInput)  { pageInput.value  = pageNum; }
+        if (pageInput) { pageInput.value = pageNum; }
         if (labelInput) { labelInput.value = ''; }
-        if (noteInput)  { noteInput.value  = ''; }
+        if (noteInput) { noteInput.value = ''; }
 
         modal.style.display = 'flex';
         modal.setAttribute('aria-hidden', 'false');
@@ -157,7 +159,7 @@ define([], function() {
             modal.setAttribute('aria-hidden', 'true');
         };
 
-        if (saveBtn)   { saveBtn.onclick   = save; }
+        if (saveBtn) { saveBtn.onclick = save; }
         if (cancelBtn) { cancelBtn.onclick = cancel; }
 
         modal.addEventListener('keydown', (e) => {
@@ -168,36 +170,36 @@ define([], function() {
     }
 
     /**
-     * Create a new bookmark via web service.
+     * Create a new bookmark via Moodle user preferences (Free Tier: Max 1).
      *
      * @param {number} pageNum Page number
      * @param {string} label Label
      * @param {string} note Optional note
      */
     async function createBookmark(pageNum, label, note) {
-        const result = await callWebService('mod_leafr_bookmark_create', {
-            cmid:   cfg.cmid,
+        if (bookmarks.length >= MAX_BOOKMARKS_FREE) {
+            showSnackbar('Nur 1 Lesezeichen im Free-Tier. Upgrade auf Pro für mehr.');
+            return;
+        }
+
+        const newId = Date.now();
+        bookmarks.unshift({
+            id: newId,
             pageno: pageNum,
-            label,
-            note,
+            label: label || ('Seite ' + pageNum),
+            note: note || '',
+            timecreated: Math.floor(Date.now() / 1000),
+            timemodified: Math.floor(Date.now() / 1000),
         });
 
-        if (result && result.id) {
-            bookmarks.unshift({
-                id:    result.id,
-                pageno: pageNum,
-                label,
-                note,
-                timecreated:  Math.floor(Date.now() / 1000),
-                timemodified: Math.floor(Date.now() / 1000),
-            });
-            renderBookmarkList();
-            showSnackbar(cfg.strings.bookmark_saved || 'Lesezeichen gespeichert.');
-        }
+        M.util.set_user_preference('leafr_bookmarks_' + cfg.cmid, JSON.stringify(bookmarks));
+
+        renderBookmarkList();
+        showSnackbar(cfg.strings.bookmark_saved || 'Lesezeichen gespeichert.');
     }
 
     /**
-     * Delete a bookmark with undo functionality.
+     * Delete a bookmark from preferences with undo functionality.
      *
      * @param {number} bookmarkId Bookmark ID
      */
@@ -207,33 +209,23 @@ define([], function() {
             return;
         }
 
-        // Remove from local list.
+        // Remove from local list and save to preference
         bookmarks = bookmarks.filter((b) => b.id !== bookmarkId);
+        M.util.set_user_preference('leafr_bookmarks_' + cfg.cmid, JSON.stringify(bookmarks));
         renderBookmarkList();
 
         // Show undo snackbar for 5 seconds.
-        let undone = false;
         showSnackbar(
             (cfg.strings.bookmark_deleted || 'Lesezeichen gelöscht.') + ' ',
             'Rückgängig',
             () => {
-                undone = true;
                 bookmarks.unshift(bm);
                 bookmarks.sort((a, b) => b.timemodified - a.timemodified);
+                M.util.set_user_preference('leafr_bookmarks_' + cfg.cmid, JSON.stringify(bookmarks));
                 renderBookmarkList();
             },
             5000
         );
-
-        // After 5 seconds, if not undone, delete on server.
-        setTimeout(async () => {
-            if (!undone) {
-                await callWebService('mod_leafr_bookmark_delete', {
-                    cmid:       cfg.cmid,
-                    bookmarkid: bookmarkId,
-                });
-            }
-        }, 5100);
     }
 
     /**
@@ -288,9 +280,9 @@ define([], function() {
     async function callWebService(methodname, args) {
         try {
             const response = await fetch(M.cfg.wwwroot + '/lib/ajax/service.php?sesskey=' + M.cfg.sesskey, {
-                method:  'POST',
-                headers: {'Content-Type': 'application/json'},
-                body:    JSON.stringify([{methodname, args}]),
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify([{ methodname, args }]),
             });
             const data = await response.json();
             if (data && data[0] && !data[0].error) {
@@ -302,5 +294,5 @@ define([], function() {
         return null;
     }
 
-    return {init};
+    return { init };
 });
