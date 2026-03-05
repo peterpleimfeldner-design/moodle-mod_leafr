@@ -18,7 +18,7 @@
  */
 
 // "mod_leafr/vendor-stpageflip" path is configured via require.config() in view.php.
-define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function(PdfLoader, St) {
+define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function (PdfLoader, St) {
 
     'use strict';
 
@@ -65,45 +65,75 @@ define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function(PdfLoade
         // Detect single page vs spread layout.
         const isMobile = window.innerWidth < 768;
 
-        // Get first page dimensions for sizing.
+        // Get first page dimensions to determine aspect ratio.
         const firstPage = await pdfDoc.getPage(1);
         const dims = PdfLoader.getPageDimensions(firstPage, RENDER_SCALE);
+        const aspectRatio = dims.width / dims.height; // e.g. ~0.707 for A4
 
         // Landscape PDFs (width > height) use single-page display.
         // Portrait PDFs on desktop show a two-page spread (book layout).
-        const isLandscape  = dims.width > dims.height;
+        const isLandscape = dims.width > dims.height;
         const useSinglePage = isMobile || isLandscape;
-        const flipbookWidth  = useSinglePage ? dims.width : dims.width * 2;
-        const flipbookHeight = dims.height;
 
-        container.style.width  = flipbookWidth  + 'px';
-        container.style.height = flipbookHeight + 'px';
+        /**
+         * Calculate the page size StPageFlip should use based on the actual
+         * rendered area of the flipbook-area container.
+         *
+         * @return {{pageW: number, pageH: number}}
+         */
+        function calcSize() {
+            const area = container.closest('.leafr-flipbook-area') || container.parentElement;
+            const areaH = area ? area.clientHeight : window.innerHeight;
+            const areaW = area ? area.clientWidth : window.innerWidth;
+
+            const padding = 16;
+            const availH = Math.max(areaH - padding * 2, 200);
+            const availW = Math.max(areaW - padding * 2, 200);
+
+            // Derive page height from available space, width from aspect ratio.
+            let pageH = availH;
+            let pageW = Math.floor(pageH * aspectRatio);
+
+            // Spread width is 2× pageW; scale down if wider than available.
+            const spreadW = useSinglePage ? pageW : pageW * 2;
+            if (spreadW > availW) {
+                pageW = Math.floor(availW / (useSinglePage ? 1 : 2));
+                pageH = Math.floor(pageW / aspectRatio);
+            }
+
+            return { pageW, pageH };
+        }
+
+        const { pageW, pageH } = calcSize();
+
+        container.style.width = (useSinglePage ? pageW : pageW * 2) + 'px';
+        container.style.height = pageH + 'px';
 
         // Create page canvases.
         const pages = createPageElements(options.totalPages);
         container.innerHTML = '';
         pages.forEach(p => container.appendChild(p));
 
-        // Initialize StPageFlip.
+        // Initialize StPageFlip with computed dimensions.
         pageFlip = new St.PageFlip(container, {
-            width:           dims.width,
-            height:          dims.height,
-            size:            'fixed',
-            minWidth:        dims.width,
-            maxWidth:        useSinglePage ? dims.width : dims.width * 2,
-            minHeight:       dims.height,
-            maxHeight:       dims.height,
-            maxShadowOpacity: 0.5,
-            showCover:       false,
-            mobileScrollSupport: true,
-            usePortrait:     useSinglePage,
-            startPage:       options.startPage - 1, // 0-based
-            drawShadow:      true,
-            flippingTime:    600,
-            useMouseEvents:  true,
-            swipeDistance:   30,
+            width: pageW,
+            height: pageH,
+            size: 'fixed',
+            autoSize: false,  // we compute size ourselves
+            minWidth: pageW,
+            maxWidth: useSinglePage ? pageW : pageW * 2,
+            minHeight: pageH,
+            maxHeight: pageH,
+            maxShadowOpacity: 0.35,
+            showCover: false,
+            mobileScrollSupport: false,
+            usePortrait: useSinglePage,
+            startPage: options.startPage - 1, // 0-based
+            drawShadow: true,
+            flippingTime: 800,
+            useMouseEvents: true,
+            swipeDistance: 30,
             clickEventForward: true,
-            autoSize:        false,
         });
 
         // Load pages from HTML elements.
@@ -119,15 +149,27 @@ define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function(PdfLoade
             await renderPageRange(e.data, RENDER_BUFFER);
         });
 
-        pageFlip.on('changeState', (e) => {
-            // Handle state changes if needed.
-        });
+        pageFlip.on('changeState', () => { });
 
         // Render initial pages.
         await renderPageRange(options.startPage - 1, RENDER_BUFFER);
 
         if (options.onReady) {
             options.onReady();
+        }
+
+        // ResizeObserver: recalculate and update StPageFlip when container resizes.
+        const area = container.closest('.leafr-flipbook-area') || container.parentElement;
+        if (area && typeof ResizeObserver !== 'undefined') {
+            const ro = new ResizeObserver(() => {
+                const { pageW: newW, pageH: newH } = calcSize();
+                container.style.width = (useSinglePage ? newW : newW * 2) + 'px';
+                container.style.height = newH + 'px';
+                if (pageFlip) {
+                    pageFlip.update();
+                }
+            });
+            ro.observe(area);
         }
 
         // Swipe support for mobile (touch events).
@@ -172,7 +214,7 @@ define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function(PdfLoade
         }
 
         const start = Math.max(0, centerIdx - buffer);
-        const end   = Math.min(pdfDoc.numPages - 1, centerIdx + buffer + 1);
+        const end = Math.min(pdfDoc.numPages - 1, centerIdx + buffer + 1);
 
         for (let i = start; i <= end; i++) {
             if (!renderedPages.has(i)) {
@@ -227,7 +269,7 @@ define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function(PdfLoade
         container.addEventListener('touchstart', (e) => {
             touchStartX = e.touches[0].clientX;
             touchStartY = e.touches[0].clientY;
-        }, {passive: true});
+        }, { passive: true });
 
         container.addEventListener('touchend', (e) => {
             const dx = e.changedTouches[0].clientX - touchStartX;
@@ -243,7 +285,7 @@ define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function(PdfLoade
                     }
                 }
             }
-        }, {passive: true});
+        }, { passive: true });
     }
 
     return {
