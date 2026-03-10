@@ -24,6 +24,9 @@ define([], function () {
     /** @type {Function} Navigation callback */
     let onNavigateCallback = null;
 
+    /** @type {Function|null} Active keydown handler for the modal (stored for cleanup) */
+    let modalKeydownHandler = null;
+
     /** @type {Array} Current bookmarks */
     let bookmarks = [];
 
@@ -36,7 +39,6 @@ define([], function () {
      * @param {Function} options.onNavigate Navigation callback(pageNum)
      */
     async function init(options) {
-        console.log('Leafr Bookmarks v1.0.6 loaded');
         cfg = options;
         onNavigateCallback = options.onNavigate;
 
@@ -213,11 +215,17 @@ define([], function () {
         if (saveBtn) { saveBtn.onclick = save; }
         if (cancelBtn) { cancelBtn.onclick = cancel; }
 
-        modal.addEventListener('keydown', (e) => {
+        // Remove any previous keydown handler before adding a new one,
+        // to prevent listener accumulation when the modal is opened multiple times.
+        if (modalKeydownHandler) {
+            modal.removeEventListener('keydown', modalKeydownHandler);
+        }
+        modalKeydownHandler = (e) => {
             if (e.key === 'Escape') {
                 cancel();
             }
-        });
+        };
+        modal.addEventListener('keydown', modalKeydownHandler);
     }
 
     /**

@@ -30,7 +30,11 @@ define([
     /** @type {number} Total pages in the PDF */
     let totalPages = 0;
 
+    /** @type {number} Currently visible page number (1-based) */
+    let currentPage = 1;
 
+    /** @type {Object|null} StPageFlip instance */
+    let flipbookInstance = null;
 
     let zoomLevel = 1.0;
     const MIN_ZOOM = 0.5;
@@ -47,7 +51,6 @@ define([
      */
     async function init(config) {
         try {
-            console.log('Leafr Reader v1.0.6 loaded');
             cfg = config;
 
             const container = document.getElementById('leafr-reader-container');
@@ -189,7 +192,7 @@ define([
             // Set up an observer to update current page and TOC while scrolling
             const pageObserver = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
+                    if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
                         const pageNum = parseInt(entry.target.dataset.page, 10);
                         if (!isNaN(pageNum) && pageNum !== currentPage) {
                             currentPage = pageNum;
@@ -275,6 +278,9 @@ define([
         canvas.height = viewport.height;
 
         const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            throw new Error('Canvas 2D context unavailable for page ' + pageNum);
+        }
         await page.render({ canvasContext: ctx, viewport }).promise;
 
         // Add text layer for accessibility and selection.

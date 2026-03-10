@@ -40,6 +40,9 @@ define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function (PdfLoad
     /** Callback when page changes */
     let onFlipCallback = null;
 
+    /** @type {ResizeObserver|null} Stored for cleanup */
+    let resizeObserver = null;
+
     /**
      * Initialize the StPageFlip instance.
      *
@@ -160,9 +163,13 @@ define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function (PdfLoad
         }
 
         // ResizeObserver: recalculate and update StPageFlip when container resizes.
+        // Stored in module-level variable so it can be disconnected on re-init.
         const area = container.closest('.leafr-flipbook-area') || container.parentElement;
         if (area && typeof ResizeObserver !== 'undefined') {
-            const ro = new ResizeObserver(() => {
+            if (resizeObserver) {
+                resizeObserver.disconnect();
+            }
+            resizeObserver = new ResizeObserver(() => {
                 const { pageW: newW, pageH: newH } = calcSize();
                 container.style.width = (useSinglePage ? newW : newW * 2) + 'px';
                 container.style.height = newH + 'px';
@@ -170,7 +177,7 @@ define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function (PdfLoad
                     pageFlip.update();
                 }
             });
-            ro.observe(area);
+            resizeObserver.observe(area);
         }
 
         // Swipe support for mobile (touch events).
@@ -268,8 +275,10 @@ define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function (PdfLoad
         let touchStartY = 0;
 
         container.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
+            if (e.touches.length > 0) {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+            }
         }, { passive: true });
 
         container.addEventListener('touchend', (e) => {

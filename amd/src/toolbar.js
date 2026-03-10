@@ -49,7 +49,6 @@ define([], function () {
      * @param {Function|null} options.onToggleToc
      */
     function init(options) {
-        console.log('Leafr Toolbar v1.0.6 loaded');
         total = options.totalPages;
         current = options.startPage || 1;
         onPageChange = options.onPageChange;

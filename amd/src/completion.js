@@ -127,6 +127,7 @@ define([], function () {
         const result = await callWebService('mod_leafr_page_viewed', {
             cmid: cfg.cmid,
             seen_pages: seenPagesArr,
+            total_pages: cfg.totalPages || 0,
         });
 
         if (result && result.completed) {

@@ -48,15 +48,16 @@ class page_viewed extends external_api {
      *
      * @param int $cmid Course module ID
      * @param array $seenpages Array of seen page numbers
+     * @param int $totalpages Total number of pages in the PDF (0 = unknown)
      * @return array Result with completion status
      */
-    public static function execute(int $cmid, array $seenpages): array {
+    public static function execute(int $cmid, array $seenpages, int $totalpages = 0): array {
         global $DB, $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'cmid'        => $cmid,
             'seen_pages'  => $seenpages,
-            'total_pages' => func_num_args() > 2 ? func_get_arg(2) : 0,
+            'total_pages' => $totalpages,
         ]);
 
         $context = \context_module::instance($params['cmid']);
