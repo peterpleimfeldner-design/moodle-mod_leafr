@@ -1,14 +1,5 @@
-# Moodle Plugin mod_leafr
-# Ignore ZIP files
-leafr.zip
 *.zip
-
-# Ignore docx files (as they are in the parent folder, but just in case)
 *.docx
-
-# Moodle temporary folders
-/vendor/
-
-# OS specific files
+node_modules/
 .DS_Store
 Thumbs.db

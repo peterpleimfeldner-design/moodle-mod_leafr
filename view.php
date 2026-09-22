@@ -5,135 +5,105 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Main entry point for mod_leafr - renders the PDF Flipbook reader.
+ * Shows a Leafr flipbook.
  *
- * @package    mod_leafr
- * @copyright  2026 Leafr
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_leafr
+ * @copyright 2026 Peter Pleimfeldner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
+use mod_leafr\local\progress;
 
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
-require_once(__DIR__ . '/locallib.php');
 
-$id = required_param('id', PARAM_INT); // Course module ID.
+$id = required_param('id', PARAM_INT);
 
-$cm      = get_coursemodule_from_id('leafr', $id, 0, false, MUST_EXIST);
-$course  = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
-$leafr   = $DB->get_record('leafr', ['id' => $cm->instance], '*', MUST_EXIST);
+[$course, $cm] = get_course_and_cm_from_cmid($id, 'leafr');
+$leafr = $DB->get_record('leafr', ['id' => $cm->instance], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
-
 $context = context_module::instance($cm->id);
 require_capability('mod/leafr:view', $context);
 
-// Log the course module viewed event.
-$event = \mod_leafr\event\course_module_viewed::create([
-    'objectid' => $leafr->id,
-    'context'  => $context,
-]);
-$event->add_record_snapshot('course', $course);
-$event->add_record_snapshot('leafr', $leafr);
-$event->trigger();
+leafr_view($leafr, $course, $cm, $context);
 
-// Mark as viewed for completion tracking.
-$completion = new completion_info($course);
-$completion->set_module_viewed($cm);
-
-// Get PDF file URL.
-$fileurl = leafr_get_file_url($context, $cm->id);
-
-// Get reading position for resume-reading toast.
-$savedpage  = leafr_get_reading_position($cm->id);
-$startpage  = max(1, (int)($leafr->initialpage ?? 1));
-if ($savedpage > 1) {
-    $startpage = $savedpage;
-}
-
-// Simple View detection (user preference or server-side default).
-$simpleview = (bool) get_user_preferences('leafr_simpleview_' . $cm->id, 0);
-
-// Pro features available?
-$proavailable = leafr_pro_is_available();
-
-// PAGE setup.
-$PAGE->set_url('/mod/leafr/view.php', ['id' => $id]);
+$PAGE->set_url('/mod/leafr/view.php', ['id' => $cm->id]);
 $PAGE->set_title(format_string($leafr->name));
 $PAGE->set_heading(format_string($course->fullname));
-$PAGE->set_context($context);
 $PAGE->set_activity_record($leafr);
 
-// Configure RequireJS paths for vendor libraries.
-// PDF.js 3.x uses a NAMED AMD define: define("pdfjs-dist/build/pdf", ...).
-// The path must be registered under that exact name; pdfloader.js requires
-// it by that same name. StPageFlip uses an anonymous AMD define with
-// ["exports"], so a custom module name works fine for it.
-$pdfjs_url  = (new moodle_url('/mod/leafr/vendor/pdfjs/pdf.min'))->out(false);
-$stpf_url   = (new moodle_url('/mod/leafr/vendor/stpageflip/StPageFlip.browser'))->out(false);
-$PAGE->requires->js_amd_inline(
-    'require.config({paths:{"pdfjs-dist/build/pdf":"' . $pdfjs_url
-    . '","mod_leafr/vendor-stpageflip":"' . $stpf_url . '"}});'
-);
+$file = leafr_get_pdf_file($context);
+if ($file) {
+    $fileurl = moodle_url::make_pluginfile_url(
+        $context->id,
+        'mod_leafr',
+        'content',
+        0,
+        $file->get_filepath(),
+        $file->get_filename()
+    );
 
-// Load our stylesheet.
-$PAGE->requires->css('/mod/leafr/styles.css');
+    $lastpage = 0;
+    $completed = false;
+    if (isloggedin() && !isguestuser()) {
+        $lastpage = progress::get_last_page((int)$leafr->id, (int)$USER->id);
+        $completed = $leafr->completiontype > 0 && progress::is_complete($leafr, (int)$USER->id);
+    }
+    $simpleview = get_user_preferences('mod_leafr_simpleview', null);
 
-// AMD init with config.
-$PAGE->requires->js_call_amd(
-    'mod_leafr/reader',
-    'init',
-    [[
-        'cmid'         => (int)$cm->id,
-        'fileurl'      => $fileurl ?? '',
-        'startPage'    => $startpage,
-        'savedPage'    => (int)$savedpage,
-        'wwwroot'      => $CFG->wwwroot,
-        'sesskey'      => sesskey(),
-        'config'       => [
-            'completionType'    => (int)$leafr->completiontype,
-            'completionPercent' => (int)$leafr->completionpercent,
-            'completionPage'    => (int)$leafr->completionpage,
-            'downloadAllowed'   => (bool)$leafr->downloadallowed,
-            'showToc'           => (bool)$leafr->showtoc,
-            'simpleView'        => $simpleview,
-            'proAvailable'      => $proavailable,
-        ],
-        'strings'      => [
-            'loading'           => get_string('loading', 'leafr'),
-            'errordocument'     => get_string('errordocument', 'leafr'),
-            'pageof'            => get_string('pageof', 'leafr'),
-            'resume_toast'      => get_string('resume_toast', 'leafr'),
-            'resume_continue'   => get_string('resume_continue', 'leafr'),
-            'resume_restart'    => get_string('resume_restart', 'leafr'),
-            'completion_done'   => get_string('completion_done', 'leafr'),
-            'toc_title'         => get_string('toc_title', 'leafr'),
-            'toc_empty'         => get_string('toc_empty', 'leafr'),
-            'bookmark_add'      => get_string('bookmark_add', 'leafr'),
-            'bookmark_saved'    => get_string('bookmark_saved', 'leafr'),
-            'bookmark_deleted'  => get_string('bookmark_deleted', 'leafr'),
-            'simple_view'       => get_string('simple_view', 'leafr'),
-        ],
-    ]]
-);
+    $downloadurl = '';
+    if ($leafr->downloadallowed && has_capability('mod/leafr:download', $context)) {
+        $downloadurl = moodle_url::make_pluginfile_url(
+            $context->id,
+            'mod_leafr',
+            'content',
+            0,
+            $file->get_filepath(),
+            $file->get_filename(),
+            true
+        )->out(false);
+    }
 
-// Render the page.
-echo $OUTPUT->header();
+    // The PDF.js and StPageFlip builds are loaded as AMD modules from the vendor directory.
+    // PDF.js registers itself with the fixed name "pdfjs-dist/build/pdf".
+    $PAGE->requires->js_amd_inline('require.config({paths: ' . json_encode([
+        'pdfjs-dist/build/pdf' => (new moodle_url('/mod/leafr/vendor/pdfjs/pdf.min'))->out(false),
+        'mod_leafr/vendor-stpageflip' => (new moodle_url('/mod/leafr/vendor/stpageflip/StPageFlip.browser'))->out(false),
+    ], JSON_UNESCAPED_SLASHES) . '});');
 
-/** @var mod_leafr_renderer $renderer */
-$renderer = $PAGE->get_renderer('mod_leafr');
-
-// Show activity intro if configured.
-if ($leafr->intro && $cm->showdescription) {
-    echo $OUTPUT->box(format_module_intro('leafr', $leafr, $cm->id), 'generalbox mod_introbox');
+    $uniqid = html_writer::random_id('leafr-reader-');
+    $templatecontext = [
+        'uniqid' => $uniqid,
+        'cmid' => $cm->id,
+        'readerlabel' => get_string('readerlabel', 'leafr', format_string($leafr->name, true, ['context' => $context])),
+        'fileurl' => $fileurl->out(false),
+        'downloadurl' => $downloadurl,
+        'startpage' => $lastpage ?: max(1, (int)$leafr->initialpage),
+        'totalpages' => (int)$leafr->totalpages,
+        'showtoc' => !empty($leafr->showtoc),
+        'simpleview' => $simpleview === null ? '' : (string)(int)$simpleview,
+        'completed' => $completed,
+    ];
+    $PAGE->requires->js_call_amd('mod_leafr/reader', 'init', ['#' . $uniqid]);
 }
 
-// Render the reader container.
-if ($fileurl) {
-    echo $renderer->render_reader($cm, $leafr, $context, $fileurl, $proavailable);
+echo $OUTPUT->header();
+
+if ($file) {
+    echo $OUTPUT->render_from_template('mod_leafr/reader', $templatecontext);
 } else {
-    echo $renderer->render_no_file();
+    echo $OUTPUT->render_from_template('mod_leafr/error', ['message' => get_string('nopdfuploaded', 'leafr')]);
 }
 
 echo $OUTPUT->footer();

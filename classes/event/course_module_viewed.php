@@ -5,55 +5,39 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-
-/**
- * Course module viewed event for mod_leafr
- *
- * @package    mod_leafr
- * @copyright  2026 Leafr
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace mod_leafr\event;
 
 /**
- * Event fired when a Leafr activity is viewed.
+ * Event triggered when a Leafr activity is viewed.
+ *
+ * @package   mod_leafr
+ * @copyright 2026 Peter Pleimfeldner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class course_module_viewed extends \core\event\course_module_viewed {
-
     /**
-     * Initialize the event.
+     * Initialises the event data.
      */
-    protected function init(): void {
+    protected function init() {
         $this->data['objecttable'] = 'leafr';
         parent::init();
     }
 
     /**
-     * Returns the description of the event.
+     * Returns the mapping of the object id for restoring logs.
      *
-     * @return string
+     * @return array
      */
-    public static function get_name(): string {
-        return get_string('event_course_module_viewed', 'leafr');
-    }
-
-    /**
-     * Returns the description of the event.
-     *
-     * @return string
-     */
-    public function get_description(): string {
-        return "The user with id '$this->userid' viewed the leafr activity with " .
-               "course module id '$this->contextinstanceid'.";
-    }
-
-    /**
-     * Returns relevant URL.
-     *
-     * @return \moodle_url
-     */
-    public function get_url(): \moodle_url {
-        return new \moodle_url('/mod/leafr/view.php', ['id' => $this->contextinstanceid]);
+    public static function get_objectid_mapping() {
+        return ['db' => 'leafr', 'restore' => 'leafr'];
     }
 }

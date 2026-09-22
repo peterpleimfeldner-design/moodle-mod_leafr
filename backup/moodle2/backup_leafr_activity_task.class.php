@@ -5,13 +5,22 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Backup task for mod_leafr
+ * Backup task for mod_leafr.
  *
- * @package    mod_leafr
- * @copyright  2026 Leafr
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_leafr
+ * @category  backup
+ * @copyright 2026 Peter Pleimfeldner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -19,45 +28,39 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/mod/leafr/backup/moodle2/backup_leafr_stepslib.php');
 
 /**
- * Defines the backup structure for mod_leafr.
+ * Backup task for mod_leafr.
+ *
+ * @package   mod_leafr
+ * @category  backup
+ * @copyright 2026 Peter Pleimfeldner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class backup_leafr_activity_task extends backup_activity_task {
-
     /**
-     * Define (add) particular settings this activity can have.
+     * No specific settings for this activity.
      */
-    protected function define_my_settings(): void {
-        // No specific settings.
+    protected function define_my_settings() {
     }
 
     /**
-     * Define (add) particular steps this activity can have.
+     * Defines the backup steps.
      */
-    protected function define_my_steps(): void {
+    protected function define_my_steps() {
         $this->add_step(new backup_leafr_activity_structure_step('leafr_structure', 'leafr.xml'));
     }
 
     /**
-     * Code the transformations to perform in the activity to get transportable (encoded) links.
+     * Encodes links to the activity so they can be restored.
      *
-     * @param string $content Content to encode
-     * @return string Encoded content
+     * @param string $content Content with links
+     * @return string Content with encoded links
      */
-    public static function encode_content_links(string $content): string {
+    public static function encode_content_links($content) {
         global $CFG;
 
         $base = preg_quote($CFG->wwwroot, '/');
-
-        // Link to module view.
-        $search  = "/($base\/mod\/leafr\/view\.php\?id=)([0-9]+)/";
-        $replace = '$@LEAFRVIEWBYID*$2@$';
-        $content = preg_replace($search, $replace, $content);
-
-        // Link to module index.
-        $search  = "/($base\/mod\/leafr\/index\.php\?id=)([0-9]+)/";
-        $replace = '$@LEAFRINDEX*$2@$';
-        $content = preg_replace($search, $replace, $content);
-
+        $content = preg_replace("/({$base}\/mod\/leafr\/index\.php\?id=)([0-9]+)/", '$@LEAFRINDEX*$2@$', $content);
+        $content = preg_replace("/({$base}\/mod\/leafr\/view\.php\?id=)([0-9]+)/", '$@LEAFRVIEWBYID*$2@$', $content);
         return $content;
     }
 }

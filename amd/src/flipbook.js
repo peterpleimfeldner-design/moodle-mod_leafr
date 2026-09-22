@@ -4,302 +4,393 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * StPageFlip integration for mod_leafr.
- * Manages the animated page-flip book rendering.
- *
- * StPageFlip is loaded as an AMD dependency via requirejs path "mod_leafr/vendor-stpageflip"
- * configured in view.php. This avoids the UMD/AMD detection issue.
+ * Book view with page-turning animation, based on StPageFlip.
  *
  * @module     mod_leafr/flipbook
- * @copyright  2026 Leafr
+ * @copyright  2026 Peter Pleimfeldner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// "mod_leafr/vendor-stpageflip" path is configured via require.config() in view.php.
-define(['mod_leafr/pdfloader', 'mod_leafr/vendor-stpageflip'], function (PdfLoader, St) {
+import {PageFlip} from 'mod_leafr/vendor-stpageflip';
+import {getPageSize, releaseCanvas, renderPage} from 'mod_leafr/pdf';
 
-    'use strict';
+/** Pages rendered before and after the visible pages. */
+const RENDER_AHEAD = 2;
 
-    /** Render scale for PDF pages */
-    const RENDER_SCALE = 2.5;
+/** Pages further away than this from the visible pages are released from memory. */
+const KEEP_RENDERED = 6;
 
-    /** Buffer: pre-render N pages ahead/behind */
-    const RENDER_BUFFER = 3;
+/** Viewports narrower than this show one page at a time. */
+const SPREAD_MIN_WIDTH = 768;
 
-    /** Set of rendered page numbers */
-    const renderedPages = new Set();
+/** Space around the book in CSS pixels. */
+const PADDING = 16;
 
-    /** The PDF document proxy */
-    let pdfDoc = null;
-
-    /** The PageFlip instance */
-    let pageFlip = null;
-
-    /** Callback when page changes */
-    let onFlipCallback = null;
-
-    /** @type {ResizeObserver|null} Stored for cleanup */
-    let resizeObserver = null;
+export default class FlipbookView {
 
     /**
-     * Initialize the StPageFlip instance.
+     * Constructor.
      *
-     * @param {Object} options Initialization options
-     * @param {HTMLElement} options.container Flipbook container element
-     * @param {PDFDocumentProxy} options.pdfDoc PDF document
-     * @param {number} options.startPage Starting page number
-     * @param {number} options.totalPages Total number of pages
+     * @param {Object} options
+     * @param {HTMLElement} options.stage Scrollable element that contains the view
+     * @param {HTMLElement} options.host Element the view is rendered into
+     * @param {Object} options.pdfDoc PDF.js document proxy
+     * @param {number} options.startPage First page to show
      * @param {Object} options.strings Language strings
-     * @param {Function} options.onFlip Callback on page flip
-     * @param {Function} options.onReady Callback when flipbook is ready
-     * @return {Promise<PageFlip>}
+     * @param {Function} options.onPageChange Called with (firstVisiblePage, visiblePages)
      */
-    async function init(options) {
-        pdfDoc = options.pdfDoc;
-        onFlipCallback = options.onFlip;
+    constructor(options) {
+        this.stage = options.stage;
+        this.host = options.host;
+        this.pdfDoc = options.pdfDoc;
+        this.total = options.pdfDoc.numPages;
+        this.strings = options.strings;
+        this.onPageChange = options.onPageChange;
+        this.page = Math.min(Math.max(1, options.startPage), this.total);
+        this.zoom = 1;
+        this.pageFlip = null;
+        this.canvases = [];
+        this.rendered = new Map();
+        this.layout = null;
+        this.resizeTimer = null;
+        this.zoomTimer = null;
+        this.pan = null;
+        this.destroyed = false;
 
-        const container = options.container;
-        if (!container) {
-            throw new Error('Flipbook container element not found.');
-        }
-
-        // Detect single page vs spread layout.
-        const isMobile = window.innerWidth < 768;
-
-        // Get first page dimensions to determine aspect ratio.
-        const firstPage = await pdfDoc.getPage(1);
-        const dims = PdfLoader.getPageDimensions(firstPage, RENDER_SCALE);
-        const aspectRatio = dims.width / dims.height; // e.g. ~0.707 for A4
-
-        // Landscape PDFs (width > height) use single-page display.
-        // Portrait PDFs on desktop show a two-page spread (book layout).
-        const isLandscape = dims.width > dims.height;
-        const useSinglePage = isMobile || isLandscape;
-
-        /**
-         * Calculate the page size StPageFlip should use based on the actual
-         * rendered area of the flipbook-area container.
-         *
-         * @return {{pageW: number, pageH: number}}
-         */
-        function calcSize() {
-            const area = container.closest('.leafr-flipbook-area') || container.parentElement;
-            const areaH = area ? area.clientHeight : window.innerHeight;
-            const areaW = area ? area.clientWidth : window.innerWidth;
-
-            const padding = 16;
-            const availH = Math.max(areaH - padding * 2, 200);
-            const availW = Math.max(areaW - padding * 2, 200);
-
-            // Derive page height from available space, width from aspect ratio.
-            let pageH = availH;
-            let pageW = Math.floor(pageH * aspectRatio);
-
-            // Spread width is 2× pageW; scale down if wider than available.
-            const spreadW = useSinglePage ? pageW : pageW * 2;
-            if (spreadW > availW) {
-                pageW = Math.floor(availW / (useSinglePage ? 1 : 2));
-                pageH = Math.floor(pageW / aspectRatio);
-            }
-
-            return { pageW, pageH };
-        }
-
-        const { pageW, pageH } = calcSize();
-
-        container.style.width = (useSinglePage ? pageW : pageW * 2) + 'px';
-        container.style.height = pageH + 'px';
-
-        // Create page canvases.
-        const pages = createPageElements(options.totalPages);
-        container.innerHTML = '';
-        pages.forEach(p => container.appendChild(p));
-
-        // Initialize StPageFlip with computed dimensions.
-        pageFlip = new St.PageFlip(container, {
-            width: pageW,
-            height: pageH,
-            size: 'fixed',
-            autoSize: false,  // we compute size ourselves
-            minWidth: pageW,
-            maxWidth: useSinglePage ? pageW : pageW * 2,
-            minHeight: pageH,
-            maxHeight: pageH,
-            maxShadowOpacity: 0.35,
-            showCover: false,
-            mobileScrollSupport: false,
-            usePortrait: useSinglePage,
-            startPage: options.startPage - 1, // 0-based
-            drawShadow: true,
-            flippingTime: 800,
-            useMouseEvents: true,
-            swipeDistance: 50,   // 50px reduces accidental swipes
-            disableFlipByClick: true, // only corner/drag — no tap flip
-            clickEventForward: true,
-        });
-
-        // Load pages from HTML elements.
-        pageFlip.loadFromHTML(pages);
-
-        // Bind events.
-        pageFlip.on('flip', async (e) => {
-            const pageNo = e.data + 1; // Convert to 1-based.
-            if (onFlipCallback) {
-                onFlipCallback(pageNo);
-            }
-            // Render current and buffer pages.
-            await renderPageRange(e.data, RENDER_BUFFER);
-        });
-
-        pageFlip.on('changeState', () => { });
-
-        // Render initial pages.
-        await renderPageRange(options.startPage - 1, RENDER_BUFFER);
-
-        if (options.onReady) {
-            options.onReady();
-        }
-
-        // ResizeObserver: recalculate and update StPageFlip when container resizes.
-        // Stored in module-level variable so it can be disconnected on re-init.
-        const area = container.closest('.leafr-flipbook-area') || container.parentElement;
-        if (area && typeof ResizeObserver !== 'undefined') {
-            if (resizeObserver) {
-                resizeObserver.disconnect();
-            }
-            resizeObserver = new ResizeObserver(() => {
-                const { pageW: newW, pageH: newH } = calcSize();
-                container.style.width = (useSinglePage ? newW : newW * 2) + 'px';
-                container.style.height = newH + 'px';
-                if (pageFlip) {
-                    pageFlip.update();
-                }
-            });
-            resizeObserver.observe(area);
-        }
-
-        // Swipe support for mobile (touch events).
-        setupTouchNavigation(container);
-
-        return pageFlip;
+        this.handleResize = this.handleResize.bind(this);
+        this.blockFlipGesture = this.blockFlipGesture.bind(this);
+        this.handlePanMove = this.handlePanMove.bind(this);
+        this.handlePanEnd = this.handlePanEnd.bind(this);
     }
 
     /**
-     * Create placeholder canvas elements for all pages.
+     * Builds the view.
      *
-     * @param {number} total Total number of pages
-     * @return {HTMLElement[]} Array of page elements
+     * @returns {Promise<void>}
      */
-    function createPageElements(total) {
-        const pages = [];
-        for (let i = 1; i <= total; i++) {
-            const div = document.createElement('div');
-            div.className = 'leafr-page';
-            div.dataset.pageNum = i;
-            div.setAttribute('aria-label', 'Seite ' + i);
+    async init() {
+        this.pageSize = await getPageSize(this.pdfDoc, 1);
+        this.build();
+        this.resizeObserver = new ResizeObserver(this.handleResize);
+        this.resizeObserver.observe(this.stage);
+    }
 
+    /**
+     * Computes the size of the pages for the available space.
+     *
+     * @returns {{single: boolean, pageWidth: number, pageHeight: number}}
+     */
+    computeLayout() {
+        const ratio = this.pageSize.width / this.pageSize.height;
+        const availableWidth = Math.max(this.stage.clientWidth - 2 * PADDING, 120);
+        const availableHeight = Math.max(this.stage.clientHeight - 2 * PADDING, 160);
+        const single = this.stage.clientWidth < SPREAD_MIN_WIDTH || ratio > 1 || this.total === 1;
+        const columns = single ? 1 : 2;
+
+        let pageHeight = availableHeight;
+        let pageWidth = pageHeight * ratio;
+        if (pageWidth * columns > availableWidth) {
+            pageWidth = availableWidth / columns;
+            pageHeight = pageWidth / ratio;
+        }
+        return {single, pageWidth: Math.floor(pageWidth), pageHeight: Math.floor(pageHeight)};
+    }
+
+    /**
+     * (Re)creates the StPageFlip instance for the current layout.
+     */
+    build() {
+        this.teardownBook();
+        this.layout = this.computeLayout();
+        const {single, pageWidth, pageHeight} = this.layout;
+
+        this.zoomBox = document.createElement('div');
+        this.zoomBox.className = 'leafr-zoombox';
+        this.book = document.createElement('div');
+        this.book.className = 'leafr-book';
+        this.zoomBox.appendChild(this.book);
+        this.host.appendChild(this.zoomBox);
+
+        const pages = [];
+        this.canvases = [];
+        for (let i = 1; i <= this.total; i++) {
+            const pageEl = document.createElement('div');
+            pageEl.className = 'leafr-page';
+            pageEl.dataset.page = i;
             const canvas = document.createElement('canvas');
             canvas.className = 'leafr-page-canvas';
-            canvas.id = 'leafr-canvas-' + i;
-            div.appendChild(canvas);
+            canvas.setAttribute('role', 'img');
+            canvas.setAttribute('aria-label', this.strings.pagelabel.replace('{$a}', i));
+            pageEl.appendChild(canvas);
+            pages.push(pageEl);
+            this.canvases.push(canvas);
+        }
+        this.rendered.clear();
 
-            pages.push(div);
+        this.pageFlip = new PageFlip(this.book, {
+            width: pageWidth,
+            height: pageHeight,
+            size: 'fixed',
+            autoSize: false,
+            usePortrait: single,
+            showCover: false,
+            startPage: this.page - 1,
+            drawShadow: true,
+            maxShadowOpacity: 0.35,
+            flippingTime: 700,
+            mobileScrollSupport: false,
+            swipeDistance: 40,
+            showPageCorners: true,
+            disableFlipByClick: false,
+            clickEventForward: true,
+            useMouseEvents: true,
+        });
+        this.pageFlip.loadFromHTML(pages);
+        this.pageFlip.on('flip', (event) => this.handleFlip(event.data));
+
+        // Block the flip gestures of StPageFlip while the page is zoomed; dragging pans instead.
+        this.zoomBox.addEventListener('mousedown', this.blockFlipGesture, true);
+        this.zoomBox.addEventListener('touchstart', this.blockFlipGesture, true);
+
+        this.applyZoom();
+        this.handleFlip(this.pageFlip.getCurrentPageIndex());
+    }
+
+    /**
+     * Returns the 1-based pages currently visible.
+     *
+     * @returns {number[]}
+     */
+    getVisiblePages() {
+        if (!this.pageFlip) {
+            return [this.page];
+        }
+        const index = this.pageFlip.getCurrentPageIndex();
+        const pages = [index + 1];
+        if (this.pageFlip.getOrientation() === 'landscape' && index + 2 <= this.total) {
+            pages.push(index + 2);
         }
         return pages;
     }
 
     /**
-     * Render a range of PDF pages to canvases.
+     * Called by StPageFlip whenever the visible pages change.
      *
-     * @param {number} centerIdx 0-based center page index
-     * @param {number} buffer Number of pages to render on each side
+     * @param {number} index 0-based index of the first visible page
      */
-    async function renderPageRange(centerIdx, buffer) {
-        if (!pdfDoc) {
-            return;
-        }
-
-        const start = Math.max(0, centerIdx - buffer);
-        const end = Math.min(pdfDoc.numPages - 1, centerIdx + buffer + 1);
-
-        for (let i = start; i <= end; i++) {
-            if (!renderedPages.has(i)) {
-                renderedPages.add(i);
-                await renderSinglePage(i + 1); // Convert to 1-based.
-            }
-        }
+    handleFlip(index) {
+        this.page = index + 1;
+        const visible = this.getVisiblePages();
+        this.renderAround(visible);
+        this.onPageChange(this.page, visible);
     }
 
     /**
-     * Render a single PDF page to its canvas.
+     * Renders the visible pages and a few pages around them, and releases pages far away.
+     *
+     * @param {number[]} visible Visible pages
+     */
+    renderAround(visible) {
+        const first = visible[0];
+        const last = visible[visible.length - 1];
+        const cssWidth = this.layout.pageWidth * Math.max(1, this.zoom);
+
+        // Visible pages first, then the neighbours.
+        const order = [...visible];
+        for (let i = 1; i <= RENDER_AHEAD * 2; i++) {
+            order.push(last + i, first - i);
+        }
+        order.filter((p) => p >= 1 && p <= this.total).forEach((pageNum) => {
+            const renderedWidth = this.rendered.get(pageNum) || 0;
+            if (renderedWidth < cssWidth) {
+                this.rendered.set(pageNum, cssWidth);
+                renderPage(this.pdfDoc, pageNum, this.canvases[pageNum - 1], cssWidth).catch(() => {
+                    this.rendered.delete(pageNum);
+                });
+            }
+        });
+
+        this.rendered.forEach((width, pageNum) => {
+            if (pageNum < first - KEEP_RENDERED || pageNum > last + KEEP_RENDERED) {
+                releaseCanvas(this.canvases[pageNum - 1]);
+                this.rendered.delete(pageNum);
+            }
+        });
+    }
+
+    /**
+     * Shows a page.
      *
      * @param {number} pageNum 1-based page number
      */
-    async function renderSinglePage(pageNum) {
-        const canvas = document.getElementById('leafr-canvas-' + pageNum);
-        if (!canvas || !pdfDoc) {
+    goTo(pageNum) {
+        if (!this.pageFlip) {
             return;
         }
-
-        try {
-            const page = await pdfDoc.getPage(pageNum);
-            await PdfLoader.renderPage(page, canvas, RENDER_SCALE);
-        } catch (e) {
-            // Page render failed - leave blank.
-            console.warn('Leafr: Failed to render page ' + pageNum, e);
+        const target = Math.min(Math.max(1, pageNum), this.total);
+        const visible = this.getVisiblePages();
+        if (visible.includes(target)) {
+            return;
+        }
+        const distance = Math.abs(target - this.page);
+        if (distance <= 2 && this.zoom === 1) {
+            this.pageFlip.flip(target - 1);
+        } else {
+            this.pageFlip.turnToPage(target - 1);
         }
     }
 
     /**
-     * Navigate to a specific page.
-     *
-     * @param {PageFlip} flipInstance The PageFlip instance
-     * @param {number} pageNum 1-based page number
+     * Turns to the next page or spread.
      */
-    function goToPage(flipInstance, pageNum) {
-        if (!flipInstance) {
-            return;
+    next() {
+        if (this.pageFlip) {
+            if (this.zoom === 1) {
+                this.pageFlip.flipNext();
+            } else {
+                this.pageFlip.turnToNextPage();
+            }
         }
-        flipInstance.turnToPage(pageNum - 1); // Convert to 0-based.
     }
 
     /**
-     * Setup touch/swipe navigation for mobile.
-     *
-     * @param {HTMLElement} container The flipbook container
+     * Turns to the previous page or spread.
      */
-    function setupTouchNavigation(container) {
-        let touchStartX = 0;
-        let touchStartY = 0;
-
-        container.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 0) {
-                touchStartX = e.touches[0].clientX;
-                touchStartY = e.touches[0].clientY;
+    prev() {
+        if (this.pageFlip) {
+            if (this.zoom === 1) {
+                this.pageFlip.flipPrev();
+            } else {
+                this.pageFlip.turnToPrevPage();
             }
-        }, { passive: true });
-
-        container.addEventListener('touchend', (e) => {
-            const dx = e.changedTouches[0].clientX - touchStartX;
-            const dy = e.changedTouches[0].clientY - touchStartY;
-
-            // Only horizontal swipes (ignore vertical scroll).
-            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 30) {
-                if (pageFlip) {
-                    if (dx < 0) {
-                        pageFlip.flipNext();
-                    } else {
-                        pageFlip.flipPrev();
-                    }
-                }
-            }
-        }, { passive: true });
+        }
     }
 
-    return {
-        init,
-        goToPage,
-    };
-});
+    /**
+     * Sets the zoom factor.
+     *
+     * @param {number} zoom Zoom factor, 1 = fit to the available space
+     */
+    setZoom(zoom) {
+        this.zoom = zoom;
+        this.applyZoom();
+        clearTimeout(this.zoomTimer);
+        this.zoomTimer = setTimeout(() => this.renderAround(this.getVisiblePages()), 200);
+    }
+
+    /**
+     * Applies the zoom factor to the book element.
+     */
+    applyZoom() {
+        const {single, pageWidth, pageHeight} = this.layout;
+        const bookWidth = pageWidth * (single ? 1 : 2);
+        this.zoomBox.style.width = Math.round(bookWidth * this.zoom) + 'px';
+        this.zoomBox.style.height = Math.round(pageHeight * this.zoom) + 'px';
+        this.book.style.width = bookWidth + 'px';
+        this.book.style.height = pageHeight + 'px';
+        this.book.style.transform = this.zoom === 1 ? '' : 'scale(' + this.zoom + ')';
+        this.zoomBox.classList.toggle('is-zoomed', this.zoom !== 1);
+    }
+
+    /**
+     * Prevents StPageFlip from starting a page turn while zoomed and starts panning instead.
+     *
+     * @param {Event} event Mouse or touch event
+     */
+    blockFlipGesture(event) {
+        if (this.zoom === 1) {
+            return;
+        }
+        event.stopPropagation();
+        if (event.type === 'mousedown' && event.button === 0) {
+            event.preventDefault();
+            this.pan = {x: event.clientX, y: event.clientY, left: this.stage.scrollLeft, top: this.stage.scrollTop};
+            this.zoomBox.classList.add('is-panning');
+            window.addEventListener('mousemove', this.handlePanMove);
+            window.addEventListener('mouseup', this.handlePanEnd);
+        }
+    }
+
+    /**
+     * Pans the zoomed page while the mouse is dragged.
+     *
+     * @param {MouseEvent} event Mouse event
+     */
+    handlePanMove(event) {
+        if (this.pan) {
+            this.stage.scrollLeft = this.pan.left - (event.clientX - this.pan.x);
+            this.stage.scrollTop = this.pan.top - (event.clientY - this.pan.y);
+        }
+    }
+
+    /**
+     * Ends panning.
+     */
+    handlePanEnd() {
+        this.pan = null;
+        if (this.zoomBox) {
+            this.zoomBox.classList.remove('is-panning');
+        }
+        window.removeEventListener('mousemove', this.handlePanMove);
+        window.removeEventListener('mouseup', this.handlePanEnd);
+    }
+
+    /**
+     * Rebuilds the book when the available space changes noticeably.
+     */
+    handleResize() {
+        clearTimeout(this.resizeTimer);
+        this.resizeTimer = setTimeout(() => {
+            if (this.destroyed || !this.layout) {
+                return;
+            }
+            const layout = this.computeLayout();
+            if (layout.single !== this.layout.single || Math.abs(layout.pageHeight - this.layout.pageHeight) > 8 ||
+                    Math.abs(layout.pageWidth - this.layout.pageWidth) > 8) {
+                this.build();
+            }
+        }, 200);
+    }
+
+    /**
+     * Removes the StPageFlip instance and the page canvases.
+     */
+    teardownBook() {
+        this.handlePanEnd();
+        this.canvases.forEach(releaseCanvas);
+        this.canvases = [];
+        this.rendered.clear();
+        if (this.pageFlip) {
+            try {
+                this.pageFlip.destroy();
+            } catch (error) {
+                // StPageFlip may throw if the DOM was already removed; nothing left to clean up then.
+            }
+            this.pageFlip = null;
+        }
+        this.host.innerHTML = '';
+    }
+
+    /**
+     * Destroys the view.
+     */
+    destroy() {
+        this.destroyed = true;
+        clearTimeout(this.resizeTimer);
+        clearTimeout(this.zoomTimer);
+        if (this.resizeObserver) {
+            this.resizeObserver.disconnect();
+        }
+        this.teardownBook();
+    }
+}

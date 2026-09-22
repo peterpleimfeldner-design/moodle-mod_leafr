@@ -15,17 +15,18 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Leafr PDF Flipbook Activity Plugin
+ * Version information for mod_leafr.
  *
- * @package    mod_leafr
- * @copyright  2026 Leafr
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package   mod_leafr
+ * @copyright 2026 Peter Pleimfeldner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2026031000;        // YYYYMMDDXX
-$plugin->requires  = 2023042400;        // Moodle 4.1 LTS minimum
 $plugin->component = 'mod_leafr';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.0.7';
+$plugin->version   = 2026092200;
+$plugin->requires  = 2023042400; // Moodle 4.2.
+$plugin->supported = [402, 501];
+$plugin->maturity  = MATURITY_BETA;
+$plugin->release   = '1.1.0';

@@ -1,5 +1,59 @@
 # Leafr – Changelog
 
+## 1.1.0 – 2026-09-22 (Überarbeitung nach Gesamt-Review)
+
+Vollständige Überarbeitung auf Basis eines Reviews des gesamten Codes. Getestet im lokalen
+Moodle 5.0 (Upgrade von 1.0.7, Lesen im Browser, Abschluss, Formular), dazu neue PHPUnit-
+und Behat-Tests sowie GitHub-Actions-CI.
+
+### Kritische Fehler behoben
+- **Webservices funktionierten ab Moodle 4.2 gar nicht:** Die Klassen nutzten die alten globalen
+  Namen `external_api` usw., die nur nach `require lib/externallib.php` existieren. Umgestellt auf
+  `core_external\*`.
+- **Fortschritt konnte nie gespeichert werden:** `page_viewed` rief `leafr_update_progress()` aus
+  `locallib.php` auf, die im AJAX-Aufruf nie geladen war. Fortschritt liegt jetzt in der neuen
+  Tabelle `leafr_progress` (Klasse `mod_leafr\local\progress`), `locallib.php` entfällt.
+- **Leseposition und Einfache Ansicht wurden nie gespeichert:** Nicht registrierte Nutzer-
+  Präferenzen werden von Moodle verworfen. Leseposition läuft jetzt über `mod_leafr_page_viewed`,
+  die Ansicht über die registrierte Präferenz `mod_leafr_simpleview` (gilt für alle Flipbooks).
+- **Abschlussregel war nie aktiv:** `customcompletionrules` fehlte in
+  `leafr_get_coursemodule_info()`, und `completiontype` blieb auch bei ausgeschalteter Regel 1.
+  Formular speichert jetzt korrekt, inkl. Suffix-Unterstützung für Moodle 4.3+.
+- **Backup/Restore stürzte ab** (inkompatible Methodensignatur `encode_content_links()`), außerdem
+  fehlten `totalpages`, `showtoc` und die Beschreibungsdateien im Backup.
+- **`leafr_add_instance()`** rief `get_coursemodule_from_id()` mit der Instanz-ID auf und setzte
+  „angesehen“ für die Lehrperson.
+- **Sicherheit:** PDF.js läuft mit `isEvalSupported: false` (Schutz vor CVE-2024-4367).
+- **`vendor/` fehlte im Repository** (stand in `.gitignore`), ein Klon von GitHub war nicht lauffähig.
+  Jetzt enthalten, Herkunft per `thirdpartylibs.xml` und Lizenzdateien dokumentiert.
+
+### Reader (JavaScript komplett neu, ES-Module mit Moodle-Grunt gebaut)
+- Keine doppelten Event-Listener mehr beim Wechsel der Ansicht; kein doppeltes Blättern auf dem Handy.
+- Seiten werden nur um die aktuelle Seite herum gerendert und weiter entfernte wieder freigegeben –
+  auch lange PDFs bringen den Browser nicht mehr zum Absturz (vorher: alle Seiten in 2,5-facher Größe).
+- Schärfe passt sich Bildschirm (devicePixelRatio) und Zoom an.
+- Zoom 50–300 % in beiden Ansichten, im Buch mit Ziehen zum Verschieben.
+- Einfache Ansicht: Text jeder Seite für Screenreader, Seiten als Gruppen statt Landmarks.
+- Inhaltsverzeichnis mit Unterkapiteln und Markierung des aktuellen Kapitels; Knopf bleibt
+  deaktiviert, wenn das PDF keine Lesezeichen hat.
+- Tastenkürzel nur, wenn der Reader den Fokus hat (WCAG 2.1.4), Hilfe-Dialog mit `?`.
+- Alle Texte über Sprachdateien (vorher ca. 40 fest eingebaute deutsche Texte).
+- Abschluss-Hinweis nur, wenn die Regel während des Lesens erfüllt wird.
+
+### Entfernt
+- Lesezeichen-Funktion (Tabelle `leafr_bookmarks`, drei Webservices, JS-Modul) – laut Absprache.
+- Unbenutzte Capability `mod/leafr:viewreport`, Webservices `save_position`/`get_position`,
+  `renderer.php`, `db/events.php`, `db/tasks.php`, unbenutzte Icons.
+
+### Neu
+- Kurs-Zurücksetzen löscht auf Wunsch den Lesefortschritt.
+- Upgrade übernimmt vorhandenen Fortschritt aus den alten Präferenzen.
+- PHPUnit-Tests (Fortschritt, Abschluss, Webservice, Datenschutz, Duplizieren/Backup), Behat-Tests,
+  GitHub-Actions-CI (Moodle 4.2, 4.5, 5.0, 5.1).
+- Mindestversion korrigiert: Moodle 4.2 (der Wert `2023042400` war schon immer 4.2, nicht 4.1).
+
+---
+
 ## 1.0.7 – 2026-03-10
 ### Kritische Bugfixes
 - **Fehlende Variablendeklarationen in reader.js**: `currentPage` und `flipbookInstance`

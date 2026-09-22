@@ -1,265 +1,176 @@
 {{!
-    Template: mod_leafr/reader
-    Renders the main Leafr flipbook reader container.
+    This file is part of Moodle - http://moodle.org/
 
-    @copyright 2026 Leafr
-    @license   GNU GPL v3 or later
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 }}
-<div id="leafr-reader-container" class="leafr-reader" role="main" aria-label="{{name}} – PDF Flipbook">
+{{!
+    @template mod_leafr/reader
 
-    {{! Reader Header — Logo + Activity Name }}
-    <header class="leafr-header" aria-label="Leafr Reader Header">
-        <div class="leafr-header-brand">
-            {{! monologo.svg inlined — full wordmark, for Reader header only }}
-            <svg class="leafr-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 32" fill="none" aria-hidden="true" width="90" height="24">
-                <rect x="0" y="0" width="32" height="32" rx="6" fill="currentColor" opacity="0.15"/>
-                <path d="M16 5 C13 3 8 3 5 5 L5 25 C8 24 13 24 16 27 C19 24 24 24 27 25 L27 5 C24 3 19 3 16 5Z" fill="currentColor"/>
-                <path d="M16 5 L16 27" stroke="white" stroke-width="1" opacity="0.6"/>
-                <text x="40" y="22" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="700" fill="currentColor" letter-spacing="-0.5">Leafr</text>
-            </svg>
-        </div>
-        <div class="leafr-header-title">
-            <span class="leafr-header-activity-name">{{name}}</span>
-        </div>
-    </header>
+    The Leafr flipbook reader. The document is rendered by the AMD module mod_leafr/reader.
 
-    {{! ARIA live region for screen reader announcements }}
-    <div id="leafr-aria-live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+    Context variables required for this template:
+    * uniqid - Unique id of the reader element
+    * cmid - Course module id
+    * readerlabel - Accessible name of the reader
+    * fileurl - URL of the PDF file
+    * downloadurl - URL to download the PDF, empty if downloading is not allowed
+    * startpage - Page to open first
+    * totalpages - Known number of pages, 0 if unknown
+    * showtoc - Whether the table of contents is enabled
+    * simpleview - "1", "0" or "" (no preference)
+    * completed - Whether the page based completion rule is already fulfilled
 
-    {{! Loading skeleton }}
-    <div id="leafr-skeleton" class="leafr-skeleton" aria-hidden="true">
-        <div class="leafr-skeleton-page leafr-skeleton-page--left"></div>
-        <div class="leafr-skeleton-page leafr-skeleton-page--right"></div>
-        <div class="leafr-skeleton-spinner" role="status">
-            <span class="sr-only">{{#str}}loading, leafr{{/str}}</span>
-        </div>
-    </div>
+    Example context (json):
+    {
+        "uniqid": "leafr-reader-1",
+        "cmid": 12,
+        "readerlabel": "Flipbook: Handbook",
+        "fileurl": "https://example.com/pluginfile.php/34/mod_leafr/content/0/handbook.pdf",
+        "downloadurl": "https://example.com/pluginfile.php/34/mod_leafr/content/0/handbook.pdf?forcedownload=1",
+        "startpage": 1,
+        "totalpages": 0,
+        "showtoc": true,
+        "simpleview": "",
+        "completed": false
+    }
+}}
+<div id="{{uniqid}}" class="leafr-reader" data-region="leafr-reader" role="region"
+     aria-label="{{readerlabel}}"
+     data-cmid="{{cmid}}" data-fileurl="{{fileurl}}" data-startpage="{{startpage}}" data-totalpages="{{totalpages}}"
+     data-simpleview="{{simpleview}}" data-completed="{{#completed}}1{{/completed}}{{^completed}}0{{/completed}}">
 
-    {{! Error state }}
-    <div id="leafr-error" class="leafr-error-state" style="display:none;" role="alert">
-        <svg class="leafr-error-icon" aria-hidden="true" width="48" height="48" viewBox="0 0 256 256">
-            <path fill="currentColor" d="M236.8 188.09L149.35 36.22a24.76 24.76 0 0 0-42.7 0L19.2 188.09a23.51 23.51 0 0 0 0 23.72A24.35 24.35 0 0 0 40.55 224h174.9a24.35 24.35 0 0 0 21.33-12.19a23.51 23.51 0 0 0 .02-23.72ZM120 104a8 8 0 0 1 16 0v40a8 8 0 0 1-16 0Zm8 88a12 12 0 1 1 12-12a12 12 0 0 1-12 12Z"/>
-        </svg>
-        <p class="leafr-error-message"></p>
-        <a id="leafr-error-download" class="btn btn-secondary leafr-error-download" style="display:none;" aria-label="PDF herunterladen">
-            {{#str}}pdffile, leafr{{/str}} herunterladen
-        </a>
-        <button class="btn btn-primary leafr-error-retry" onclick="window.location.reload()">
-            Seite neu laden
-        </button>
-    </div>
-
-    {{! Main reader layout }}
-    <div class="leafr-reader-body">
-
-        {{! TOC Drawer — slide-in from left, pushes document right }}
+    <div class="leafr-body">
         {{#showtoc}}
-        <nav id="leafr-toc-drawer" class="leafr-toc-drawer" aria-label="{{#str}}toc_title, leafr{{/str}}" aria-hidden="true">
+        <nav class="leafr-toc" data-region="toc" aria-labelledby="{{uniqid}}-toc-title" hidden>
             <div class="leafr-toc-header">
-                <h2 class="leafr-toc-heading">{{#str}}toc_title, leafr{{/str}}</h2>
-                <button class="leafr-toc-close" id="leafr-toc-close-btn" aria-label="Inhaltsverzeichnis schließen">
-                    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                        <path d="M205.66 194.34a8 8 0 0 1-11.32 11.32L128 139.31l-66.34 66.35a8 8 0 0 1-11.32-11.32L116.69 128L50.34 61.66a8 8 0 0 1 11.32-11.32L128 116.69l66.34-66.35a8 8 0 0 1 11.32 11.32L139.31 128Z"/>
-                    </svg>
+                <h2 class="leafr-toc-title" id="{{uniqid}}-toc-title">{{#str}}toc, mod_leafr{{/str}}</h2>
+                <button type="button" class="leafr-iconbtn" data-action="toc-close" title="{{#str}}close, mod_leafr{{/str}}">
+                    <span class="sr-only">{{#str}}close, mod_leafr{{/str}}</span>
+                    <svg aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 256 256" fill="currentColor"><path d="M205.66 194.34a8 8 0 0 1-11.32 11.32L128 139.31l-66.34 66.35a8 8 0 0 1-11.32-11.32L116.69 128L50.34 61.66a8 8 0 0 1 11.32-11.32L128 116.69l66.34-66.35a8 8 0 0 1 11.32 11.32L139.31 128Z"/></svg>
                 </button>
             </div>
-
-            {{! TOC entries populated by reader.js }}
-            <ul class="leafr-toc-list" role="list"></ul>
-
-            {{! Bookmark section (below divider) }}
-            <div class="leafr-toc-bookmarks">
-                <div class="leafr-toc-divider" aria-hidden="true"></div>
-                <h3 class="leafr-toc-bookmarks-heading">Lesezeichen</h3>
-                <ul id="leafr-bookmark-list" class="leafr-bookmark-list" role="list">
-                    {{! Populated by bookmarks.js }}
-                </ul>
-            </div>
+            <div class="leafr-toc-content" data-region="toc-content"></div>
         </nav>
         {{/showtoc}}
 
-        {{! Flipbook container — shifts right when drawer opens }}
-        <div class="leafr-flipbook-container">
-            {{! Flipbook area }}
-            <div class="leafr-flipbook-area">
-                <div id="leafr-flipbook" class="leafr-flipbook" aria-label="PDF Flipbook Inhalt">
-                    {{! StPageFlip canvas pages injected here by flipbook.js }}
-                </div>
-
-                {{! Simple view (accessible scrollable) }}
-                <div id="leafr-simple-view" class="leafr-simple-view" style="display:none;" aria-label="PDF Inhalt – einfache Ansicht">
-                    {{! Pages rendered here by reader.js initSimpleView }}
+        <div class="leafr-stage" data-region="stage" tabindex="0" aria-label="{{#str}}document, mod_leafr{{/str}}">
+            <div class="leafr-loading" data-region="loading" role="status">
+                <span class="leafr-spinner" aria-hidden="true"></span>
+                <span>{{#str}}loading, mod_leafr{{/str}}</span>
+            </div>
+            <div class="leafr-error" data-region="error" role="alert" hidden>
+                <p class="leafr-error-message">{{#str}}errordocument, mod_leafr{{/str}}</p>
+                <div class="leafr-error-actions">
+                    <button type="button" class="btn btn-primary" data-action="reload">{{#str}}reload, mod_leafr{{/str}}</button>
+                    {{#downloadurl}}
+                    <a class="btn btn-secondary" href="{{downloadurl}}">{{#str}}download, mod_leafr{{/str}}</a>
+                    {{/downloadurl}}
                 </div>
             </div>
+            <div class="leafr-view" data-region="view"></div>
         </div>
-
     </div>
 
-    {{! Bottom Toolbar — always visible }}
-    <nav id="leafr-toolbar" class="leafr-toolbar" role="navigation" aria-label="PDF-Navigation">
-
-        {{! Progress bar — 4px strip at top of toolbar }}
-        <div class="leafr-progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" aria-label="Lesefortschritt">
-            <div id="leafr-progress-fill" class="leafr-progress-fill" style="width:0%"></div>
-        </div>
-
+    <div class="leafr-toolbar" role="toolbar" aria-label="{{#str}}toolbar, mod_leafr{{/str}}">
+        <div class="leafr-progress" aria-hidden="true"><div class="leafr-progress-fill" data-region="progress-fill"></div></div>
         <div class="leafr-toolbar-inner">
-
-            {{! TOC toggle }}
-            <button id="leafr-btn-toc" class="leafr-btn" data-action="toc" aria-label="Inhaltsverzeichnis (T)" title="Inhaltsverzeichnis (T)">
-                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M224 128a8 8 0 0 1-8 8H40a8 8 0 0 1 0-16h176a8 8 0 0 1 8 8ZM40 72h176a8 8 0 0 0 0-16H40a8 8 0 0 0 0 16Zm176 112H40a8 8 0 0 0 0 16h176a8 8 0 0 0 0-16Z"/>
-                </svg>
-            </button>
-
-            {{! Bookmark add button }}
-            <button id="leafr-bookmark-add" class="leafr-btn" data-action="bookmark" aria-label="Lesezeichen setzen" title="Lesezeichen auf dieser Seite setzen">
-                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M192 24H96A16 16 0 0 0 80 40v16H64A16 16 0 0 0 48 72v160a8 8 0 0 0 12.65 6.51L112 201.47l51.35 37.04A8 8 0 0 0 176 232V88h16a16 16 0 0 0 16-16V40a16 16 0 0 0-16-16ZM160 212.87l-43.35-31.26a8 8 0 0 0-9.3 0L64 212.87V72h96ZM192 72h-16V40H96V24h96Z"/>
-                </svg>
-            </button>
-
-            <div class="leafr-toolbar-separator" aria-hidden="true"></div>
-
-            {{! First page }}
-            <button id="leafr-btn-first" class="leafr-btn" data-action="first" aria-label="Erste Seite" title="Erste Seite">
-                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M205.66 205.66a8 8 0 0 1-11.32 0l-80-80a8 8 0 0 1 0-11.32l80-80a8 8 0 0 1 11.32 11.32L131.31 128l74.35 74.34a8 8 0 0 1 0 11.32ZM48 40a8 8 0 0 0-8 8v160a8 8 0 0 0 16 0V48a8 8 0 0 0-8-8Z"/>
-                </svg>
-            </button>
-
-            {{! Previous page }}
-            <button id="leafr-btn-prev" class="leafr-btn" data-action="prev" aria-label="Vorherige Seite" title="Vorherige Seite">
-                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M165.66 202.34a8 8 0 0 1-11.32 11.32l-80-80a8 8 0 0 1 0-11.32l80-80a8 8 0 0 1 11.32 11.32L91.31 128Z"/>
-                </svg>
-            </button>
-
-            {{! Page indicator }}
-            <div class="leafr-page-indicator">
-                <label for="leafr-page-input" class="sr-only">Zur Seite</label>
-                <input type="number" id="leafr-page-input" class="leafr-page-input" value="1" min="1" aria-label="Zur Seite"/>
-                <span class="leafr-page-sep" aria-hidden="true">/</span>
-                <span id="leafr-total-pages" class="leafr-total-pages">—</span>
+            <div class="leafr-toolbar-group">
+                {{#showtoc}}
+                <button type="button" class="leafr-iconbtn" data-action="toc" aria-expanded="false" title="{{#str}}toc, mod_leafr{{/str}}" disabled>
+                    <span class="sr-only">{{#str}}toc, mod_leafr{{/str}}</span>
+                    <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M224 128a8 8 0 0 1-8 8H40a8 8 0 0 1 0-16h176a8 8 0 0 1 8 8ZM40 72h176a8 8 0 0 0 0-16H40a8 8 0 0 0 0 16Zm176 112H40a8 8 0 0 0 0 16h176a8 8 0 0 0 0-16Z"/></svg>
+                </button>
+                {{/showtoc}}
             </div>
 
-            {{! Next page }}
-            <button id="leafr-btn-next" class="leafr-btn" data-action="next" aria-label="Nächste Seite" title="Nächste Seite">
-                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M181.66 133.66l-80 80a8 8 0 0 1-11.32-11.32L164.69 128 90.34 53.66a8 8 0 0 1 11.32-11.32l80 80a8 8 0 0 1 0 11.32Z"/>
-                </svg>
-            </button>
-
-            {{! Last page }}
-            <button id="leafr-btn-last" class="leafr-btn" data-action="last" aria-label="Letzte Seite" title="Letzte Seite">
-                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M208 40a8 8 0 0 0-8 8v160a8 8 0 0 0 16 0V48a8 8 0 0 0-8-8ZM50.34 53.66a8 8 0 0 1 11.32-11.32l80 80a8 8 0 0 1 0 11.32l-80 80a8 8 0 0 1-11.32-11.32L124.69 128Z"/>
-                </svg>
-            </button>
-
-            <div class="leafr-toolbar-separator" aria-hidden="true"></div>
-
-            {{! Simple view toggle — icon swaps between eye / eye-slash }}
-            <button id="leafr-btn-simple" class="leafr-btn leafr-btn--toggle" data-action="simpleview" aria-label="Einfache Ansicht" aria-pressed="false" title="Einfache Ansicht">
-                {{! eye icon: shown when flipbook mode is active }}
-                <svg class="leafr-icon-eye" aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M247.31 124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57 61.26 162.88 48 128 48S61.43 61.26 36.34 86.35C17.51 105.18 9 124 8.69 124.76a8 8 0 0 0 0 6.48c.35.79 8.82 19.57 27.65 38.41C61.43 194.74 93.12 208 128 208s66.57-13.26 91.66-38.35c18.83-18.84 27.3-37.62 27.65-38.41a8 8 0 0 0 0-6.48ZM128 192c-30.78 0-57.67-11.19-79.93-33.25A133.47 133.47 0 0 1 25 128a133.33 133.33 0 0 1 23.07-30.75C70.33 75.19 97.22 64 128 64s57.67 11.19 79.93 33.25A133.46 133.46 0 0 1 231.05 128C223.84 141.46 192.43 192 128 192Zm0-112a48 48 0 1 0 48 48 48.05 48.05 0 0 0-48-48Zm0 80a32 32 0 1 1 32-32 32 32 0 0 1-32 32Z"/>
-                </svg>
-                {{! eye-slash icon: shown when simple view is active }}
-                <svg class="leafr-icon-eye-slash" aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor" style="display:none">
-                    <path d="M53.92 34.62a8 8 0 1 0-11.84 10.76l19.24 21.17C35 88.06 17.69 111.29 8.69 124.76a8 8 0 0 0 0 6.48c.35.79 8.82 19.57 27.65 38.41C61.43 194.74 93.12 208 128 208a123.27 123.27 0 0 0 52.57-11.48l22.51 24.86a8 8 0 1 0 11.84-10.76ZM128 192c-30.78 0-57.67-11.19-79.93-33.25A133.16 133.16 0 0 1 25 128c7.13-13.33 30.18-55.62 72.72-69.74l14.17 15.62A48 48 0 0 0 174.8 128a47.49 47.49 0 0 0-3.38 17.53l14.4 15.87A123.08 123.08 0 0 1 128 192Zm99.31-60.76c-.35.78-8.82 19.57-27.65 38.41q-4.12 4.13-8.48 7.84l-11-12.2a133.07 133.07 0 0 0 23.82-37.29A133.32 133.32 0 0 0 181 97.25C158.73 75.19 131.84 64 128 64q-2 0-3.94.08L111 48.56A123.27 123.27 0 0 1 128 48c34.88 0 66.57 13.26 91.66 38.35 18.83 18.84 27.3 37.62 27.65 38.41a8 8 0 0 1 0 6.48ZM134 112.08a48.07 48.07 0 0 1 38.49 39.36Z"/>
-                </svg>
-            </button>
-
-
-            {{! Zoom Controls (only visible in fullscreen) }}
-            <button id="leafr-btn-zoom-out" class="leafr-btn leafr-fullscreen-only" aria-label="Herauszoomen" title="Herauszoomen">
-                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Zm112,0a8,8,0,0,1-8,8H80a8,8,0,0,1,0-16h64A8,8,0,0,1,152,112Z"/>
-                </svg>
-            </button>
-            <div class="leafr-toolbar-separator leafr-fullscreen-only" aria-hidden="true"></div>
-            <button id="leafr-btn-zoom-reset" class="leafr-btn leafr-fullscreen-only" aria-label="Zoom zurücksetzen" title="Zoom zurücksetzen">
-                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M192.17 63.83A8 8 0 0 0 184 72a64.12 64.12 0 0 1-46.74 57.65 8 8 0 0 0 4.19 15.42A80.14 80.14 0 0 0 200 72a8 8 0 0 0-7.83-8.17ZM80 184a64.12 64.12 0 0 1 46.74-57.65 8 8 0 0 0-4.19-15.42A80.14 80.14 0 0 0 64 184a8 8 0 0 0 16 0Z"/>
-                </svg>
-            </button>
-            <div class="leafr-toolbar-separator leafr-fullscreen-only" aria-hidden="true"></div>
-            <button id="leafr-btn-zoom-in" class="leafr-btn leafr-fullscreen-only" aria-label="Hineinzoomen" title="Hineinzoomen">
-                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Zm112,0a8,8,0,0,1-8,8h-24v24a8,8,0,0,1-16,0v-24H80a8,8,0,0,1,0-16h24V80a8,8,0,0,1,16,0v24h24A8,8,0,0,1,152,112Z"/>
-                </svg>
-            </button>
-            <div class="leafr-toolbar-separator leafr-fullscreen-only" aria-hidden="true"></div>
-
-            {{! Fullscreen (desktop only) — swaps icon when active }}
-            <button id="leafr-btn-fullscreen" class="leafr-btn leafr-btn--toggle leafr-desktop-only" data-action="fullscreen" aria-label="Vollbild" aria-pressed="false" title="Vollbild (F)">
-                <svg class="leafr-icon-arrows-out" aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M216,48V96a8,8,0,0,1-16,0V67.31l-42.34,42.35a8,8,0,0,1-11.32-11.32L188.69,56H160a8,8,0,0,1,0-16h48A8,8,0,0,1,216,48ZM98.34,146.34,56,188.69V160a8,8,0,0,0-16,0v48a8,8,0,0,0,8,8H96a8,8,0,0,0,0-16H67.31l42.35-42.34a8,8,0,0,0-11.32-11.32ZM208,152a8,8,0,0,0-8,8v28.69l-42.34-42.35a8,8,0,0,0-11.32,11.32L188.69,200H160a8,8,0,0,0,0,16h48a8,8,0,0,0,8-8V160A8,8,0,0,0,208,152ZM67.31,56H96a8,8,0,0,0,0-16H48a8,8,0,0,0-8,8V96a8,8,0,0,0,16,0V67.31l42.34,42.35a8,8,0,0,0,11.32-11.32Z"/>
-                </svg>
-                <svg class="leafr-icon-arrows-in" aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor" style="display:none">
-                    <path d="M144,104V64a8,8,0,0,1,16,0V84.69l42.34-42.35a8,8,0,0,1,11.32,11.32L171.31,96H192a8,8,0,0,1,0,16H152A8,8,0,0,1,144,104Zm-40,40H64a8,8,0,0,0,0,16H84.69L42.34,202.34a8,8,0,0,0,11.32,11.32L96,171.31V192a8,8,0,0,0,16,0V152A8,8,0,0,0,104,144Zm67.31,16H192a8,8,0,0,0,0-16H152a8,8,0,0,0-8,8v40a8,8,0,0,0,16,0V171.31l42.34,42.35a8,8,0,0,0,11.32-11.32ZM104,56a8,8,0,0,0-8,8V84.69L53.66,42.34A8,8,0,0,0,42.34,53.66L84.69,96H64a8,8,0,0,0,0,16h40a8,8,0,0,0,8-8V64A8,8,0,0,0,104,56Z"/>
-                </svg>
-            </button>
-
-            {{! Download (only when allowed) }}
-            {{#downloadallowed}}
-            <a id="leafr-btn-download" class="leafr-btn" data-action="download" aria-label="PDF herunterladen" title="PDF herunterladen" href="#" role="button">
-                <svg aria-hidden="true" width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-                    <path d="M224 152v56a16 16 0 0 1-16 16H48a16 16 0 0 1-16-16v-56a8 8 0 0 1 16 0v56h160v-56a8 8 0 0 1 16 0Zm-101.66 5.66a8 8 0 0 0 11.32 0l40-40a8 8 0 0 0-11.32-11.32L136 132.69V40a8 8 0 0 0-16 0v92.69L93.66 106.34a8 8 0 0 0-11.32 11.32Z"/>
-                </svg>
-            </a>
-            {{/downloadallowed}}
-
-        </div>
-    </nav>
-
-
-
-    {{! Completion notice }}
-    <div id="leafr-completion-notice" class="leafr-completion-notice" style="display:none;" aria-hidden="true">
-        <svg aria-hidden="true" width="24" height="24" viewBox="0 0 256 256">
-            <path fill="currentColor" d="M173.66 98.34a8 8 0 0 1 0 11.32l-56 56a8 8 0 0 1-11.32 0l-24-24a8 8 0 0 1 11.32-11.32L112 148.69l50.34-50.35a8 8 0 0 1 11.32 0ZM232 128A104 104 0 1 1 128 24a104.11 104.11 0 0 1 104 104Zm-16 0a88 88 0 1 0-88 88a88.1 88.1 0 0 0 88-88Z"/>
-        </svg>
-        {{#str}}completion_done, leafr{{/str}}
-    </div>
-
-    {{! Bookmark modal (Pro) }}
-    <div id="leafr-bookmark-modal" class="leafr-modal" style="display:none;" role="dialog" aria-label="Lesezeichen hinzufügen" aria-hidden="true" aria-modal="true">
-        <div class="leafr-modal-content">
-            <h2 class="leafr-modal-title">{{#str}}bookmark_add, leafr{{/str}}</h2>
-            <div class="leafr-modal-body">
-                <label for="leafr-bm-page" class="leafr-label">Seite</label>
-                <input type="number" id="leafr-bm-page" class="leafr-input form-control" min="1" readonly>
-
-                <label for="leafr-bm-label" class="leafr-label">Name</label>
-                <input type="text" id="leafr-bm-label" class="leafr-input form-control" maxlength="255" placeholder="z.B. Kapitel 3">
-
-                <label for="leafr-bm-note" class="leafr-label">Notiz (optional)</label>
-                <textarea id="leafr-bm-note" class="leafr-input form-control" rows="3" maxlength="500" placeholder="Optionale Notiz..."></textarea>
+            <div class="leafr-toolbar-group leafr-toolbar-nav">
+                <button type="button" class="leafr-iconbtn leafr-hide-narrow" data-action="first" title="{{#str}}firstpage, mod_leafr{{/str}}" disabled>
+                    <span class="sr-only">{{#str}}firstpage, mod_leafr{{/str}}</span>
+                    <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M205.66 202.34a8 8 0 0 1-11.32 11.32l-80-80a8 8 0 0 1 0-11.32l80-80a8 8 0 0 1 11.32 11.32L131.31 128ZM48 40a8 8 0 0 0-8 8v160a8 8 0 0 0 16 0V48a8 8 0 0 0-8-8Z"/></svg>
+                </button>
+                <button type="button" class="leafr-iconbtn" data-action="prev" title="{{#str}}previouspage, mod_leafr{{/str}}" disabled>
+                    <span class="sr-only">{{#str}}previouspage, mod_leafr{{/str}}</span>
+                    <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M165.66 202.34a8 8 0 0 1-11.32 11.32l-80-80a8 8 0 0 1 0-11.32l80-80a8 8 0 0 1 11.32 11.32L91.31 128Z"/></svg>
+                </button>
+                <div class="leafr-pagebox">
+                    <label class="sr-only" for="{{uniqid}}-page">{{#str}}gotopage, mod_leafr{{/str}}</label>
+                    <input type="text" inputmode="numeric" pattern="[0-9]*" id="{{uniqid}}-page" class="leafr-pageinput"
+                           data-region="page-input" value="{{startpage}}" autocomplete="off" disabled>
+                    <span class="leafr-pagetotal" data-region="page-total" aria-hidden="true"></span>
+                </div>
+                <button type="button" class="leafr-iconbtn" data-action="next" title="{{#str}}nextpage, mod_leafr{{/str}}" disabled>
+                    <span class="sr-only">{{#str}}nextpage, mod_leafr{{/str}}</span>
+                    <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M181.66 133.66l-80 80a8 8 0 0 1-11.32-11.32L164.69 128 90.34 53.66a8 8 0 0 1 11.32-11.32l80 80a8 8 0 0 1 0 11.32Z"/></svg>
+                </button>
+                <button type="button" class="leafr-iconbtn leafr-hide-narrow" data-action="last" title="{{#str}}lastpage, mod_leafr{{/str}}" disabled>
+                    <span class="sr-only">{{#str}}lastpage, mod_leafr{{/str}}</span>
+                    <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M208 40a8 8 0 0 0-8 8v160a8 8 0 0 0 16 0V48a8 8 0 0 0-8-8ZM50.34 53.66a8 8 0 0 1 11.32-11.32l80 80a8 8 0 0 1 0 11.32l-80 80a8 8 0 0 1-11.32-11.32L124.69 128Z"/></svg>
+                </button>
             </div>
-            <div class="leafr-modal-footer">
-                <button id="leafr-bm-cancel" class="btn btn-secondary">Abbrechen</button>
-                <button id="leafr-bm-save"   class="btn btn-primary">Speichern</button>
+
+            <div class="leafr-toolbar-group">
+                <button type="button" class="leafr-iconbtn leafr-hide-narrow" data-action="zoom-out" title="{{#str}}zoomout, mod_leafr{{/str}}" disabled>
+                    <span class="sr-only">{{#str}}zoomout, mod_leafr{{/str}}</span>
+                    <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M152 112a8 8 0 0 1-8 8H80a8 8 0 0 1 0-16h64a8 8 0 0 1 8 8Zm77.66 117.66a8 8 0 0 1-11.32 0l-50.06-50.07a88.11 88.11 0 1 1 11.31-11.31l50.07 50.06a8 8 0 0 1 0 11.32ZM112 184a72 72 0 1 0-72-72a72.08 72.08 0 0 0 72 72Z"/></svg>
+                </button>
+                <button type="button" class="leafr-zoomlabel leafr-hide-narrow" data-action="zoom-reset" data-region="zoom-label" title="{{#str}}zoomreset, mod_leafr{{/str}}" disabled>100%</button>
+                <button type="button" class="leafr-iconbtn leafr-hide-narrow" data-action="zoom-in" title="{{#str}}zoomin, mod_leafr{{/str}}" disabled>
+                    <span class="sr-only">{{#str}}zoomin, mod_leafr{{/str}}</span>
+                    <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M152 112a8 8 0 0 1-8 8h-24v24a8 8 0 0 1-16 0v-24H80a8 8 0 0 1 0-16h24V80a8 8 0 0 1 16 0v24h24a8 8 0 0 1 8 8Zm77.66 117.66a8 8 0 0 1-11.32 0l-50.06-50.07a88.11 88.11 0 1 1 11.31-11.31l50.07 50.06a8 8 0 0 1 0 11.32ZM112 184a72 72 0 1 0-72-72a72.08 72.08 0 0 0 72 72Z"/></svg>
+                </button>
+                <button type="button" class="leafr-iconbtn" data-action="simpleview" aria-pressed="false" title="{{#str}}simpleview, mod_leafr{{/str}}" disabled>
+                    <span class="sr-only">{{#str}}simpleview, mod_leafr{{/str}}</span>
+                    <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M216 40H40a16 16 0 0 0-16 16v144a16 16 0 0 0 16 16h176a16 16 0 0 0 16-16V56a16 16 0 0 0-16-16Zm0 160H40V56h176v144ZM184 96a8 8 0 0 1-8 8H80a8 8 0 0 1 0-16h96a8 8 0 0 1 8 8Zm0 32a8 8 0 0 1-8 8H80a8 8 0 0 1 0-16h96a8 8 0 0 1 8 8Zm0 32a8 8 0 0 1-8 8H80a8 8 0 0 1 0-16h96a8 8 0 0 1 8 8Z"/></svg>
+                </button>
+                <button type="button" class="leafr-iconbtn" data-action="fullscreen" aria-pressed="false" title="{{#str}}fullscreen_enter, mod_leafr{{/str}}" disabled>
+                    <span class="sr-only" data-region="fullscreen-label">{{#str}}fullscreen_enter, mod_leafr{{/str}}</span>
+                    <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M216 48v40a8 8 0 0 1-16 0V56h-32a8 8 0 0 1 0-16h40a8 8 0 0 1 8 8ZM88 200H56v-32a8 8 0 0 0-16 0v40a8 8 0 0 0 8 8h40a8 8 0 0 0 0-16Zm120-40a8 8 0 0 0-8 8v32h-32a8 8 0 0 0 0 16h40a8 8 0 0 0 8-8v-40a8 8 0 0 0-8-8ZM88 40H48a8 8 0 0 0-8 8v40a8 8 0 0 0 16 0V56h32a8 8 0 0 0 0-16Z"/></svg>
+                </button>
+                {{#downloadurl}}
+                <a class="leafr-iconbtn" href="{{downloadurl}}" title="{{#str}}download, mod_leafr{{/str}}">
+                    <span class="sr-only">{{#str}}download, mod_leafr{{/str}}</span>
+                    <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M224 152v56a16 16 0 0 1-16 16H48a16 16 0 0 1-16-16v-56a8 8 0 0 1 16 0v56h160v-56a8 8 0 0 1 16 0Zm-101.66 5.66a8 8 0 0 0 11.32 0l40-40a8 8 0 0 0-11.32-11.32L136 132.69V40a8 8 0 0 0-16 0v92.69l-26.34-26.35a8 8 0 0 0-11.32 11.32Z"/></svg>
+                </a>
+                {{/downloadurl}}
+                <button type="button" class="leafr-iconbtn leafr-hide-narrow" data-action="help" aria-haspopup="dialog" title="{{#str}}help, mod_leafr{{/str}}">
+                    <span class="sr-only">{{#str}}help, mod_leafr{{/str}}</span>
+                    <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M140 180a12 12 0 1 1-12-12a12 12 0 0 1 12 12ZM128 72c-22.06 0-40 16.15-40 36v4a8 8 0 0 0 16 0v-4c0-11 10.77-20 24-20s24 9 24 20s-10.77 20-24 20a8 8 0 0 0-8 8v8a8 8 0 0 0 16 0v-.72c18.24-3.35 32-17.9 32-35.28c0-19.85-17.94-36-40-36Zm104 56A104 104 0 1 1 128 24a104.11 104.11 0 0 1 104 104Zm-16 0a88 88 0 1 0-88 88a88.1 88.1 0 0 0 88-88Z"/></svg>
+                </button>
             </div>
         </div>
     </div>
 
-    {{! Help overlay }}
-    <div id="leafr-help-overlay" class="leafr-help-overlay" style="display:none;" role="dialog" aria-label="Tastaturkürzel" aria-hidden="true">
-        <div class="leafr-help-content">
-            <h2>Tastaturkürzel</h2>
-            <dl>
-                <dt><kbd>←</kbd> <kbd>Bild↑</kbd></dt><dd>Vorherige Seite</dd>
-                <dt><kbd>→</kbd> <kbd>Bild↓</kbd></dt><dd>Nächste Seite</dd>
-                <dt><kbd>Pos1</kbd></dt><dd>Erste Seite</dd>
-                <dt><kbd>Ende</kbd></dt><dd>Letzte Seite</dd>
-                <dt><kbd>T</kbd></dt><dd>Inhaltsverzeichnis öffnen/schließen</dd>
-                <dt><kbd>F</kbd></dt><dd>Vollbild umschalten</dd>
-                <dt><kbd>Esc</kbd></dt><dd>Vollbild beenden / Dialog schließen</dd>
-                <dt><kbd>?</kbd></dt><dd>Diese Hilfe anzeigen/ausblenden</dd>
+    <div class="sr-only" data-region="live" aria-live="polite" aria-atomic="true"></div>
+    <div class="leafr-toast" data-region="completion" role="status" hidden>
+        <svg aria-hidden="true" focusable="false" width="22" height="22" viewBox="0 0 256 256" fill="currentColor"><path d="M173.66 98.34a8 8 0 0 1 0 11.32l-56 56a8 8 0 0 1-11.32 0l-24-24a8 8 0 0 1 11.32-11.32L112 148.69l50.34-50.35a8 8 0 0 1 11.32 0ZM232 128A104 104 0 1 1 128 24a104.11 104.11 0 0 1 104 104Zm-16 0a88 88 0 1 0-88 88a88.1 88.1 0 0 0 88-88Z"/></svg>
+        <span>{{#str}}completion_done, mod_leafr{{/str}}</span>
+    </div>
+
+    <div class="leafr-help" data-region="help" role="dialog" aria-modal="true" aria-labelledby="{{uniqid}}-help-title" hidden>
+        <div class="leafr-help-dialog">
+            <h2 class="leafr-help-title" id="{{uniqid}}-help-title">{{#str}}help, mod_leafr{{/str}}</h2>
+            <p>{{#str}}help_intro, mod_leafr{{/str}}</p>
+            <dl class="leafr-help-list">
+                <dt><kbd>→</kbd> <kbd>←</kbd></dt><dd>{{#str}}help_nextprev, mod_leafr{{/str}}</dd>
+                <dt><kbd>Home</kbd> <kbd>End</kbd></dt><dd>{{#str}}help_firstlast, mod_leafr{{/str}}</dd>
+                <dt><kbd>+</kbd> <kbd>-</kbd></dt><dd>{{#str}}help_zoom, mod_leafr{{/str}}</dd>
+                {{#showtoc}}<dt><kbd>T</kbd></dt><dd>{{#str}}help_toc, mod_leafr{{/str}}</dd>{{/showtoc}}
+                <dt><kbd>F</kbd></dt><dd>{{#str}}help_fullscreen, mod_leafr{{/str}}</dd>
+                <dt><kbd>Esc</kbd></dt><dd>{{#str}}help_close, mod_leafr{{/str}}</dd>
+                <dt><kbd>?</kbd></dt><dd>{{#str}}help_help, mod_leafr{{/str}}</dd>
             </dl>
-            <button class="btn btn-primary" onclick="document.getElementById('leafr-help-overlay').style.display='none'">Schließen</button>
+            <button type="button" class="btn btn-primary" data-action="help-close">{{#str}}close, mod_leafr{{/str}}</button>
         </div>
     </div>
 </div>

@@ -4,829 +4,553 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Main Reader AMD module for mod_leafr.
- * Orchestrates PDF loading, flipbook rendering, toolbar and completion tracking.
+ * The Leafr reader: loads the PDF, shows it as flipbook or simple view and wires up the toolbar.
  *
  * @module     mod_leafr/reader
- * @copyright  2026 Leafr
+ * @copyright  2026 Peter Pleimfeldner
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-define([
-    'mod_leafr/pdfloader',
-    'mod_leafr/flipbook',
-    'mod_leafr/toolbar',
-    'mod_leafr/completion',
-    'mod_leafr/bookmarks'
-], function (PdfLoader, Flipbook, Toolbar, Completion, Bookmarks) {
+import Ajax from 'core/ajax';
+import Pending from 'core/pending';
+import {getStrings} from 'core/str';
+import FlipbookView from 'mod_leafr/flipbook';
+import ScrollView from 'mod_leafr/scrollview';
+import Toc from 'mod_leafr/toc';
+import Tracker from 'mod_leafr/tracker';
+import {getOutline, loadDocument} from 'mod_leafr/pdf';
 
-    'use strict';
+/** Time a page turn animation needs, in milliseconds. */
+const TURN_DURATION = 900;
 
-    /** @type {Object} Current configuration */
-    let cfg = {};
+/** Available zoom factors. */
+const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3];
 
-    /** @type {number} Total pages in the PDF */
-    let totalPages = 0;
+/** Language strings used by the reader. */
+const STRING_KEYS = [
+    'pagelabel', 'pageofpages', 'pagesofpages', 'totalpages', 'toc_empty', 'toc',
+    'fullscreen_enter', 'fullscreen_exit', 'zoomlevel',
+];
 
-    /** @type {number} Currently visible page number (1-based) */
-    let currentPage = 1;
-
-    /** @type {Object|null} StPageFlip instance */
-    let flipbookInstance = null;
-
-    let zoomLevel = 1.0;
-    const MIN_ZOOM = 0.5;
-    const MAX_ZOOM = 3.0;
-    const ZOOM_STEP = 0.2;
-
-    /** @type {boolean} Resume toast already handled */
-    let toastHandled = false;
+class Reader {
 
     /**
-     * Initialize the Leafr reader.
+     * Constructor.
      *
-     * @param {Object} config Configuration object from PHP
+     * @param {HTMLElement} root The reader element
      */
-    async function init(config) {
-        try {
-            cfg = config;
+    constructor(root) {
+        this.root = root;
+        this.cmid = parseInt(root.dataset.cmid, 10);
+        this.fileurl = root.dataset.fileurl;
+        this.page = Math.max(1, parseInt(root.dataset.startpage, 10) || 1);
+        this.completed = root.dataset.completed === '1';
+        this.stage = root.querySelector('[data-region="stage"]');
+        this.viewHost = root.querySelector('[data-region="view"]');
+        this.pageInput = root.querySelector('[data-region="page-input"]');
+        this.pageTotal = root.querySelector('[data-region="page-total"]');
+        this.progressFill = root.querySelector('[data-region="progress-fill"]');
+        this.live = root.querySelector('[data-region="live"]');
+        this.helpDialog = root.querySelector('[data-region="help"]');
+        this.tocPanel = root.querySelector('[data-region="toc"]');
+        this.zoomLabel = root.querySelector('[data-region="zoom-label"]');
+        this.view = null;
+        this.toc = null;
+        this.zoomIndex = ZOOM_STEPS.indexOf(1);
+        this.announceTimer = null;
+        this.helpReturnFocus = null;
 
-            const container = document.getElementById('leafr-reader-container');
-            if (!container) {
-                return;
-            }
-
-            // Measure and apply Moodle navbar height as CSS variable.
-            // This allows the reader to fill exactly the remaining viewport.
-            measureNavHeight();
-
-            // Accessibility: simple view detection.
-            const preferReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-            if (cfg.config.simpleView || preferReducedMotion) {
-                await initSimpleView(config);
-            } else {
-                await initFlipbook(config);
-            }
-
-            // Resume reading position.
-            if (cfg.savedPage > 1) {
-                setTimeout(() => {
-                    if (cfg.config.simpleView || preferReducedMotion) {
-                        scrollToPage(cfg.savedPage);
-                    } else {
-                        goToPage(cfg.savedPage);
-                    }
-                }, 300);
-            } else if (cfg.startPage > 1) {
-                setTimeout(() => {
-                    if (cfg.config.simpleView || preferReducedMotion) {
-                        scrollToPage(cfg.startPage);
-                    } else {
-                        goToPage(cfg.startPage);
-                    }
-                }, 300);
-            }
-
-            // Global keyboard navigation.
-            setupKeyboardNavigation();
-
-        } catch (e) {
-            console.error('Leafr Reader Init Error:', e);
-        }
+        const stored = root.dataset.simpleview;
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        this.simpleView = stored === '' ? reducedMotion : stored === '1';
     }
 
     /**
-     * Initialize the flipbook (animated) view.
+     * Loads the document and shows it.
      *
-     * @param {Object} config
+     * @returns {Promise<void>}
      */
-    async function initFlipbook(config) {
+    async init() {
+        const pending = new Pending('mod_leafr/reader:init');
+        this.fitHeight();
+        window.addEventListener('resize', () => this.fitHeight());
+        this.bindEvents();
+
         try {
-            showLoading(true);
+            const [strings, pdfDoc] = await Promise.all([
+                getStrings(STRING_KEYS.map((key) => ({key, component: 'mod_leafr'}))),
+                loadDocument(this.fileurl),
+            ]);
+            this.strings = {};
+            STRING_KEYS.forEach((key, index) => {
+                this.strings[key] = strings[index];
+            });
+            this.pdfDoc = pdfDoc;
+            this.total = pdfDoc.numPages;
+            this.page = Math.min(this.page, this.total);
 
-            // Load PDF via PDF.js.
-            const pdfDoc = await PdfLoader.load(config.fileurl);
-            totalPages = pdfDoc.numPages;
-
-            // Update toolbar with total pages.
-            Toolbar.init({
-                totalPages,
-                startPage: config.startPage,
-                downloadAllowed: config.config.downloadAllowed,
-                fileurl: config.fileurl,
-                strings: config.strings,
-                onPageChange: goToPage,
-                onFullscreen: toggleFullscreen,
-                onToggleSimple: switchToSimpleView,
-                onToggleToc: toggleToc,
-                onZoomIn: () => setZoom(zoomLevel + ZOOM_STEP),
-                onZoomOut: () => setZoom(zoomLevel - ZOOM_STEP),
-                onZoomReset: () => setZoom(1.0),
+            this.tracker = new Tracker({
+                cmid: this.cmid,
+                totalPages: this.total,
+                onCompleted: () => this.showCompletion(),
             });
 
-            // Initialize StPageFlip.
-            flipbookInstance = await Flipbook.init({
-                container: document.getElementById('leafr-flipbook'),
-                pdfDoc,
-                startPage: config.startPage,
-                totalPages,
-                strings: config.strings,
-                onFlip: onPageFlipped,
-                onReady: onFlipbookReady,
-            });
-
-            // Initialize completion tracking.
-            Completion.init({
-                cmid: config.cmid,
-                totalPages,
-                config: config.config,
-                wwwroot: config.wwwroot,
-            });
-
-            // Initialize TOC if enabled.
-            if (config.config.showToc) {
-                await initToc(pdfDoc);
-            }
-
-            // Initialize bookmarks.
-            Bookmarks.init({
-                cmid: config.cmid,
-                strings: config.strings,
-                onNavigate: goToPage,
-            });
-
-            // Re-render flags after a short delay to ensure canvasses are in DOM
-            setTimeout(() => Bookmarks.renderBookmarkFlags(), 1000);
-
-            showLoading(false);
-
-        } catch (err) {
-            showError(config.strings.errordocument + ' (' + err.message + ')', config.fileurl, config.config.downloadAllowed);
-        }
-    }
-
-    /**
-     * Initialize the simple (non-animated, accessible) view.
-     *
-     * @param {Object} config
-     */
-    async function initSimpleView(config) {
-        try {
-            showLoading(true);
-
-            const pdfDoc = await PdfLoader.load(config.fileurl);
-            totalPages = pdfDoc.numPages;
-
-            const container = document.getElementById('leafr-simple-view');
-            if (container) {
-                container.style.display = 'block';
-            }
-            const flipbookEl = document.getElementById('leafr-flipbook');
-            if (flipbookEl) {
-                flipbookEl.style.display = 'none';
-            }
-
-            // Set up an observer to update current page and TOC while scrolling
-            const pageObserver = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-                        const pageNum = parseInt(entry.target.dataset.page, 10);
-                        if (!isNaN(pageNum) && pageNum !== currentPage) {
-                            currentPage = pageNum;
-                            Toolbar.updatePage(pageNum);
-                            syncTocHighlight(pageNum);
-                            Completion.trackPage(pageNum);
-                            Completion.savePosition(cfg.cmid, pageNum);
-                        }
-                    }
-                });
-            }, {
-                root: container,
-                threshold: 0.5 // trigger when page is 50% visible
-            });
-
-            // Render all pages as stacked canvases (scrollable).
-            for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-                const pageEl = await renderSimplePage(pdfDoc, pageNum, totalPages);
-                if (container) {
-                    pageEl.dataset.page = pageNum; // Add data attribute for the observer
-                    container.appendChild(pageEl);
-                    pageObserver.observe(pageEl);
+            this.pageTotal.textContent = this.strings.totalpages.replace('{$a}', this.total);
+            this.pageInput.setAttribute('max', this.total);
+            this.root.querySelectorAll('.leafr-toolbar button[disabled], .leafr-pageinput').forEach((el) => {
+                if (el.dataset.action !== 'toc') {
+                    el.disabled = false;
                 }
-            }
-
-            // Toolbar with simplified controls.
-            Toolbar.init({
-                totalPages,
-                startPage: config.startPage,
-                downloadAllowed: config.config.downloadAllowed,
-                fileurl: config.fileurl,
-                strings: config.strings,
-                simpleView: true,
-                onPageChange: scrollToPage,
-                onFullscreen: toggleFullscreen,
-                onToggleSimple: switchToSimpleView,
-                onToggleToc: config.config.showToc ? toggleToc : null,
-                onZoomIn: () => setZoom(zoomLevel + ZOOM_STEP),
-                onZoomOut: () => setZoom(zoomLevel - ZOOM_STEP),
-                onZoomReset: () => setZoom(1.0),
             });
+            const fullscreenButton = this.root.querySelector('[data-action="fullscreen"]');
+            fullscreenButton.hidden = !this.root.requestFullscreen;
 
-            // Completion via IntersectionObserver.
-            Completion.init({
-                cmid: config.cmid,
-                totalPages,
-                config: config.config,
-                wwwroot: config.wwwroot,
-                simpleView: true,
-            });
-
-            showLoading(false);
-
-            // Scroll to start page.
-            scrollToPage(config.startPage);
-
-        } catch (err) {
-            showError(config.strings.errordocument + ' (' + err.message + ')', config.fileurl, config.config.downloadAllowed);
+            await this.showView();
+            this.setLoading(false);
+            await this.initToc();
+        } catch (error) {
+            this.showError();
         }
+        pending.resolve();
     }
 
     /**
-     * Render a single page in simple view.
-     *
-     * @param {Object} pdfDoc PDF document
-     * @param {number} pageNum Page number (1-based)
-     * @param {number} totalPagesCount Total number of pages
-     * @return {Promise<HTMLElement>}
+     * Lets automated tests wait until a page turn has finished.
      */
-    async function renderSimplePage(pdfDoc, pageNum, totalPagesCount) {
-        const page = await pdfDoc.getPage(pageNum);
-        const viewport = page.getViewport({ scale: 2.5 });
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'leafr-simple-page';
-        wrapper.id = 'leafr-page-' + pageNum;
-        wrapper.setAttribute('role', 'region');
-        wrapper.setAttribute('aria-label', 'Seite ' + pageNum + ' von ' + totalPagesCount);
-        wrapper.setAttribute('tabindex', '-1');
-
-        const canvas = document.createElement('canvas');
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-            throw new Error('Canvas 2D context unavailable for page ' + pageNum);
-        }
-        await page.render({ canvasContext: ctx, viewport }).promise;
-
-        // Add text layer for accessibility and selection.
-        const textContent = await page.getTextContent();
-        const textLayer = document.createElement('div');
-        textLayer.className = 'leafr-text-layer';
-        textLayer.setAttribute('aria-hidden', 'true');
-
-        const pageLabel = document.createElement('span');
-        pageLabel.className = 'sr-only';
-        pageLabel.textContent = 'Seite ' + pageNum;
-        textLayer.appendChild(pageLabel);
-
-        wrapper.appendChild(canvas);
-        wrapper.appendChild(textLayer);
-
-        return wrapper;
+    waitForTurn() {
+        const pending = new Pending('mod_leafr/reader:turn');
+        setTimeout(() => pending.resolve(), TURN_DURATION);
     }
 
     /**
-     * Called when the flipbook flips to a new page.
-     *
-     * @param {number} pageNum The new page number
+     * Makes the reader as high as the window below the fixed navigation bar of the theme.
      */
-    function onPageFlipped(pageNum) {
-        currentPage = pageNum;
-        Toolbar.updatePage(pageNum);
-
-        // Track seen pages (current + adjacent visible page for spreads).
-        Completion.trackPage(pageNum);
-        if (pageNum < totalPages) {
-            Completion.trackPage(pageNum + 1);
-        }
-
-        // Save reading position via AJAX (debounced).
-        Completion.savePosition(cfg.cmid, pageNum);
-
-        // ARIA announcement.
-        announcePageChange(pageNum, totalPages, cfg.strings);
-
-        // Auto-highlight the matching TOC entry (nearest chapter ≤ current page).
-        syncTocHighlight(pageNum);
-    }
-
-    /**
-     * Highlight the TOC entry whose page is closest to (but not exceeding) pageNum.
-     *
-     * @param {number} pageNum Current page
-     */
-    function syncTocHighlight(pageNum) {
-        const drawer = document.getElementById('leafr-toc-drawer');
-        if (!drawer || !drawer.classList.contains('is-open')) {
-            return; // don't touch DOM if drawer is not visible
-        }
-        const items = Array.from(drawer.querySelectorAll('.leafr-toc-item[data-page]'));
-        let best = null;
-        let bestPage = 0;
-        items.forEach((btn) => {
-            const p = parseInt(btn.dataset.page, 10);
-            if (p <= pageNum && p > bestPage) {
-                bestPage = p;
-                best = btn;
-            }
-        });
-        if (best) {
-            highlightActiveTOCItem(best);
-        }
-    }
-
-
-    /**
-     * Called when flipbook is fully ready.
-     */
-    function onFlipbookReady() {
-        // nothing extra needed
-    }
-
-    /**
-     * Navigate to a specific page.
-     *
-     * @param {number} pageNum Target page number
-     */
-    function goToPage(pageNum) {
-        const target = Math.max(1, Math.min(pageNum, totalPages));
-
-        const simpleViewEl = document.getElementById('leafr-simple-view');
-        if (simpleViewEl && simpleViewEl.classList.contains('is-active')) {
-            scrollToPage(target);
-            currentPage = target;
-            Toolbar.updatePage(target);
-            syncTocHighlight(target);
+    fitHeight() {
+        if (document.fullscreenElement === this.root) {
+            this.root.style.removeProperty('--leafr-height');
             return;
         }
+        const navbar = document.querySelector('.navbar.fixed-top, nav.fixed-top');
+        const offset = navbar ? navbar.offsetHeight : 0;
+        this.root.style.setProperty('--leafr-height', Math.max(window.innerHeight - offset - 32, 420) + 'px');
+    }
 
-        if (flipbookInstance) {
-            Flipbook.goToPage(flipbookInstance, target);
+    /**
+     * Shows the document in the current view mode.
+     *
+     * @returns {Promise<void>}
+     */
+    async showView() {
+        if (this.view) {
+            this.view.destroy();
+        }
+        const ViewClass = this.simpleView ? ScrollView : FlipbookView;
+        this.root.classList.toggle('is-simpleview', this.simpleView);
+        this.root.querySelector('[data-action="simpleview"]').setAttribute('aria-pressed', this.simpleView ? 'true' : 'false');
+        this.stage.scrollTo(0, 0);
+
+        this.view = new ViewClass({
+            stage: this.stage,
+            host: this.viewHost,
+            pdfDoc: this.pdfDoc,
+            startPage: this.page,
+            strings: this.strings,
+            onPageChange: (page, visible) => this.handlePageChange(page, visible),
+        });
+        await this.view.init();
+        if (ZOOM_STEPS[this.zoomIndex] !== 1) {
+            this.view.setZoom(ZOOM_STEPS[this.zoomIndex]);
         }
     }
 
     /**
-     * Scroll to a page in simple view.
-     *
-     * @param {number} pageNum Target page number
+     * Loads the outline of the PDF into the table of contents.
      */
-    function scrollToPage(pageNum) {
-        const el = document.getElementById('leafr-page-' + pageNum);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            el.focus();
+    async initToc() {
+        const toggle = this.root.querySelector('[data-action="toc"]');
+        if (!this.tocPanel || !toggle) {
+            return;
+        }
+        let entries = [];
+        try {
+            entries = await getOutline(this.pdfDoc);
+        } catch (error) {
+            entries = [];
+        }
+        if (!entries.length) {
+            toggle.title = this.strings.toc_empty;
+            toggle.querySelector('.sr-only').textContent = this.strings.toc + ': ' + this.strings.toc_empty;
+            return;
+        }
+        this.toc = new Toc({
+            panel: this.tocPanel,
+            toggle: toggle,
+            entries: entries,
+            onNavigate: (page) => this.goTo(page),
+        });
+        this.toc.setCurrentPage(this.page);
+        toggle.disabled = false;
+    }
+
+    /**
+     * Updates toolbar, progress and tracking when the visible pages change.
+     *
+     * @param {number} page First visible page
+     * @param {number[]} visible Visible pages
+     */
+    handlePageChange(page, visible) {
+        this.page = page;
+        const last = visible.length ? visible[visible.length - 1] : page;
+        if (document.activeElement !== this.pageInput) {
+            this.pageInput.value = page;
+        }
+        this.progressFill.style.width = (this.total > 1 ? (last - 1) / (this.total - 1) * 100 : 100) + '%';
+        this.root.querySelector('[data-action="first"]').disabled = page <= 1;
+        this.root.querySelector('[data-action="prev"]').disabled = page <= 1;
+        this.root.querySelector('[data-action="next"]').disabled = last >= this.total;
+        this.root.querySelector('[data-action="last"]').disabled = last >= this.total;
+        if (this.toc) {
+            this.toc.setCurrentPage(page);
+        }
+        this.tracker.record(page, visible);
+
+        // Announce the new page to screen readers once the user stops turning pages.
+        clearTimeout(this.announceTimer);
+        this.announceTimer = setTimeout(() => {
+            const text = visible.length > 1 && !this.simpleView
+                ? this.strings.pagesofpages.replace('{$a->first}', visible[0]).replace('{$a->last}', last)
+                : this.strings.pageofpages.replace('{$a->page}', page);
+            this.live.textContent = text.replace('{$a->total}', this.total);
+        }, 400);
+    }
+
+    /**
+     * Shows a page.
+     *
+     * @param {number} page 1-based page number
+     */
+    goTo(page) {
+        if (this.view) {
+            this.waitForTurn();
+            this.view.goTo(Math.min(Math.max(1, page), this.total));
         }
     }
 
     /**
-     * Set zoom level of the flipbook area.
-     *
-     * @param {number} level New zoom level
+     * Registers the event handlers of the toolbar, keyboard and dialogs.
      */
-    function setZoom(level) {
-        zoomLevel = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, level));
-        const area = document.querySelector('.leafr-flipbook-area') || document.getElementById('leafr-simple-view');
-        if (area) {
-            // Only apply transform if we are zoomed in/out, otherwise remove it to avoid blurry text on 1.0 scale
-            if (zoomLevel === 1.0) {
-                area.style.transform = '';
-            } else {
-                area.style.transform = `scale(${zoomLevel})`;
-                area.classList.add('leafr-zoom-wrapper');
+    bindEvents() {
+        this.root.addEventListener('click', (event) => {
+            const button = event.target.closest('[data-action]');
+            if (!button || !this.root.contains(button) || button.disabled) {
+                return;
             }
+            this.handleAction(button.dataset.action);
+        });
+
+        this.pageInput.addEventListener('change', () => this.submitPageInput());
+        this.pageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                this.submitPageInput();
+            }
+        });
+
+        this.root.addEventListener('keydown', (event) => this.handleKey(event));
+        this.stage.addEventListener('mousedown', () => this.stage.focus({preventScroll: true}));
+
+        document.addEventListener('fullscreenchange', () => {
+            const active = document.fullscreenElement === this.root;
+            this.root.classList.toggle('is-fullscreen', active);
+            const button = this.root.querySelector('[data-action="fullscreen"]');
+            const label = active ? this.strings.fullscreen_exit : this.strings.fullscreen_enter;
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
+            button.title = label;
+            button.querySelector('[data-region="fullscreen-label"]').textContent = label;
+            this.fitHeight();
+        });
+    }
+
+    /**
+     * Executes a toolbar action.
+     *
+     * @param {string} action Action name
+     */
+    handleAction(action) {
+        switch (action) {
+            case 'first':
+                this.goTo(1);
+                break;
+            case 'prev':
+                this.waitForTurn();
+                this.view.prev();
+                break;
+            case 'next':
+                this.waitForTurn();
+                this.view.next();
+                break;
+            case 'last':
+                this.goTo(this.total);
+                break;
+            case 'zoom-in':
+                this.changeZoom(1);
+                break;
+            case 'zoom-out':
+                this.changeZoom(-1);
+                break;
+            case 'zoom-reset':
+                this.changeZoom(0);
+                break;
+            case 'simpleview':
+                this.toggleSimpleView();
+                break;
+            case 'fullscreen':
+                this.toggleFullscreen();
+                break;
+            case 'toc':
+                if (this.toc) {
+                    this.toc.toggle();
+                }
+                break;
+            case 'toc-close':
+                if (this.toc) {
+                    this.toc.close();
+                }
+                break;
+            case 'help':
+                this.openHelp();
+                break;
+            case 'help-close':
+                this.closeHelp();
+                break;
+            case 'reload':
+                window.location.reload();
+                break;
         }
     }
 
     /**
-     * Setup wheel zoom handling.
+     * Handles keyboard shortcuts while the reader has the focus.
+     *
+     * @param {KeyboardEvent} event Key event
      */
-    function setupWheelZoom() {
-        const container = document.getElementById('leafr-reader-container');
-        if (!container) return;
-        container.addEventListener('wheel', (e) => {
-            // Only zoom on Ctrl+Wheel
-            if (e.ctrlKey) {
-                e.preventDefault();
-                if (e.deltaY < 0) {
-                    setZoom(zoomLevel + ZOOM_STEP);
+    handleKey(event) {
+        if (!this.view || event.ctrlKey || event.metaKey || event.altKey) {
+            return;
+        }
+        if (!this.helpDialog.hidden) {
+            if (event.key === 'Escape' || event.key === 'Tab') {
+                event.preventDefault();
+                this.closeHelp();
+            }
+            return;
+        }
+        const tag = event.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+            return;
+        }
+        const pageKeys = !this.simpleView || event.target !== this.stage;
+        let handled = true;
+        switch (event.key) {
+            case 'ArrowRight':
+                this.waitForTurn();
+                this.view.next();
+                break;
+            case 'ArrowLeft':
+                this.waitForTurn();
+                this.view.prev();
+                break;
+            case 'PageDown':
+            case 'PageUp':
+                // In the simple view the browser scrolls the stage itself.
+                handled = pageKeys;
+                if (handled) {
+                    this.view[event.key === 'PageDown' ? 'next' : 'prev']();
+                }
+                break;
+            case 'Home':
+                this.goTo(1);
+                break;
+            case 'End':
+                this.goTo(this.total);
+                break;
+            case '+':
+                this.changeZoom(1);
+                break;
+            case '-':
+                this.changeZoom(-1);
+                break;
+            case 't':
+            case 'T':
+                handled = !!this.toc;
+                if (handled) {
+                    this.toc.toggle();
+                }
+                break;
+            case 'f':
+            case 'F':
+                this.toggleFullscreen();
+                break;
+            case '?':
+                this.openHelp();
+                break;
+            case 'Escape':
+                if (this.toc && this.toc.isOpen()) {
+                    this.toc.close();
                 } else {
-                    setZoom(zoomLevel - ZOOM_STEP);
+                    handled = false;
                 }
-            }
-        }, { passive: false });
-    }
-
-    /**
-     * Toggle fullscreen mode.
-     */
-    function toggleFullscreen() {
-        const readerEl = document.getElementById('leafr-reader-container');
-        if (!document.fullscreenElement) {
-            readerEl.requestFullscreen().catch(() => { });
-        } else {
-            document.exitFullscreen().catch(() => { });
+                break;
+            default:
+                handled = false;
+        }
+        if (handled) {
+            event.preventDefault();
         }
     }
 
     /**
-     * Toggle between flipbook and simple (scrollable) view without a page reload.
+     * Goes to the page typed into the page field.
      */
-    async function toggleSimpleView() {
-        const simpleViewEl = document.getElementById('leafr-simple-view');
-        const flipbookEl = document.getElementById('leafr-flipbook');
-        const btn = document.getElementById('leafr-btn-simple');
-        const isNowSimple = !simpleViewEl || simpleViewEl.style.display === 'none' ||
-            !simpleViewEl.classList.contains('is-active');
-
-        if (isNowSimple) {
-            // --- Switch TO simple view ---
-
-            // Destroy the flipbook to free memory.
-            if (flipbookInstance) {
-                try { flipbookInstance.destroy(); } catch (e) { /* silent */ }
-                flipbookInstance = null;
-            }
-            if (flipbookEl) {
-                flipbookEl.style.display = 'none';
-            }
-
-            // Clear any previous simple-view pages and show container.
-            if (simpleViewEl) {
-                simpleViewEl.innerHTML = '';
-                simpleViewEl.style.display = 'block';
-                simpleViewEl.classList.add('is-active');
-            }
-
-            // Re-use cached PDF doc or reload.
-            let pdfDoc;
-            try {
-                pdfDoc = await PdfLoader.load(cfg.fileurl);
-            } catch (e) {
-                showError(cfg.strings.errordocument + ' (' + e.message + ')', cfg.fileurl, cfg.config.downloadAllowed);
-                return;
-            }
-
-            // Render all pages as stacked canvases.
-            for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
-                const pageEl = await renderSimplePage(pdfDoc, pageNum, totalPages);
-                if (simpleViewEl) { simpleViewEl.appendChild(pageEl); }
-            }
-
-            // Scroll back to current page.
-            scrollToPage(currentPage);
-
+    submitPageInput() {
+        const page = parseInt(this.pageInput.value, 10);
+        if (page >= 1 && page <= this.total) {
+            this.goTo(page);
         } else {
-            // --- Switch BACK to flipbook ---
-
-            if (simpleViewEl) {
-                simpleViewEl.innerHTML = '';
-                simpleViewEl.style.display = 'none';
-                simpleViewEl.classList.remove('is-active');
-            }
-
-            // StPageFlip destroys the DOM structure. We need to recreate the empty #leafr-flipbook div
-            // inside the flipbook-area if it was completely removed, or just clear it.
-            let flipArea = document.querySelector('.leafr-flipbook-area');
-            let newFlipbookEl = document.getElementById('leafr-flipbook');
-            if (flipArea) {
-                if (!newFlipbookEl) {
-                    newFlipbookEl = document.createElement('div');
-                    newFlipbookEl.id = 'leafr-flipbook';
-                    flipArea.appendChild(newFlipbookEl);
-                }
-                newFlipbookEl.innerHTML = '';
-                newFlipbookEl.style.display = '';
-            }
-
-            // Re-initialise the flipbook.
-            await initFlipbook(cfg);
+            this.pageInput.value = this.page;
         }
+    }
 
-        // Update button state: aria-pressed + icon swap (eye / eye-slash).
-        if (btn) {
-            btn.setAttribute('aria-pressed', isNowSimple ? 'true' : 'false');
-            const iconEye = btn.querySelector('.leafr-icon-eye');
-            const iconEyeSlash = btn.querySelector('.leafr-icon-eye-slash');
-            // Fallback: swap opacity on the single SVG if no named variants.
-            if (iconEye && iconEyeSlash) {
-                iconEye.style.display = isNowSimple ? 'none' : '';
-                iconEyeSlash.style.display = isNowSimple ? '' : 'none';
-            }
+    /**
+     * Changes the zoom factor.
+     *
+     * @param {number} direction 1 = zoom in, -1 = zoom out, 0 = reset
+     */
+    changeZoom(direction) {
+        const reset = ZOOM_STEPS.indexOf(1);
+        const index = direction === 0 ? reset : Math.min(Math.max(0, this.zoomIndex + direction), ZOOM_STEPS.length - 1);
+        if (index === this.zoomIndex || !this.view) {
+            return;
         }
+        this.zoomIndex = index;
+        const zoom = ZOOM_STEPS[index];
+        this.view.setZoom(zoom);
+        const percent = Math.round(zoom * 100);
+        this.zoomLabel.textContent = percent + '%';
+        this.live.textContent = this.strings.zoomlevel.replace('{$a}', percent);
+        this.root.querySelector('[data-action="zoom-in"]').disabled = index === ZOOM_STEPS.length - 1;
+        this.root.querySelector('[data-action="zoom-out"]').disabled = index === 0;
+    }
 
-        // Persist preference via Moodle Web Services (fire-and-forget).
+    /**
+     * Switches between flipbook and simple view and remembers the choice.
+     */
+    async toggleSimpleView() {
+        const pending = new Pending('mod_leafr/reader:toggleview');
+        this.simpleView = !this.simpleView;
+        this.setLoading(true);
         try {
-            fetch(M.cfg.wwwroot + '/lib/ajax/service.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify([{
-                    methodname: 'core_user_update_user_preferences',
-                    args: { preferences: [{ type: 'leafr_simpleview_' + cfg.cmid, value: isNowSimple ? '1' : '0' }] }
-                }])
-            });
-        } catch (e) { /* preference save failure is non-critical */ }
+            await this.showView();
+        } finally {
+            this.setLoading(false);
+            pending.resolve();
+        }
+        this.stage.focus({preventScroll: true});
+        Ajax.call([{
+            methodname: 'core_user_update_user_preferences',
+            args: {preferences: [{type: 'mod_leafr_simpleview', value: this.simpleView ? '1' : '0'}]},
+        }])[0].catch(() => null);
     }
 
     /**
-     * Switch to simple view (legacy – kept for toolbar callback compatibility).
-     * Now delegates to toggleSimpleView.
+     * Enters or leaves full screen mode.
      */
-    function switchToSimpleView() {
-        toggleSimpleView();
-    }
-
-    /**
-     * Toggle the TOC drawer open/closed.
-     * Targets the new #leafr-toc-drawer element.
-     */
-    function toggleToc() {
-        const drawer = document.getElementById('leafr-toc-drawer');
-        const tocBtn = document.getElementById('leafr-btn-toc');
-        if (!drawer) {
+    toggleFullscreen() {
+        if (!this.root.requestFullscreen) {
             return;
         }
-        const isOpen = drawer.classList.contains('is-open');
-        drawer.classList.toggle('is-open', !isOpen);
-        drawer.setAttribute('aria-hidden', isOpen ? 'true' : 'false');
-
-        if (tocBtn) {
-            tocBtn.setAttribute('aria-pressed', isOpen ? 'false' : 'true');
-        }
-
-        if (!isOpen) {
-            // Focus first item when opening.
-            const first = drawer.querySelector('.leafr-toc-item');
-            if (first) {
-                first.focus();
-            }
+        if (document.fullscreenElement === this.root) {
+            document.exitFullscreen().catch(() => null);
+        } else {
+            this.root.requestFullscreen().catch(() => null);
         }
     }
 
     /**
-     * Highlight a TOC item as active and scroll it into view.
+     * Opens the dialog with the keyboard shortcuts.
+     */
+    openHelp() {
+        this.helpReturnFocus = document.activeElement;
+        this.helpDialog.hidden = false;
+        this.helpDialog.querySelector('[data-action="help-close"]').focus();
+    }
+
+    /**
+     * Closes the dialog with the keyboard shortcuts.
+     */
+    closeHelp() {
+        this.helpDialog.hidden = true;
+        if (this.helpReturnFocus && this.root.contains(this.helpReturnFocus)) {
+            this.helpReturnFocus.focus();
+        } else {
+            this.stage.focus({preventScroll: true});
+        }
+    }
+
+    /**
+     * Shows a short confirmation when the activity has been completed by reading.
+     */
+    showCompletion() {
+        if (this.completed) {
+            return;
+        }
+        this.completed = true;
+        const toast = this.root.querySelector('[data-region="completion"]');
+        toast.hidden = false;
+        setTimeout(() => {
+            toast.hidden = true;
+        }, 6000);
+    }
+
+    /**
+     * Shows or hides the loading indicator.
      *
-     * @param {HTMLElement} item The button element to activate
+     * @param {boolean} loading Whether the document is loading
      */
-    function highlightActiveTOCItem(item) {
-        const drawer = document.getElementById('leafr-toc-drawer');
-        if (!drawer) {
-            return;
-        }
-        drawer.querySelectorAll('.leafr-toc-item').forEach((el) => el.classList.remove('is-active'));
-        item.classList.add('is-active');
-        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    setLoading(loading) {
+        this.root.querySelector('[data-region="loading"]').hidden = !loading;
+        this.root.classList.toggle('is-loading', loading);
     }
 
     /**
-     * Render TOC entries as button elements in the drawer.
-     *
-     * @param {Array<{title:string, page:number}>} entries
+     * Shows the error message.
      */
-    function renderTOC(entries) {
-        const drawer = document.getElementById('leafr-toc-drawer');
-        if (!drawer) {
-            return;
-        }
-        const list = drawer.querySelector('.leafr-toc-list');
-        if (!list) {
-            return;
-        }
-        list.innerHTML = '';
-
-        if (!entries || entries.length === 0) {
-            const empty = document.createElement('li');
-            empty.className = 'leafr-toc-empty';
-            empty.innerHTML = cfg.strings.toc_empty || '<span>Leider konnten keine Überschriften gefunden werden. Bitte achten Sie beim PDF-Export auf <br/><strong>"Lesezeichen"</strong> bzw. <strong>"Gliederung"</strong> (Bookmarks/Outline).</span>';
-            empty.style.padding = '1rem';
-            empty.style.color = '#ccc';
-            empty.style.lineHeight = '1.5';
-            list.appendChild(empty);
-            return;
-        }
-
-        entries.forEach((entry) => {
-            const li = document.createElement('li');
-            const btn = document.createElement('button');
-            btn.className = 'leafr-toc-item';
-            btn.setAttribute('tabindex', '0');
-            btn.setAttribute('title', entry.title + ' — Seite ' + entry.page);
-            btn.dataset.page = entry.page; // required for auto-highlight filter
-
-            // Title span (truncated)
-            const titleSpan = document.createElement('span');
-            titleSpan.className = 'leafr-toc-item-title';
-            titleSpan.textContent = entry.title;
-
-            // Page number span (right-aligned, muted)
-            const pageSpan = document.createElement('span');
-            pageSpan.className = 'leafr-toc-item-page';
-            pageSpan.textContent = entry.page;
-
-            btn.appendChild(titleSpan);
-            btn.appendChild(pageSpan);
-
-            btn.addEventListener('click', () => {
-                goToPage(entry.page);
-                highlightActiveTOCItem(btn);
-            });
-
-            li.appendChild(btn);
-            list.appendChild(li);
-        });
+    showError() {
+        this.setLoading(false);
+        this.root.querySelector('[data-region="error"]').hidden = false;
+        this.viewHost.hidden = true;
     }
+}
 
-    /**
-     * Load TOC from PDF outline/bookmarks and render into the drawer.
-     *
-     * @param {Object} pdfDoc PDF.js document
-     */
-    async function initToc(pdfDoc) {
-        const drawer = document.getElementById('leafr-toc-drawer');
-        if (!drawer) {
-            return;
-        }
-
-        // Wire up close button.
-        const closeBtn = document.getElementById('leafr-toc-close-btn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', toggleToc);
-        }
-
-        const outline = await pdfDoc.getOutline();
-
-        if (!outline || outline.length === 0) {
-            renderTOC([]);
-            return;
-        }
-
-        // Resolve page numbers from PDF.js destinations.
-        const entries = [];
-        for (const item of outline) {
-            if (!item.dest) {
-                entries.push({ title: item.title, page: 1 });
-                continue;
-            }
-            try {
-                const dest = await pdfDoc.getDestination(item.dest);
-                const pageIndex = await pdfDoc.getPageIndex(dest[0]);
-                entries.push({ title: item.title, page: pageIndex + 1 });
-            } catch (e) {
-                entries.push({ title: item.title, page: 1 });
-            }
-        }
-
-        renderTOC(entries);
+/**
+ * Initialises a reader.
+ *
+ * @param {string} selector CSS selector of the reader element
+ */
+export const init = (selector) => {
+    const root = document.querySelector(selector);
+    if (root && !root.dataset.initialised) {
+        root.dataset.initialised = '1';
+        new Reader(root).init();
     }
-
-    /**
-     * Show/hide loading skeleton.
-     *
-     * @param {boolean} loading
-     */
-    function showLoading(loading) {
-        const skeleton = document.getElementById('leafr-skeleton');
-        const flipbook = document.getElementById('leafr-flipbook');
-        if (skeleton) {
-            skeleton.style.display = loading ? 'flex' : 'none';
-        }
-        if (flipbook) {
-            flipbook.style.visibility = loading ? 'hidden' : 'visible';
-        }
-    }
-
-    /**
-     * Show error state.
-     *
-     * @param {string} message Error message
-     * @param {string} fileurl PDF file URL for fallback download
-     * @param {boolean} downloadAllowed Whether download is allowed
-     */
-    function showError(message, fileurl, downloadAllowed) {
-        showLoading(false);
-        const errorEl = document.getElementById('leafr-error');
-        if (errorEl) {
-            errorEl.style.display = 'flex';
-            const msgEl = errorEl.querySelector('.leafr-error-message');
-            if (msgEl) {
-                msgEl.textContent = message;
-            }
-            if (downloadAllowed && fileurl) {
-                const dl = errorEl.querySelector('.leafr-error-download');
-                if (dl) {
-                    dl.style.display = 'inline-block';
-                    dl.href = fileurl + '?forcedownload=1';
-                }
-            }
-        }
-    }
-
-
-    /**
-     * Set up global keyboard navigation.
-     */
-    function setupKeyboardNavigation() {
-        document.addEventListener('keydown', (e) => {
-            // Only handle when flipbook area has focus or no input is focused.
-            const tag = document.activeElement?.tagName;
-            if (tag === 'INPUT' || tag === 'TEXTAREA') {
-                return;
-            }
-
-            switch (e.key) {
-                case 'ArrowLeft':
-                case 'PageUp':
-                    e.preventDefault();
-                    goToPage(currentPage - 2); // Move back by 2 (spread).
-                    break;
-                case 'ArrowRight':
-                case 'PageDown':
-                    e.preventDefault();
-                    goToPage(currentPage + 2); // Move forward by 2 (spread).
-                    break;
-                case 'Home':
-                    e.preventDefault();
-                    goToPage(1);
-                    break;
-                case 'End':
-                    e.preventDefault();
-                    goToPage(totalPages);
-                    break;
-                case 'Escape':
-                    if (document.fullscreenElement) {
-                        document.exitFullscreen();
-                    }
-                    break;
-                case 't':
-                case 'T':
-                    toggleToc();
-                    break;
-                case 'f':
-                case 'F':
-                    toggleFullscreen();
-                    break;
-                case '?':
-                    showHelp();
-                    break;
-            }
-        });
-    }
-
-    /**
-     * Show keyboard shortcuts help overlay.
-     */
-    function showHelp() {
-        const help = document.getElementById('leafr-help-overlay');
-        if (help) {
-            help.style.display = help.style.display === 'none' ? 'flex' : 'none';
-        }
-    }
-
-    /**
-     * Measure the Moodle page header/navbar height and set --leafr-nav-height.
-     * Checks common selectors used across Moodle themes.
-     */
-    function measureNavHeight() {
-        // Try common Moodle navbar selectors (Boost, Classic, Moove, etc.).
-        const headerEl = document.querySelector(
-            '#page-header, .navbar.fixed-top, .navbar, header[role="banner"], #header'
-        );
-        const offsetTop = document.getElementById('leafr-reader-container')
-            ? document.getElementById('leafr-reader-container').getBoundingClientRect().top
-            : (headerEl ? headerEl.offsetHeight : 64);
-        const navH = Math.max(offsetTop, 56); // at least 56px
-        document.documentElement.style.setProperty('--leafr-nav-height', navH + 'px');
-    }
-
-    /**
-     * Announce page change to screenreaders.
-     *
-     * @param {number} page Current page
-     * @param {number} total Total pages
-     * @param {Object} strings Language strings
-     */
-    function announcePageChange(page, total, strings) {
-        const liveRegion = document.getElementById('leafr-aria-live');
-        if (liveRegion) {
-            liveRegion.textContent = strings.pageof
-                .replace('{page}', page)
-                .replace('{total}', total);
-        }
-    }
-
-    return { init };
-});
+};

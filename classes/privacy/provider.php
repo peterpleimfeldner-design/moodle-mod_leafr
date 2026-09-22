@@ -5,14 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-
-/**
- * Privacy API implementation for mod_leafr (GDPR/DSGVO compliance)
- *
- * @package    mod_leafr
- * @copyright  2026 Leafr
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace mod_leafr\privacy;
 
@@ -20,246 +20,179 @@ use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
 use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\contextlist;
+use core_privacy\local\request\helper;
+use core_privacy\local\request\transform;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
+use mod_leafr\local\progress;
 
 /**
- * Privacy API provider for mod_leafr.
+ * Privacy API implementation for mod_leafr.
+ *
+ * @package   mod_leafr
+ * @copyright 2026 Peter Pleimfeldner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class provider implements
     \core_privacy\local\metadata\provider,
+    \core_privacy\local\request\core_userlist_provider,
     \core_privacy\local\request\plugin\provider,
-    \core_privacy\local\request\core_userlist_provider {
-
-    // ── Metadata declarations ──────────────────────────────────────────
-
+    \core_privacy\local\request\user_preference_provider {
     /**
-     * Returns metadata about the stored user data.
+     * Describes the personal data stored by the plugin.
      *
-     * @param collection $collection The metadata collection to add data to
-     * @return collection The enriched collection
+     * @param collection $collection Collection to add the metadata to
+     * @return collection
      */
     public static function get_metadata(collection $collection): collection {
-        $collection->add_user_preference('leafr_pos_*', [
-            'preference' => 'privacy:metadata:preference:readingpos',
-        ]);
-
-        $collection->add_user_preference('leafr_progress_*', [
-            'preference' => 'privacy:metadata:preference:progress',
-        ]);
-
-        $collection->add_user_preference('leafr_simpleview_*', [
-            'preference' => 'privacy:metadata:preference:simpleview',
-        ]);
-
-        $collection->add_database_table('leafr_bookmarks', [
-            'userid'       => 'privacy:metadata:leafr_bookmarks:userid',
-            'pageno'       => 'privacy:metadata:leafr_bookmarks:pageno',
-            'label'        => 'privacy:metadata:leafr_bookmarks:label',
-            'note'         => 'privacy:metadata:leafr_bookmarks:note',
-            'timecreated'  => 'privacy:metadata:leafr_bookmarks:timecreated',
-            'timemodified' => 'privacy:metadata:leafr_bookmarks:timemodified',
-        ], 'privacy:metadata:leafr_bookmarks');
-
+        $collection->add_database_table('leafr_progress', [
+            'userid' => 'privacy:metadata:leafr_progress:userid',
+            'seenpages' => 'privacy:metadata:leafr_progress:seenpages',
+            'lastpage' => 'privacy:metadata:leafr_progress:lastpage',
+            'timemodified' => 'privacy:metadata:leafr_progress:timemodified',
+        ], 'privacy:metadata:leafr_progress');
+        $collection->add_user_preference('mod_leafr_simpleview', 'privacy:metadata:preference:simpleview');
         return $collection;
     }
 
-    // ── Context lookups ───────────────────────────────────────────────
-
     /**
-     * Returns all contexts that contain user data for the given user.
+     * Returns the contexts that contain data of a user.
      *
-     * @param int $userid The user's id
-     * @return contextlist The contextlist
+     * @param int $userid User id
+     * @return contextlist
      */
     public static function get_contexts_for_userid(int $userid): contextlist {
-        $contextlist = new contextlist();
-
-        // Find contexts via bookmarks table.
         $sql = "SELECT ctx.id
-                  FROM {context} ctx
-                  JOIN {course_modules} cm ON cm.id = ctx.instanceid AND ctx.contextlevel = :ctxlevel
-                  JOIN {leafr} l ON l.id = cm.instance
-                  JOIN {leafr_bookmarks} lb ON lb.leafrid = l.id
-                 WHERE lb.userid = :userid";
-
+                  FROM {leafr_progress} p
+                  JOIN {course_modules} cm ON cm.instance = p.leafrid
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                  JOIN {context} ctx ON ctx.instanceid = cm.id AND ctx.contextlevel = :contextlevel
+                 WHERE p.userid = :userid";
+        $contextlist = new contextlist();
         $contextlist->add_from_sql($sql, [
-            'ctxlevel' => CONTEXT_MODULE,
-            'userid'   => $userid,
+            'modname' => 'leafr',
+            'contextlevel' => CONTEXT_MODULE,
+            'userid' => $userid,
         ]);
-
         return $contextlist;
     }
 
     /**
-     * Returns all users who have user data in the given context.
+     * Returns the users who have data in a context.
      *
-     * @param userlist $userlist The userlist to add users to
+     * @param userlist $userlist List to add the users to
      */
-    public static function get_users_in_context(userlist $userlist): void {
+    public static function get_users_in_context(userlist $userlist) {
         $context = $userlist->get_context();
-
-        if ($context->contextlevel !== CONTEXT_MODULE) {
+        if (!$context instanceof \context_module) {
             return;
         }
-
-        $sql = "SELECT lb.userid
-                  FROM {leafr_bookmarks} lb
-                  JOIN {leafr} l ON l.id = lb.leafrid
-                  JOIN {course_modules} cm ON cm.instance = l.id AND cm.module = (
-                      SELECT id FROM {modules} WHERE name = 'leafr'
-                  )
+        $sql = "SELECT p.userid
+                  FROM {leafr_progress} p
+                  JOIN {course_modules} cm ON cm.instance = p.leafrid
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modname
                  WHERE cm.id = :cmid";
-
-        $userlist->add_from_sql('userid', $sql, ['cmid' => $context->instanceid]);
+        $userlist->add_from_sql('userid', $sql, ['modname' => 'leafr', 'cmid' => $context->instanceid]);
     }
 
-    // ── Data export ───────────────────────────────────────────────────
-
     /**
-     * Exports all data for the given user in the given contexts.
+     * Exports the data of a user in the approved contexts.
      *
-     * @param approved_contextlist $contextlist The approved context list
+     * @param approved_contextlist $contextlist Approved contexts
      */
-    public static function export_user_data(approved_contextlist $contextlist): void {
-        global $DB;
-
+    public static function export_user_data(approved_contextlist $contextlist) {
         $user = $contextlist->get_user();
-
         foreach ($contextlist->get_contexts() as $context) {
-            if ($context->contextlevel !== CONTEXT_MODULE) {
+            $leafrid = self::get_instance_id($context);
+            if (!$leafrid) {
                 continue;
             }
-
-            $cm = get_coursemodule_from_id('leafr', $context->instanceid);
-            if (!$cm) {
+            $record = progress::get_record($leafrid, $user->id);
+            if (!$record) {
                 continue;
             }
-
-            $data = [];
-
-            // Export reading position.
-            $pos = get_user_preferences('leafr_pos_' . $cm->id, null, $user->id);
-            if ($pos !== null) {
-                $data['readingposition'] = (int)$pos;
-            }
-
-            // Export progress.
-            $progress = get_user_preferences('leafr_progress_' . $cm->id, null, $user->id);
-            if ($progress !== null) {
-                $data['progress'] = json_decode($progress, true);
-            }
-
-            // Export bookmarks.
-            $bookmarks = $DB->get_records('leafr_bookmarks', [
-                'leafrid' => $cm->instance,
-                'userid'  => $user->id,
-            ]);
-            if (!empty($bookmarks)) {
-                $data['bookmarks'] = array_values((array)$bookmarks);
-            }
-
-            if (!empty($data)) {
-                writer::with_context($context)->export_data(['leafr'], (object)$data);
-            }
+            $data = helper::get_context_data($context, $user);
+            $data->seenpages = $record->seenpages;
+            $data->lastpage = (int)$record->lastpage;
+            $data->timemodified = transform::datetime($record->timemodified);
+            writer::with_context($context)->export_data([], $data);
+            helper::export_context_files($context, $user);
         }
     }
 
-    // ── Data deletion ─────────────────────────────────────────────────
+    /**
+     * Exports the user preferences of a user.
+     *
+     * @param int $userid User id
+     */
+    public static function export_user_preferences(int $userid) {
+        $simpleview = get_user_preferences('mod_leafr_simpleview', null, $userid);
+        if ($simpleview !== null) {
+            writer::export_user_preference(
+                'mod_leafr',
+                'mod_leafr_simpleview',
+                transform::yesno($simpleview),
+                get_string('privacy:metadata:preference:simpleview', 'leafr')
+            );
+        }
+    }
 
     /**
-     * Deletes data for a specific user in the given contexts.
+     * Deletes the data of all users in a context.
      *
-     * @param approved_contextlist $contextlist The approved context list
+     * @param \context $context Context
      */
-    public static function delete_data_for_user(approved_contextlist $contextlist): void {
+    public static function delete_data_for_all_users_in_context(\context $context) {
+        $leafrid = self::get_instance_id($context);
+        if ($leafrid) {
+            progress::delete_for_instance($leafrid);
+        }
+    }
+
+    /**
+     * Deletes the data of a user in the approved contexts.
+     *
+     * @param approved_contextlist $contextlist Approved contexts
+     */
+    public static function delete_data_for_user(approved_contextlist $contextlist) {
         global $DB;
-
-        $user = $contextlist->get_user();
-
+        $userid = $contextlist->get_user()->id;
         foreach ($contextlist->get_contexts() as $context) {
-            if ($context->contextlevel !== CONTEXT_MODULE) {
-                continue;
+            $leafrid = self::get_instance_id($context);
+            if ($leafrid) {
+                $DB->delete_records('leafr_progress', ['leafrid' => $leafrid, 'userid' => $userid]);
             }
-
-            $cm = get_coursemodule_from_id('leafr', $context->instanceid);
-            if (!$cm) {
-                continue;
-            }
-
-            // Delete bookmarks.
-            $DB->delete_records('leafr_bookmarks', [
-                'leafrid' => $cm->instance,
-                'userid'  => $user->id,
-            ]);
-
-            // Delete user preferences.
-            unset_user_preference('leafr_pos_'        . $cm->id, $user->id);
-            unset_user_preference('leafr_progress_'   . $cm->id, $user->id);
-            unset_user_preference('leafr_simpleview_' . $cm->id, $user->id);
         }
     }
 
     /**
-     * Deletes data for all users in the given context.
+     * Deletes the data of the approved users in a context.
      *
-     * @param \context $context The module context
+     * @param approved_userlist $userlist Approved users
      */
-    public static function delete_data_for_all_users_in_context(\context $context): void {
+    public static function delete_data_for_users(approved_userlist $userlist) {
         global $DB;
-
-        if ($context->contextlevel !== CONTEXT_MODULE) {
+        $leafrid = self::get_instance_id($userlist->get_context());
+        $userids = $userlist->get_userids();
+        if (!$leafrid || !$userids) {
             return;
         }
-
-        $cm = get_coursemodule_from_id('leafr', $context->instanceid);
-        if (!$cm) {
-            return;
-        }
-
-        // Delete all bookmarks for this activity.
-        $DB->delete_records('leafr_bookmarks', ['leafrid' => $cm->instance]);
-
-        // Delete all user preferences for this activity via SQL LIKE.
-        $DB->delete_records_select(
-            'user_preferences',
-            $DB->sql_like('name', ':pattern1') . ' OR ' . $DB->sql_like('name', ':pattern2') . ' OR ' . $DB->sql_like('name', ':pattern3'),
-            [
-                'pattern1' => 'leafr_pos_' . $cm->id,
-                'pattern2' => 'leafr_progress_' . $cm->id,
-                'pattern3' => 'leafr_simpleview_' . $cm->id,
-            ]
-        );
+        [$insql, $params] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
+        $params['leafrid'] = $leafrid;
+        $DB->delete_records_select('leafr_progress', "leafrid = :leafrid AND userid {$insql}", $params);
     }
 
     /**
-     * Deletes data for the given users in the given context.
+     * Returns the Leafr instance id of a module context.
      *
-     * @param approved_userlist $userlist The approved userlist
+     * @param \context $context Context
+     * @return int Instance id, 0 if the context is not a Leafr activity
      */
-    public static function delete_data_for_users(approved_userlist $userlist): void {
-        global $DB;
-
-        $context = $userlist->get_context();
-
-        if ($context->contextlevel !== CONTEXT_MODULE) {
-            return;
+    protected static function get_instance_id(\context $context): int {
+        if (!$context instanceof \context_module) {
+            return 0;
         }
-
         $cm = get_coursemodule_from_id('leafr', $context->instanceid);
-        if (!$cm) {
-            return;
-        }
-
-        [$insql, $inparams] = $DB->get_in_or_equal($userlist->get_userids(), SQL_PARAMS_NAMED);
-        $inparams['leafrid'] = $cm->instance;
-
-        $DB->delete_records_select('leafr_bookmarks', "leafrid = :leafrid AND userid $insql", $inparams);
-
-        foreach ($userlist->get_userids() as $userid) {
-            unset_user_preference('leafr_pos_'        . $cm->id, $userid);
-            unset_user_preference('leafr_progress_'   . $cm->id, $userid);
-            unset_user_preference('leafr_simpleview_' . $cm->id, $userid);
-        }
+        return $cm ? (int)$cm->instance : 0;
     }
 }

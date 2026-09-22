@@ -5,123 +5,137 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-
-/**
- * External function: Track page view and trigger completion
- *
- * @package    mod_leafr
- * @copyright  2026 Leafr
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace mod_leafr\external;
 
-use external_api;
-use external_function_parameters;
-use external_value;
-use external_multiple_structure;
-use external_single_structure;
+use core_external\external_api;
+use core_external\external_function_parameters;
+use core_external\external_multiple_structure;
+use core_external\external_single_structure;
+use core_external\external_value;
+use mod_leafr\local\progress;
 
 /**
- * External function to record seen pages and trigger completion.
+ * Records the pages a user has seen and the reading position, and updates completion.
+ *
+ * @package   mod_leafr
+ * @copyright 2026 Peter Pleimfeldner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class page_viewed extends external_api {
-
     /**
-     * Returns description of method parameters.
+     * Describes the parameters.
      *
      * @return external_function_parameters
      */
     public static function execute_parameters(): external_function_parameters {
         return new external_function_parameters([
-            'cmid'       => new external_value(PARAM_INT,  'Course module ID'),
-            'seen_pages' => new external_multiple_structure(
-                new external_value(PARAM_INT, 'Page number seen'),
-                'Array of seen page numbers'
+            'cmid' => new external_value(PARAM_INT, 'Course module id'),
+            'pages' => new external_multiple_structure(
+                new external_value(PARAM_INT, 'Page number (1-based)'),
+                'Pages the user has seen since the last call',
+                VALUE_DEFAULT,
+                []
             ),
-            'total_pages' => new external_value(PARAM_INT, 'Total number of pages', VALUE_DEFAULT, 0),
+            'currentpage' => new external_value(
+                PARAM_INT,
+                'Current reading position, 0 to leave it unchanged',
+                VALUE_DEFAULT,
+                0
+            ),
+            'totalpages' => new external_value(
+                PARAM_INT,
+                'Number of pages of the PDF as reported by the viewer',
+                VALUE_DEFAULT,
+                0
+            ),
         ]);
     }
 
     /**
-     * Execute the function.
+     * Records the progress.
      *
-     * @param int $cmid Course module ID
-     * @param array $seenpages Array of seen page numbers
-     * @param int $totalpages Total number of pages in the PDF (0 = unknown)
-     * @return array Result with completion status
+     * @param int $cmid Course module id
+     * @param int[] $pages Seen pages
+     * @param int $currentpage Current reading position
+     * @param int $totalpages Number of pages in the PDF
+     * @return array
      */
-    public static function execute(int $cmid, array $seenpages, int $totalpages = 0): array {
+    public static function execute(int $cmid, array $pages = [], int $currentpage = 0, int $totalpages = 0): array {
         global $DB, $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [
-            'cmid'        => $cmid,
-            'seen_pages'  => $seenpages,
-            'total_pages' => $totalpages,
+            'cmid' => $cmid,
+            'pages' => $pages,
+            'currentpage' => $currentpage,
+            'totalpages' => $totalpages,
         ]);
 
-        $context = \context_module::instance($params['cmid']);
+        [$course, $cm] = get_course_and_cm_from_cmid($params['cmid'], 'leafr');
+        $context = \context_module::instance($cm->id);
         self::validate_context($context);
         require_capability('mod/leafr:view', $context);
 
-        // Validate page numbers.
-        $cleanpages = array_filter(
-            array_map('intval', $params['seen_pages']),
-            fn($p) => $p >= 1
-        );
+        $leafr = $DB->get_record('leafr', ['id' => $cm->instance], '*', MUST_EXIST);
 
-        // Update progress tracking.
-        \leafr_update_progress($params['cmid'], array_values($cleanpages));
-
-        // Also save current position as max seen page.
-        if (!empty($cleanpages)) {
-            $maxpage = max($cleanpages);
-            \leafr_save_reading_position($params['cmid'], $maxpage);
+        // The PDF itself is only available in the browser, so the viewer reports its page count.
+        // It is stored once per PDF and corrected by users who can edit the activity.
+        $reported = min((int)$params['totalpages'], progress::MAX_PAGES);
+        $totalchanged = false;
+        if (
+            $reported > 0 && $reported != $leafr->totalpages
+                && (empty($leafr->totalpages) || has_capability('moodle/course:manageactivities', $context))
+        ) {
+            $leafr->totalpages = $reported;
+            $DB->set_field('leafr', 'totalpages', $reported, ['id' => $leafr->id]);
+            $totalchanged = true;
         }
 
-        // Fire page_viewed event.
-        $cm = get_coursemodule_from_id('leafr', $params['cmid'], 0, false, MUST_EXIST);
-        foreach ($cleanpages as $pageno) {
-            $event = \mod_leafr\event\page_viewed::create([
-                'objectid' => $cm->instance,
-                'context'  => $context,
-                'other'    => ['pageno' => $pageno],
-            ]);
-            $event->trigger();
+        if (isguestuser() || !isloggedin()) {
+            return ['completed' => false];
         }
 
-        // Check completion.
+        $limit = (int)$leafr->totalpages ?: progress::MAX_PAGES;
+        $valid = array_filter($params['pages'], fn($p) => $p >= 1 && $p <= $limit);
+        $position = ($params['currentpage'] >= 1 && $params['currentpage'] <= $limit) ? $params['currentpage'] : 0;
+        $newpages = progress::record((int)$leafr->id, (int)$USER->id, $valid, $position);
+
+        foreach ($newpages as $pageno) {
+            \mod_leafr\event\page_viewed::create([
+                'objectid' => $leafr->id,
+                'context' => $context,
+                'other' => ['pageno' => $pageno],
+            ])->trigger();
+        }
+
         $completed = false;
-        $leafr = $DB->get_record('leafr', ['id' => $cm->instance]);
-        if ($leafr) {
-            // Update totalpages if not set yet, or if it changed.
-            if ($params['total_pages'] > 0 && (int)$leafr->totalpages !== $params['total_pages']) {
-                $leafr->totalpages = $params['total_pages'];
-                $DB->update_record('leafr', $leafr);
+        $completion = new \completion_info($course);
+        if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC && $leafr->completiontype > 0) {
+            if ($newpages || $totalchanged) {
+                $completion->update_state($cm, COMPLETION_UNKNOWN, $USER->id);
             }
-
-            if ((int)$leafr->completiontype > 0) {
-                $course = get_course($cm->course);
-                $completion = new \completion_info($course);
-                if ($completion->is_enabled($cm)) {
-                    $completion->update_state($cm, COMPLETION_COMPLETE, $USER->id);
-                    $completed = true;
-                }
-            }
+            $completed = progress::is_complete($leafr, (int)$USER->id);
         }
 
-        return ['status' => 'ok', 'completed' => $completed];
+        return ['completed' => $completed];
     }
 
     /**
-     * Returns description of method result value.
+     * Describes the return value.
      *
      * @return external_single_structure
      */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
-            'status'    => new external_value(PARAM_TEXT, 'Status message'),
-            'completed' => new external_value(PARAM_BOOL, 'Whether completion was triggered'),
+            'completed' => new external_value(PARAM_BOOL, 'Whether the page based completion rule is fulfilled'),
         ]);
     }
 }

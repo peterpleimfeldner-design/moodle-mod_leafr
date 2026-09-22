@@ -5,106 +5,91 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-
-/**
- * Custom completion rules for mod_leafr
- *
- * @package    mod_leafr
- * @copyright  2026 Leafr
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace mod_leafr\completion;
 
 use core_completion\activity_custom_completion;
+use mod_leafr\local\progress;
 
 /**
- * Activity custom completion subclass for mod_leafr.
- * Handles the custom "completionpageseen" rule.
+ * Custom completion rules for mod_leafr.
+ *
+ * @package   mod_leafr
+ * @copyright 2026 Peter Pleimfeldner
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class custom_completion extends activity_custom_completion {
-
     /**
-     * Fetches the completion state for a given completion rule.
+     * Returns the completion state of a rule.
      *
-     * @param string $rule The completion rule
-     * @return int The completion state (COMPLETION_COMPLETE or COMPLETION_INCOMPLETE)
+     * @param string $rule Rule name
+     * @return int COMPLETION_COMPLETE or COMPLETION_INCOMPLETE
      */
     public function get_state(string $rule): int {
         global $DB;
 
         $this->validate_rule($rule);
 
-        $leafr = $DB->get_record('leafr', ['id' => $this->cm->instance], '*', MUST_EXIST);
-
-        if ($rule === 'completionpageseen') {
-            // Load the seen pages progress from user preferences.
-            $prefkey   = 'leafr_progress_' . $this->cm->id;
-            $seenjson  = get_user_preferences($prefkey, '[]', $this->userid);
-            $seen      = json_decode($seenjson, true) ?? [];
-            $totalpages = (int)($leafr->totalpages ?? 0);
-
-            // If total pages not yet stored (old record), treat as incomplete.
-            if ($totalpages === 0) {
-                return COMPLETION_INCOMPLETE;
-            }
-
-            $complete = match((int)$leafr->completiontype) {
-                1 => in_array($totalpages, $seen),
-                2 => count($seen) > 0 && (count($seen) / $totalpages * 100) >= (int)$leafr->completionpercent,
-                3 => in_array((int)$leafr->completionpage, $seen),
-                default => false,
-            };
-
-            return $complete ? COMPLETION_COMPLETE : COMPLETION_INCOMPLETE;
-        }
-
-        return COMPLETION_INCOMPLETE;
+        $leafr = $DB->get_record(
+            'leafr',
+            ['id' => $this->cm->instance],
+            'id, completiontype, completionpercent, completionpage, totalpages',
+            MUST_EXIST
+        );
+        return progress::is_complete($leafr, $this->userid) ? COMPLETION_COMPLETE : COMPLETION_INCOMPLETE;
     }
 
     /**
-     * Defines the custom completion rules this module supports.
+     * Returns the names of the custom rules of this module.
      *
-     * @return array
+     * @return string[]
      */
     public static function get_defined_custom_rules(): array {
         return ['completionpageseen'];
     }
 
     /**
-     * Returns an associative array of the descriptions of custom completion rules.
+     * Returns the descriptions of the active custom rules.
      *
      * @return array
      */
     public function get_custom_rule_descriptions(): array {
         global $DB;
 
-        $leafr = $DB->get_record('leafr', ['id' => $this->cm->instance]);
-
-        $desc = '';
+        $leafr = $DB->get_record(
+            'leafr',
+            ['id' => $this->cm->instance],
+            'id, completiontype, completionpercent, completionpage'
+        );
+        $description = '';
         if ($leafr) {
             switch ((int)$leafr->completiontype) {
-                case 1:
-                    $desc = get_string('completion_lastpage', 'leafr');
+                case progress::COMPLETION_LASTPAGE:
+                    $description = get_string('completiondetail:lastpage', 'leafr');
                     break;
-                case 2:
-                    $desc = get_string('completion_percent_desc', 'leafr', $leafr->completionpercent);
+                case progress::COMPLETION_PERCENT:
+                    $description = get_string('completiondetail:percent', 'leafr', (int)$leafr->completionpercent);
                     break;
-                case 3:
-                    $desc = get_string('completion_specificpage_desc', 'leafr', $leafr->completionpage);
+                case progress::COMPLETION_SPECIFICPAGE:
+                    $description = get_string('completiondetail:page', 'leafr', (int)$leafr->completionpage);
                     break;
-                default:
-                    $desc = get_string('completion_none', 'leafr');
             }
         }
-
-        return ['completionpageseen' => $desc];
+        return ['completionpageseen' => $description];
     }
 
     /**
-     * Returns an array of all completion rules, in the order they should be displayed to users.
+     * Returns the order in which the rules are displayed.
      *
-     * @return array
+     * @return string[]
      */
     public function get_sort_order(): array {
         return ['completionview', 'completionpageseen'];
