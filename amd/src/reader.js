@@ -23,7 +23,7 @@
 
 import Ajax from 'core/ajax';
 import Pending from 'core/pending';
-import {getStrings} from 'core/str';
+import * as Str from 'core/str';
 import FlipbookView from 'mod_leafr/flipbook';
 import ScrollView from 'mod_leafr/scrollview';
 import Toc from 'mod_leafr/toc';
@@ -88,7 +88,8 @@ class Reader {
 
         try {
             const [strings, pdfDoc] = await Promise.all([
-                getStrings(STRING_KEYS.map((key) => ({key, component: 'mod_leafr'}))),
+                // The function getStrings() exists from Moodle 4.3, get_strings() before.
+                (Str.getStrings || Str.get_strings)(STRING_KEYS.map((key) => ({key, component: 'mod_leafr'}))),
                 loadDocument(this.fileurl),
             ]);
             this.strings = {};
@@ -355,68 +356,41 @@ class Reader {
             }
             return;
         }
-        const tag = event.target.tagName;
-        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) {
             return;
         }
-        const pageKeys = !this.simpleView || event.target !== this.stage;
-        let handled = true;
-        switch (event.key) {
-            case 'ArrowRight':
-                this.waitForTurn();
-                this.view.next();
-                break;
-            case 'ArrowLeft':
-                this.waitForTurn();
-                this.view.prev();
-                break;
-            case 'PageDown':
-            case 'PageUp':
-                // In the simple view the browser scrolls the stage itself.
-                handled = pageKeys;
-                if (handled) {
-                    this.view[event.key === 'PageDown' ? 'next' : 'prev']();
-                }
-                break;
-            case 'Home':
-                this.goTo(1);
-                break;
-            case 'End':
-                this.goTo(this.total);
-                break;
-            case '+':
-                this.changeZoom(1);
-                break;
-            case '-':
-                this.changeZoom(-1);
-                break;
-            case 't':
-            case 'T':
-                handled = !!this.toc;
-                if (handled) {
-                    this.toc.toggle();
-                }
-                break;
-            case 'f':
-            case 'F':
-                this.toggleFullscreen();
-                break;
-            case '?':
-                this.openHelp();
-                break;
-            case 'Escape':
-                if (this.toc && this.toc.isOpen()) {
-                    this.toc.close();
-                } else {
-                    handled = false;
-                }
-                break;
-            default:
-                handled = false;
-        }
-        if (handled) {
+        const action = this.getKeyAction(event);
+        if (action) {
             event.preventDefault();
+            action();
         }
+    }
+
+    /**
+     * Returns the function for a keyboard shortcut.
+     *
+     * @param {KeyboardEvent} event Key event
+     * @returns {Function|null} The action, null if the key is not a shortcut here
+     */
+    getKeyAction(event) {
+        // In the simple view the browser scrolls the stage itself with Page Up and Page Down.
+        const pageKeys = !this.simpleView || event.target !== this.stage;
+        const actions = {
+            ArrowRight: () => this.handleAction('next'),
+            ArrowLeft: () => this.handleAction('prev'),
+            PageDown: pageKeys ? () => this.handleAction('next') : null,
+            PageUp: pageKeys ? () => this.handleAction('prev') : null,
+            Home: () => this.goTo(1),
+            End: () => this.goTo(this.total),
+            '+': () => this.changeZoom(1),
+            '-': () => this.changeZoom(-1),
+            t: this.toc ? () => this.toc.toggle() : null,
+            f: () => this.toggleFullscreen(),
+            '?': () => this.openHelp(),
+            Escape: this.toc && this.toc.isOpen() ? () => this.toc.close() : null,
+        };
+        const key = event.key.length === 1 && event.key !== '?' ? event.key.toLowerCase() : event.key;
+        return actions[key] || null;
     }
 
     /**

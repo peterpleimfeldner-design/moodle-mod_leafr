@@ -92,8 +92,18 @@ export default class Tracker {
         const currentPage = this.currentPage;
         this.pending.clear();
         this.sending = true;
+        this.send(pages, currentPage);
+    }
 
-        Ajax.call([{
+    /**
+     * Sends pages and reading position to the server.
+     *
+     * @param {number[]} pages Newly seen pages
+     * @param {number} currentPage Reading position
+     * @returns {Promise}
+     */
+    send(pages, currentPage) {
+        return Ajax.call([{
             methodname: 'mod_leafr_page_viewed',
             args: {
                 cmid: this.cmid,

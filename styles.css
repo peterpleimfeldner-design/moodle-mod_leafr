@@ -52,7 +52,7 @@
 }
 
 .leafr-reader [hidden] {
-    display: none !important;
+    display: none;
 }
 
 .leafr-reader.is-fullscreen {

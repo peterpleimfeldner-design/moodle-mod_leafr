@@ -50,6 +50,7 @@ final class page_viewed_test extends \advanced_testcase {
         global $CFG, $DB;
         require_once($CFG->libdir . '/completionlib.php');
         $this->resetAfterTest();
+        $this->setAdminUser();
 
         $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
@@ -85,6 +86,7 @@ final class page_viewed_test extends \advanced_testcase {
     public function test_totalpages_only_changed_by_editors(): void {
         global $DB;
         $this->resetAfterTest();
+        $this->setAdminUser();
 
         $course = $this->getDataGenerator()->create_course();
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
@@ -106,6 +108,7 @@ final class page_viewed_test extends \advanced_testcase {
      */
     public function test_requires_access(): void {
         $this->resetAfterTest();
+        $this->setAdminUser();
 
         $course = $this->getDataGenerator()->create_course();
         $leafr = $this->getDataGenerator()->create_module('leafr', ['course' => $course->id]);

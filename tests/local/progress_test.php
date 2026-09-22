@@ -131,6 +131,7 @@ final class progress_test extends \advanced_testcase {
         global $CFG, $DB;
         require_once($CFG->libdir . '/completionlib.php');
         $this->resetAfterTest();
+        $this->setAdminUser();
 
         $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
