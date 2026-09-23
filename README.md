@@ -8,9 +8,11 @@ Leafr is a Moodle activity that shows a PDF document as a book students can leaf
 - **Simple view** without animation: all pages below each other, scrollable, with the text of each page available to screen readers. It is used automatically when the operating system asks for reduced motion and can be switched on at any time; the choice is remembered.
 - **Continue reading**: the document opens at the page the student read last.
 - **Completion**: the activity can be completed when the last page, a percentage of all pages or a specific page has been viewed.
-- **Table of contents** built from the bookmarks (outline) of the PDF.
+- **Table of contents** built from the bookmarks (outline) of the PDF, shown as its own sidebar tab together with page thumbnails.
+- **In-document search**: full-text search across all pages with result navigation and highlighted matches.
+- **Bookmarks**: students can mark any page (in book view, either page of a two-page spread) and add a short note (up to 500 characters, with a live character counter). Bookmarks appear in their own sidebar tab and can be exported as a simple print/PDF page.
 - **Zoom** (50 % to 300 %) with drag-to-pan, **full screen**, page number input and progress bar.
-- **Keyboard shortcuts** while the reader has the focus: arrow keys, Page Up/Down, Home/End, `+`/`-`, `T` (table of contents), `F` (full screen), `?` (help).
+- **Keyboard shortcuts** while the reader has the focus: arrow keys, Page Up/Down, Home/End, `+`/`-`, `T` (table of contents), `F` (full screen), `B` (bookmark current page), `?` (help).
 - Optional **download** of the original PDF (per activity setting and capability `mod/leafr:download`).
 - Backup and restore, course reset, Privacy API (GDPR), events for page views.
 
@@ -32,7 +34,7 @@ The number of pages is determined by the browser when the document is opened for
 
 ## Privacy
 
-Leafr stores, per user and activity, the pages that were viewed and the last reading position, plus one user preference for the simple view. All data can be exported and deleted with the Moodle privacy tools.
+Leafr stores, per user and activity, the pages that were viewed and the last reading position, the bookmarks (page number and note) a user has set, plus one user preference for the simple view. All data can be exported and deleted with the Moodle privacy tools.
 
 ## Third-party libraries
 

@@ -15,10 +15,13 @@
   löschen“) und Sicherung/Wiederherstellung (inkl. Aktivität duplizieren) berücksichtigen die
   neue Tabelle.
 - **Nachbesserung (Peters Rückmeldung):** In der Doppelseiten-Ansicht ließ sich nur die linke der
-  beiden sichtbaren Seiten mit einem Lesezeichen versehen. Jede Seite hat jetzt einen eigenen,
-  klickbaren Bereich an der Seitenecke (wie ein Eselsohr), damit links und rechts unabhängig
-  markiert werden können; Werkzeugleisten-Knopf und Taste B bleiben für die einfache Ansicht und
-  die Tastaturbedienung zuständig.
+  beiden sichtbaren Seiten mit einem Lesezeichen versehen. Erste Lösung war ein klickbarer Bereich
+  an der Seitenecke – das überschnitt sich aber mit der Umblätter-Erkennung von StPageFlip (Klick/
+  Drag/Hover-Kurve genau in derselben Ecke) und sah während der Umblätter-Animation kaputt aus.
+  Stattdessen gibt es jetzt eine schmale Leiste oberhalb des Buchs mit einer Schaltfläche je
+  sichtbarer Seite (nur bei einer echten Doppelseite eingeblendet); die Eselsohr-Markierung an der
+  Seitenecke bleibt als rein optische Anzeige ohne eigenen Klick-Bereich erhalten. Werkzeugleisten-
+  Knopf und Taste B bleiben für die einfache Ansicht und die Tastaturbedienung zuständig.
 - **Nachbesserung:** Das Notizfeld zeigt jetzt einen Zeichenzähler („120 von 500 Zeichen“, der ab
   90 % farblich warnt) und wächst beim Tippen bis zu einer Maximalhöhe mit.
 - **Neu: Druckansicht** (`print.php`, erreichbar über „Drucken oder als PDF speichern“ im

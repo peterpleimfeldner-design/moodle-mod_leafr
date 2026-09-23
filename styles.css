@@ -592,27 +592,53 @@
     pointer-events: none;
 }
 
-/* Invisible hit target over the corner flag, so each page of a two-page spread can be
-   bookmarked on its own (the toolbar button and the B key only ever reach the left page). */
-.leafr-page-bookmark {
-    position: absolute;
+/* Bar above the book with one bookmark button per visible page. Shown only for an actual
+   two-page spread in the flipbook view: a button on the page corner itself used to overlap
+   StPageFlip's click/drag zone for turning pages there, which looked broken. */
+.leafr-page-bookmarks {
+    position: sticky;
     top: 0;
-    right: 4px;
-    width: 40px;
-    height: 40px;
     z-index: 4;
-    border: 0;
-    border-radius: 0 0 0.25rem 0.25rem;
-    background: transparent;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0;
+    background: var(--leafr-stage-bg);
+}
+
+.leafr-page-bookmark-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    border: 1px solid var(--leafr-border);
+    border-radius: 1rem;
+    background: var(--leafr-panel-bg);
+    color: var(--leafr-panel-fg);
+    font-size: 0.8rem;
+    line-height: 1.2;
     cursor: pointer;
 }
 
-.leafr-page-bookmark:hover,
-.leafr-page-bookmark:focus-visible {
-    background: rgba(217, 119, 6, 0.18);
+.leafr-page-bookmark-btn::before {
+    content: "";
+    width: 10px;
+    height: 14px;
+    background: #d97706;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
+    opacity: 0.35;
 }
 
-.leafr-page-bookmark:focus-visible {
+.leafr-page-bookmark-btn.is-bookmarked::before {
+    opacity: 1;
+}
+
+.leafr-page-bookmark-btn:hover,
+.leafr-page-bookmark-btn:focus-visible {
+    border-color: var(--leafr-accent);
+}
+
+.leafr-page-bookmark-btn:focus-visible {
     outline: 2px solid var(--leafr-accent);
     outline-offset: 1px;
 }
