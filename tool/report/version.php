@@ -15,18 +15,20 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version information for mod_leafr.
+ * Version information for leafrtool_report.
  *
- * @package   mod_leafr
+ * @package   leafrtool_report
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'mod_leafr';
-$plugin->version   = 2026092401;
+$plugin->component = 'leafrtool_report';
+$plugin->version   = 2026092400;
 $plugin->requires  = 2024100700; // Moodle 4.5 (LTS).
-$plugin->supported = [405, 502];
 $plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '1.1.0';
+$plugin->release   = '1.2.0';
+$plugin->dependencies = [
+    'mod_leafr' => 2026092400,
+];

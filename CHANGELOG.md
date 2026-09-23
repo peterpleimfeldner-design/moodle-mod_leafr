@@ -2,6 +2,31 @@
 
 ## 1.2.0 (in Arbeit, Branch `release/1.2.0`)
 
+### Paket G – Datensparsamer Bericht für Lehrende (`leafrtool_report`)
+- Neue Seite **„Übersicht“** (eigener Reiter neben „Einstellungen“, sichtbar nur mit der neuen
+  Capability `mod/leafr:viewreport`, standardmäßig Lehrende/Trainer/innen und Manager).
+- Pro Person nur: Name, „abgeschlossen ja/nein“, „Pflichtseiten gelesen“ (ja/nein oder als
+  Prozentsatz, je nach Abschlussregel) und, falls die Lesebestätigung (`leafrtool_confirm`)
+  eingerichtet ist, das Bestätigungsdatum.
+- Filter nach Gruppe (bei Kursen mit Gruppenmodus), CSV-Export.
+- Bewusst **nicht** erfasst oder gezeigt: Lesezeiten, einzelne Seitenaufrufe pro Person,
+  Lesezeichen, Notizen, Markierungen. Hinweistext auf der Seite erklärt das.
+- Der Kern (`tool_manager`) wurde um eine generische Navigationserweiterung ergänzt
+  (`extend_navigation`), über die jedes `leafrtool`-Unter-Plugin eigene Links in die
+  „Mehr“-Navigation der Aktivität einträgt.
+- CSV-Export gegen Formel-Injection abgesichert (ein Name, der mit `=`, `+`, `-`, `@` oder Tab
+  beginnt, würde sonst beim Öffnen in Excel/Calc als Formel ausgeführt).
+
+### Qualitätssicherung (CI)
+- Statische Analyse mit **PHPStan** (Level 5, `micaherne/phpstan-moodle`) als eigener CI-Schritt,
+  läuft gegen jede getestete Moodle-Version.
+- Neuer PHPUnit-Test mit zehn simulierten Studierenden und unterschiedlichem Lesefortschritt
+  bestätigt, dass die Übersicht (Paket G) jede Person einzeln und korrekt sortiert zeigt.
+- Neue Behat-Szenarien: zwei Studierende mit unterschiedlichem Fortschritt, Lehrperson prüft in
+  der Übersicht, dass die Werte nicht zwischen den Personen vermischt werden; außerdem
+  automatische Barrierefreiheitsprüfung (axe-core, `the page should meet accessibility
+  standards`) für das Flipbook und die Übersicht.
+
 ### Paket F – Lesebestätigung (`leafrtool_confirm`)
 - Erstes echtes Unter-Plugin vom Typ `leafrtool`: **Lesebestätigung** als eigenständiges,
   optionales Werkzeug. Neue Checkbox „Lesebestätigung erforderlich“ bei den Abschlussbedingungen,

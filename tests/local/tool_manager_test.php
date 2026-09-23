@@ -115,4 +115,28 @@ final class tool_manager_test extends \advanced_testcase {
         $this->assertStringContainsString('leafrtool-confirm', $html);
         $this->assertStringContainsString('Please confirm reading this.', $html);
     }
+
+    /**
+     * extend_navigation() lets leafrtool_report add its "Overview" link, but only for someone
+     * with the mod/leafr:viewreport capability.
+     */
+    public function test_extend_navigation(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $leafr = $this->getDataGenerator()->create_module('leafr', ['course' => $course->id]);
+        $cm = get_fast_modinfo($course)->get_cm($leafr->cmid);
+        $context = \context_module::instance($cm->id);
+
+        $node = new \navigation_node('Leafr: letzte Seite');
+        tool_manager::extend_navigation($node, $cm, $context);
+        $this->assertNotNull($node->get('leafrtoolreport'));
+
+        $this->setUser($student);
+        $node = new \navigation_node('Leafr: letzte Seite');
+        tool_manager::extend_navigation($node, $cm, $context);
+        $this->assertNull($node->get('leafrtoolreport'));
+    }
 }

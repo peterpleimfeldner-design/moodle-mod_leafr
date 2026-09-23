@@ -226,4 +226,18 @@ class tool_manager {
         }
         return $html;
     }
+
+    /**
+     * Lets every enabled tool add its own links to the activity's "More" navigation (e.g. a
+     * report page).
+     *
+     * @param \navigation_node $node The node for this activity
+     * @param \cm_info $cm Course module
+     * @param \context_module $context Module context
+     */
+    public static function extend_navigation(\navigation_node $node, \cm_info $cm, \context_module $context): void {
+        foreach (self::get_enabled_tools() as $component) {
+            component_callback($component, 'extend_navigation', [$node, $cm, $context]);
+        }
+    }
 }

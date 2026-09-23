@@ -14,19 +14,26 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace leafrtool_report\privacy;
+
+use core_privacy\local\metadata\null_provider;
+
 /**
- * Version information for mod_leafr.
+ * Privacy API implementation for leafrtool_report: the overview page only reads and displays
+ * data that mod_leafr and its other tools already store and declare themselves; it does not
+ * collect or persist anything of its own.
  *
- * @package   mod_leafr
+ * @package   leafrtool_report
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'mod_leafr';
-$plugin->version   = 2026092401;
-$plugin->requires  = 2024100700; // Moodle 4.5 (LTS).
-$plugin->supported = [405, 502];
-$plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '1.1.0';
+class provider implements null_provider {
+    /**
+     * Explains why this plugin has no personal data to declare.
+     *
+     * @return string
+     */
+    public static function get_reason(): string {
+        return 'privacy:metadata';
+    }
+}

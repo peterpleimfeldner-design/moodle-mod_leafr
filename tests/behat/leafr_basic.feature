@@ -27,6 +27,11 @@ Feature: Read a PDF document in a Leafr flipbook
     And "Download PDF" "link" should exist
     And "Sidebar" "button" should exist
 
+  @javascript @accessibility
+  Scenario: The flipbook meets accessibility standards
+    When I am on the "Handbook" "leafr activity" page logged in as "student1"
+    Then the page should meet accessibility standards
+
   Scenario: The download button is hidden when downloading is not allowed
     Given the following "activities" exist:
       | activity | course | name      | downloadallowed | showtoc |

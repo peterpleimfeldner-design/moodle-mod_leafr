@@ -92,6 +92,7 @@ $string['lastpage'] = 'Last page';
 $string['leafr:addinstance'] = 'Add a new Leafr flipbook';
 $string['leafr:download'] = 'Download the PDF';
 $string['leafr:view'] = 'View Leafr flipbook';
+$string['leafr:viewreport'] = 'View the Leafr reading report';
 $string['leafrname'] = 'Name';
 $string['loading'] = 'Loading document …';
 $string['matchofmatches'] = '{$a->index} of {$a->total}';

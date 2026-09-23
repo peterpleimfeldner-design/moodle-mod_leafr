@@ -295,6 +295,21 @@ function leafr_view(stdClass $leafr, stdClass $course, $cm, context_module $cont
 }
 
 /**
+ * Lets installed leafrtool subplugins add their own links to the activity's "More" navigation
+ * (e.g. a report or overview page).
+ *
+ * @param settings_navigation $settingsnav The settings navigation object
+ * @param navigation_node $leafrnode The node for this activity
+ */
+function leafr_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $leafrnode): void {
+    $cm = $settingsnav->get_page()->cm;
+    if (!$cm) {
+        return;
+    }
+    tool_manager::extend_navigation($leafrnode, $cm, context_module::instance($cm->id));
+}
+
+/**
  * Adds the reset options to the course reset form.
  *
  * @param MoodleQuickForm $mform Course reset form

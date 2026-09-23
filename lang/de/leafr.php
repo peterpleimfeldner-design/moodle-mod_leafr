@@ -92,6 +92,7 @@ $string['lastpage'] = 'Letzte Seite';
 $string['leafr:addinstance'] = 'Neues Leafr-Flipbook hinzufügen';
 $string['leafr:download'] = 'PDF herunterladen';
 $string['leafr:view'] = 'Leafr-Flipbook ansehen';
+$string['leafr:viewreport'] = 'Leafr-Leseübersicht ansehen';
 $string['leafrname'] = 'Name';
 $string['loading'] = 'Dokument wird geladen …';
 $string['matchofmatches'] = '{$a->index} von {$a->total}';

@@ -43,6 +43,17 @@ Abschlussbedingungen; `completion_rule_elements()` darf direkt danach eigene Zus
 $formname, 'notchecked')`). Ob die Regel für eine Aktivität aktiv ist, prüft
 `completion_rule_enabled()`; ob sie für eine Person erfüllt ist, `completion_state()`.
 
+## Navigation
+
+```php
+function leafrtool_<name>_extend_navigation(navigation_node $node, cm_info $cm, context_module $context): void
+```
+
+Wird beim Aufbau der Aktivitäts-Navigation aufgerufen (die Links unter „Mehr“ neben
+„Einstellungen“). Damit kann ein Werkzeug eine eigene Seite verlinken, z. B. eine
+Übersicht/Bericht für Lehrende (`leafrtool_report`). Rechteprüfung übernimmt das Werkzeug selbst
+(`$node->add(...)` nur, wenn `has_capability(...)` zutrifft).
+
 ## Werkzeugleiste, Seitenleiste und der Bereich unter dem Reader
 
 ```php
