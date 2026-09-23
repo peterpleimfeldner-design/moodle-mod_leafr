@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['addchapters'] = 'Add chapters';
 $string['bookmark'] = 'Bookmark';
 $string['bookmark_empty'] = 'No bookmarks yet.';
 $string['bookmark_note_chars'] = '{$a->used} of {$a->max} characters';
@@ -32,7 +33,6 @@ $string['bookmark_note_placeholder'] = 'Add a note …';
 $string['bookmark_page'] = 'Bookmark page {$a}';
 $string['bookmark_print'] = 'Print or save as PDF';
 $string['bookmark_remove'] = 'Remove bookmark';
-$string['addchapters'] = 'Add chapters';
 $string['chapterpage'] = 'Start page';
 $string['chaptersheader'] = 'Chapters';
 $string['chaptertitle'] = 'Chapter title';

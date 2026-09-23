@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$string['addchapters'] = 'Kapitel hinzufügen';
 $string['bookmark'] = 'Lesezeichen';
 $string['bookmark_empty'] = 'Noch keine Lesezeichen.';
 $string['bookmark_note_chars'] = '{$a->used} von {$a->max} Zeichen';
@@ -32,7 +33,6 @@ $string['bookmark_note_placeholder'] = 'Notiz hinzufügen …';
 $string['bookmark_page'] = 'Lesezeichen für Seite {$a}';
 $string['bookmark_print'] = 'Drucken oder als PDF speichern';
 $string['bookmark_remove'] = 'Lesezeichen entfernen';
-$string['addchapters'] = 'Kapitel hinzufügen';
 $string['chapterpage'] = 'Startseite';
 $string['chaptersheader'] = 'Kapitel';
 $string['chaptertitle'] = 'Kapiteltitel';
