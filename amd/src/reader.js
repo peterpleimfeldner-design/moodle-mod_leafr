@@ -47,7 +47,7 @@ const STRING_KEYS = [
     'pagelabel', 'pageofpages', 'pagesofpages', 'totalpages', 'toc_empty',
     'fullscreen_enter', 'fullscreen_exit', 'zoomlevel', 'continuenotice', 'progresssummary',
     'search_label', 'search_placeholder', 'search_indexing', 'search_noresults',
-    'search_noresults_scan', 'search_resultcount', 'search_next', 'search_prev', 'matchofmatches',
+    'search_noresults_scan', 'search_next', 'search_prev', 'matchofmatches',
 ];
 
 class Reader {

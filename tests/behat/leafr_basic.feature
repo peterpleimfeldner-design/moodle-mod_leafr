@@ -60,7 +60,7 @@ Feature: Read a PDF document in a Leafr flipbook
     And I set the field "Search text" to "Chapter 3"
     And I press the enter key
     And I wait "2" seconds
-    Then I should see "matches" in the ".leafr-search-status" "css_element"
+    Then I should see "1 of 4" in the ".leafr-search-status" "css_element"
     And I should see "Chapter 3" in the ".leafr-search-results" "css_element"
     And the field "Go to page" matches value "9"
     And I click on "[data-action='search-next']" "css_element"

@@ -106,7 +106,6 @@ $string['search_noresults'] = 'Keine Treffer gefunden.';
 $string['search_noresults_scan'] = 'Dieses Dokument enthält keinen durchsuchbaren Text.';
 $string['search_placeholder'] = 'Im Dokument suchen';
 $string['search_prev'] = 'Vorheriger Treffer';
-$string['search_resultcount'] = '{$a} Treffer';
 $string['showtoc'] = 'Inhaltsverzeichnis anzeigen';
 $string['showtoc_help'] = 'Zeigt die Lesezeichen (Gliederung) des PDFs als Inhaltsverzeichnis. Das PDF muss Lesezeichen enthalten, die die meisten Programme beim PDF-Export erzeugen können.';
 $string['sidebar'] = 'Seitenleiste';

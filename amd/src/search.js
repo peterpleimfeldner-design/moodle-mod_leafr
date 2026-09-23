@@ -200,7 +200,6 @@ export default class Search {
             return;
         }
 
-        this.status.textContent = this.strings.search_resultcount.replace('{$a}', this.matches.length);
         this.renderResults();
         this.activeIndex = 0;
         this.updateNavButtons();

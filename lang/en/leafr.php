@@ -106,7 +106,6 @@ $string['search_noresults'] = 'No matches found.';
 $string['search_noresults_scan'] = 'This document does not contain searchable text.';
 $string['search_placeholder'] = 'Search in document';
 $string['search_prev'] = 'Previous match';
-$string['search_resultcount'] = '{$a} matches';
 $string['showtoc'] = 'Show table of contents';
 $string['showtoc_help'] = 'Shows the bookmarks (outline) of the PDF as a table of contents. The PDF must contain bookmarks, which most programs can create when exporting to PDF.';
 $string['sidebar'] = 'Sidebar';
