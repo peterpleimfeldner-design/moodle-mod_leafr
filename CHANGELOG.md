@@ -2,7 +2,24 @@
 
 ## 1.2.0 (in Arbeit, Branch `release/1.2.0`)
 
-### Paket A – Grundlagen und UX-Fehler
+### Paket B – Seitenleiste und Wiederfinden
+- Neue Seitenleiste (ersetzt das bisherige Inhaltsverzeichnis-Panel) mit den Reitern **Miniaturen**,
+  **Inhalt** und **Suche** (ARIA-Tabs, mit Pfeiltasten bedienbar). Der Reiter „Lesezeichen“ folgt in
+  Paket C, sobald es die Lesezeichen-Datenstruktur gibt.
+- **Miniaturansichten**: werden erst gerendert, wenn sie in den sichtbaren Bereich scrollen, weit
+  entfernte werden wieder freigegeben. Gelesene Seiten zeigen ein Häkchen, die aktuelle Seite ist
+  hervorgehoben, Klick springt hin.
+- **Inhalt**: wie bisher aus der PDF-Gliederung, jetzt als Reiter statt eigenes Panel.
+- **Volltextsuche** über `PDF.js getTextContent()`: Trefferliste mit Seitenzahl und Textausschnitt,
+  Treffer werden auf der Seite selbst hervorgehoben (positionsgenaue Markierung, unabhängig von Zoom
+  und Blätteranimation), „nächster/vorheriger Treffer“. Bei Scans ohne Text erscheint ein Hinweis.
+- Auf dem Handy ist die Seitenleiste jetzt eine Überlagerung über die volle Breite (vorher 18rem) und
+  schließt sich automatisch nach einer Navigation.
+- Zwei Fehler dabei gefunden und behoben: `getTextItems()` verdoppelte die Skalierung von Breite/Höhe
+  der Textelemente (PDF.js liefert sie bereits in Seiteneinheiten); die „Nächster/Vorheriger Treffer“-
+  Knöpfe der Suche verwendeten dieselben `data-action`-Werte wie die Werkzeugleiste und lösten dadurch
+  zusätzlich eine echte Seitenwende aus. Außerdem `FlipbookView.goTo()` vereinfacht (immer
+  `turnToPage()`), da die animierte `flip()`-Kurzstrecke bei einzelnen Seiten unzuverlässig war.
 - Reader-Höhe berücksichtigt jetzt alle fixierten/klebenden Leisten am oberen Rand (nicht nur die
   erste gefundene), damit die eigene Werkzeugleiste bei Themes mit mehreren Navigationsleisten
   sichtbar bleibt. Die Messung läuft entprellt bei jeder Fenstergrößenänderung.

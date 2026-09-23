@@ -25,7 +25,7 @@ Feature: Read a PDF document in a Leafr flipbook
     Then I should see "Handbook"
     And ".leafr-toolbar" "css_element" should exist
     And "Download PDF" "link" should exist
-    And "Table of contents" "button" should exist
+    And "Sidebar" "button" should exist
 
   Scenario: The download button is hidden when downloading is not allowed
     Given the following "activities" exist:
@@ -33,7 +33,7 @@ Feature: Read a PDF document in a Leafr flipbook
       | leafr    | C1     | Protected | 0               | 0       |
     When I am on the "Protected" "leafr activity" page logged in as "student1"
     Then "Download PDF" "link" should not exist
-    And "Table of contents" "button" should not exist
+    And "Contents" "button" should not exist
 
   @javascript
   Scenario: The document is rendered and the student can leaf through it
@@ -45,9 +45,23 @@ Feature: Read a PDF document in a Leafr flipbook
     And I set the field "Go to page" to "9"
     And I press the enter key
     And the field "Go to page" matches value "9"
-    And I press "Table of contents"
+    And I press "Sidebar"
+    And I press "Contents"
     And I should see "Chapter 3: Summary"
     And I should see "of 12 pages read" in the ".leafr-toolbar" "css_element"
+
+  @javascript
+  Scenario: A student searches the document
+    When I am on the "Handbook" "leafr activity" page logged in as "student1"
+    And I press "Sidebar"
+    And I press "Search"
+    And I set the field "Search text" to "Chapter 3"
+    And I wait "1" seconds
+    Then I should see "matches" in the ".leafr-search-status" "css_element"
+    And I should see "Chapter 3" in the ".leafr-search-results" "css_element"
+    And the field "Go to page" matches value "9"
+    And I press "Next match"
+    And the field "Go to page" matches value "10"
 
   @javascript
   Scenario: A returning student sees a notice instead of a silent jump

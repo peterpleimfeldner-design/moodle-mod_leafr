@@ -242,12 +242,9 @@ export default class FlipbookView {
         if (visible.includes(target)) {
             return;
         }
-        const distance = Math.abs(target - this.page);
-        if (distance <= 2 && this.zoom === 1) {
-            this.pageFlip.flip(target - 1);
-        } else {
-            this.pageFlip.turnToPage(target - 1);
-        }
+        // StPageFlip's animated flip() pairs pages internally for its page-turning animation and
+        // can overshoot by one page for some short jumps; turnToPage() always lands exactly.
+        this.pageFlip.turnToPage(target - 1);
     }
 
     /**

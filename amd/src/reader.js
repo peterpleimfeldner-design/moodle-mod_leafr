@@ -26,9 +26,12 @@ import Pending from 'core/pending';
 import * as Str from 'core/str';
 import FlipbookView from 'mod_leafr/flipbook';
 import ScrollView from 'mod_leafr/scrollview';
+import Sidebar from 'mod_leafr/sidebar';
+import Thumbnails from 'mod_leafr/thumbnails';
+import Search from 'mod_leafr/search';
 import Toc from 'mod_leafr/toc';
 import Tracker from 'mod_leafr/tracker';
-import {getOutline, loadDocument} from 'mod_leafr/pdf';
+import {getOutline, getPageSize, loadDocument} from 'mod_leafr/pdf';
 
 /** Time a page turn animation needs, in milliseconds. */
 const TURN_DURATION = 900;
@@ -36,10 +39,15 @@ const TURN_DURATION = 900;
 /** Available zoom factors. */
 const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3];
 
+/** How long a search match stays highlighted, in milliseconds. */
+const HIGHLIGHT_DURATION = 4000;
+
 /** Language strings used by the reader. */
 const STRING_KEYS = [
-    'pagelabel', 'pageofpages', 'pagesofpages', 'totalpages', 'toc_empty', 'toc',
+    'pagelabel', 'pageofpages', 'pagesofpages', 'totalpages', 'toc_empty',
     'fullscreen_enter', 'fullscreen_exit', 'zoomlevel', 'continuenotice', 'progresssummary',
+    'search_label', 'search_placeholder', 'search_indexing', 'search_noresults',
+    'search_noresults_scan', 'search_resultcount', 'search_next', 'search_prev', 'matchofmatches',
 ];
 
 class Reader {
@@ -65,10 +73,15 @@ class Reader {
         this.continueToast = root.querySelector('[data-region="continue"]');
         this.live = root.querySelector('[data-region="live"]');
         this.helpDialog = root.querySelector('[data-region="help"]');
-        this.tocPanel = root.querySelector('[data-region="toc"]');
+        this.sidebarRoot = root.querySelector('[data-region="sidebar"]');
+        this.sidebarToggle = root.querySelector('[data-action="sidebar"]');
         this.zoomLabel = root.querySelector('[data-region="zoom-label"]');
         this.view = null;
+        this.sidebar = null;
         this.toc = null;
+        this.thumbnails = null;
+        this.search = null;
+        this.highlightTimer = null;
         this.zoomIndex = ZOOM_STEPS.indexOf(1);
         this.announceTimer = null;
         this.resizeTimer = null;
@@ -120,13 +133,12 @@ class Reader {
             this.pageInput.setAttribute('max', this.total);
             this.progressBar.setAttribute('aria-valuemax', this.total);
             this.root.querySelectorAll('.leafr-toolbar button[disabled], .leafr-pageinput').forEach((el) => {
-                if (el.dataset.action !== 'toc') {
-                    el.disabled = false;
-                }
+                el.disabled = false;
             });
             const fullscreenButton = this.root.querySelector('[data-action="fullscreen"]');
             fullscreenButton.hidden = !this.root.requestFullscreen;
 
+            this.initSidebar();
             await this.showView();
             this.setLoading(false);
             await this.initToc();
@@ -212,11 +224,56 @@ class Reader {
     }
 
     /**
-     * Loads the outline of the PDF into the table of contents.
+     * Builds the sidebar with its tabs. Thumbnails and search are only set up once their tab is
+     * opened for the first time, since building them is not free.
+     */
+    initSidebar() {
+        const tabs = [...this.root.querySelectorAll('[data-region="sidebar"] [data-tab]')].map((button) => ({
+            name: button.dataset.tab,
+            button: button,
+            panel: this.root.querySelector('[data-panel="' + button.dataset.tab + '"]'),
+        }));
+        this.sidebar = new Sidebar({root: this.sidebarRoot, toggle: this.sidebarToggle, tabs});
+
+        this.sidebar.onFirstActivate('thumbs', () => {
+            this.thumbnails = new Thumbnails({
+                host: this.root.querySelector('[data-panel="thumbs"]'),
+                pdfDoc: this.pdfDoc,
+                total: this.total,
+                seenPages: this.seenPages,
+                currentPage: this.page,
+                strings: this.strings,
+                onNavigate: (page) => {
+                    this.goTo(page);
+                    this.sidebar.closeOnNarrowScreen();
+                },
+            });
+            this.thumbnails.init();
+        });
+
+        this.sidebar.onFirstActivate('search', () => {
+            this.search = new Search({
+                host: this.root.querySelector('[data-panel="search"]'),
+                pdfDoc: this.pdfDoc,
+                total: this.total,
+                strings: this.strings,
+                onNavigate: (page, item) => {
+                    this.goTo(page);
+                    this.highlightMatch(page, item);
+                },
+            });
+            this.search.init();
+            this.search.focus();
+        });
+    }
+
+    /**
+     * Loads the outline of the PDF into the "Contents" sidebar tab, if there is one.
      */
     async initToc() {
-        const toggle = this.root.querySelector('[data-action="toc"]');
-        if (!this.tocPanel || !toggle) {
+        const button = this.root.querySelector('[data-tab="toc"]');
+        const panel = this.root.querySelector('[data-panel="toc"]');
+        if (!button || !panel) {
             return;
         }
         let entries = [];
@@ -226,18 +283,47 @@ class Reader {
             entries = [];
         }
         if (!entries.length) {
-            toggle.title = this.strings.toc_empty;
-            toggle.querySelector('.sr-only').textContent = this.strings.toc + ': ' + this.strings.toc_empty;
+            button.title = this.strings.toc_empty;
             return;
         }
         this.toc = new Toc({
-            panel: this.tocPanel,
-            toggle: toggle,
+            panel: panel,
             entries: entries,
-            onNavigate: (page) => this.goTo(page),
+            onNavigate: (page) => {
+                this.goTo(page);
+                this.sidebar.closeOnNarrowScreen();
+            },
         });
         this.toc.setCurrentPage(this.page);
-        toggle.disabled = false;
+        button.disabled = false;
+    }
+
+    /**
+     * Briefly highlights a search match on the page it was found on.
+     *
+     * The box is positioned with percentages of the page size, so it lines up correctly
+     * regardless of the current zoom or the page-turning transform of the flipbook view.
+     *
+     * @param {number} page 1-based page number
+     * @param {{left: number, top: number, width: number, height: number}} item Match position
+     * @returns {Promise<void>}
+     */
+    async highlightMatch(page, item) {
+        const target = this.viewHost.querySelector('[data-page="' + page + '"]');
+        if (!target) {
+            return;
+        }
+        target.querySelectorAll('.leafr-search-highlight').forEach((el) => el.remove());
+        const pageSize = await getPageSize(this.pdfDoc, page);
+        const mark = document.createElement('div');
+        mark.className = 'leafr-search-highlight';
+        mark.style.left = (item.left / pageSize.width * 100) + '%';
+        mark.style.top = (item.top / pageSize.height * 100) + '%';
+        mark.style.width = (item.width / pageSize.width * 100) + '%';
+        mark.style.height = (item.height / pageSize.height * 100) + '%';
+        target.appendChild(mark);
+        clearTimeout(this.highlightTimer);
+        this.highlightTimer = setTimeout(() => mark.remove(), HIGHLIGHT_DURATION);
     }
 
     /**
@@ -264,6 +350,10 @@ class Reader {
         this.root.querySelector('[data-action="last"]').disabled = last >= this.total;
         if (this.toc) {
             this.toc.setCurrentPage(page);
+        }
+        if (this.thumbnails) {
+            this.thumbnails.setCurrentPage(page);
+            this.thumbnails.markSeen(visible);
         }
         visible.forEach((visiblepage) => this.seenPages.add(visiblepage));
         this.updateProgressSummary();
@@ -399,15 +489,15 @@ class Reader {
             case 'fullscreen':
                 this.toggleFullscreen();
                 break;
-            case 'toc':
-                if (this.toc) {
-                    this.toc.toggle();
+            case 'sidebar':
+                if (this.sidebar.isOpen()) {
+                    this.sidebar.close();
+                } else {
+                    this.sidebar.open();
                 }
                 break;
-            case 'toc-close':
-                if (this.toc) {
-                    this.toc.close();
-                }
+            case 'sidebar-close':
+                this.sidebar.close();
                 break;
             case 'help':
                 this.openHelp();
@@ -506,10 +596,10 @@ class Reader {
             End: () => this.goTo(this.total),
             '+': () => this.changeZoom(1),
             '-': () => this.changeZoom(-1),
-            t: this.toc ? () => this.toc.toggle() : null,
+            t: this.toc ? () => this.sidebar.toggle('toc') : null,
             f: () => this.toggleFullscreen(),
             '?': () => this.openHelp(),
-            Escape: this.toc && this.toc.isOpen() ? () => this.toc.close() : null,
+            Escape: this.sidebar && this.sidebar.isOpen() ? () => this.sidebar.close() : null,
         };
         const key = event.key.length === 1 && event.key !== '?' ? event.key.toLowerCase() : event.key;
         return actions[key] || null;
