@@ -1,19 +1,21 @@
 includes:
-    # PHPStan resolves "includes" paths relative to this config file's own directory
-    # (.github/), not the working directory the analyser runs from - hence "../vendor/..."
-    # to reach the vendor/ folder that composer installs at the plugin root.
+    # PHPStan resolves EVERY relative path in a config file relative to that file's own
+    # directory (.github/ here), never relative to the working directory the analyser is run
+    # from. That applies to "includes" as well as to the "parameters" below (paths,
+    # excludePaths, and the moodle extension's own rootDirectory) - each therefore needs an
+    # extra "../" to reach the plugin root, which is one level above .github/.
     - ../vendor/micaherne/phpstan-moodle/extension.neon
 
 parameters:
     level: 5
     paths:
-        - .
+        - ..
     excludePaths:
-        - vendor/*
-        - amd/build/*
-        - tool/*/amd/build/*
-        - .github/*
+        - ../vendor/*
+        - ../amd/build/*
+        - ../tool/*/amd/build/*
+        - ../.github/*
     moodle:
-        rootDirectory: ../moodle
+        rootDirectory: ../../moodle
         addCommonIncludes: true
     tmpDir: /tmp/phpstan-cache
