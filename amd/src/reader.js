@@ -200,6 +200,12 @@ class Reader {
             await this.initToc();
             this.updateProgressSummary();
             this.showContinueNotice();
+            if (this.completed) {
+                // Already complete when the page loaded (e.g. a returning user): showCompletion()
+                // only fires for a *newly reached* completion, so subplugins listening for
+                // "leafr:reading-complete" (e.g. leafrtool_confirm) still need to hear about it.
+                this.announceCompletion();
+            }
         } catch (error) {
             this.showError();
         }
@@ -1050,9 +1056,19 @@ class Reader {
     }
 
     /**
+     * Tells leafrtool subplugins (e.g. leafrtool_confirm) that the reading requirement is met,
+     * without the core reader having to know they exist. The event carries the cmid so a page
+     * with more than one reader still works.
+     */
+    announceCompletion() {
+        document.dispatchEvent(new CustomEvent('leafr:reading-complete', {detail: {cmid: this.cmid}}));
+    }
+
+    /**
      * Shows a short confirmation when the activity has been completed by reading.
      */
     showCompletion() {
+        this.announceCompletion();
         if (this.completed) {
             return;
         }

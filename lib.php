@@ -25,6 +25,7 @@
 use mod_leafr\local\bookmarks;
 use mod_leafr\local\chapters;
 use mod_leafr\local\progress;
+use mod_leafr\local\tool_manager;
 
 /**
  * Returns whether the module supports a feature.
@@ -123,6 +124,7 @@ function leafr_add_instance($data, $mform = null) {
     // The course module id is known at this point, so the file can be saved.
     $DB->set_field('course_modules', 'instance', $data->id, ['id' => $data->coursemodule]);
     leafr_save_pdf($data);
+    tool_manager::save_settings($data, $data->id);
 
     if (!empty($data->completionexpected)) {
         \core_completion\api::update_completion_date_event(
@@ -155,6 +157,7 @@ function leafr_update_instance($data, $mform = null) {
         $data->totalpages = 0;
     }
     $DB->update_record('leafr', $data);
+    tool_manager::save_settings($data, $data->id);
 
     \core_completion\api::update_completion_date_event(
         $data->coursemodule,
@@ -183,6 +186,7 @@ function leafr_delete_instance($id) {
     }
     progress::delete_for_instance($id);
     bookmarks::delete_for_instance($id);
+    tool_manager::delete_instance($id);
     $DB->delete_records('leafr', ['id' => $id]);
     return true;
 }
@@ -206,8 +210,15 @@ function leafr_get_coursemodule_info($coursemodule) {
     if ($coursemodule->showdescription) {
         $result->content = format_module_intro('leafr', $leafr, $coursemodule->id, false);
     }
-    if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC && $leafr->completiontype > 0) {
-        $result->customdata['customcompletionrules']['completionpageseen'] = (int)$leafr->completiontype;
+    if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC) {
+        if ($leafr->completiontype > 0) {
+            $result->customdata['customcompletionrules']['completionpageseen'] = (int)$leafr->completiontype;
+        }
+        foreach (tool_manager::get_completion_rules() as $rulename => $info) {
+            if (tool_manager::rule_enabled($info['component'], $leafr)) {
+                $result->customdata['customcompletionrules'][$rulename] = 1;
+            }
+        }
     }
     return $result;
 }
@@ -292,6 +303,7 @@ function leafr_reset_course_form_definition(&$mform) {
     $mform->addElement('header', 'leafrheader', get_string('modulenameplural', 'leafr'));
     $mform->addElement('advcheckbox', 'reset_leafr_progress', get_string('resetprogress', 'leafr'));
     $mform->addElement('advcheckbox', 'reset_leafr_bookmarks', get_string('resetbookmarks', 'leafr'));
+    tool_manager::extend_reset_form($mform);
 }
 
 /**
@@ -301,7 +313,10 @@ function leafr_reset_course_form_definition(&$mform) {
  * @return array
  */
 function leafr_reset_course_form_defaults($course) {
-    return ['reset_leafr_progress' => 1, 'reset_leafr_bookmarks' => 1];
+    return array_merge(
+        ['reset_leafr_progress' => 1, 'reset_leafr_bookmarks' => 1],
+        tool_manager::get_reset_form_defaults()
+    );
 }
 
 /**
@@ -338,7 +353,7 @@ function leafr_reset_userdata($data) {
             'error' => false,
         ];
     }
-    return $status;
+    return array_merge($status, tool_manager::reset_userdata($data));
 }
 
 /**

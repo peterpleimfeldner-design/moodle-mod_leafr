@@ -2,6 +2,23 @@
 
 ## 1.2.0 (in Arbeit, Branch `release/1.2.0`)
 
+### Paket F – Lesebestätigung (`leafrtool_confirm`)
+- Erstes echtes Unter-Plugin vom Typ `leafrtool`: **Lesebestätigung** als eigenständiges,
+  optionales Werkzeug. Neue Checkbox „Lesebestätigung erforderlich“ bei den Abschlussbedingungen,
+  mit eigenem Textfeld für die Bestätigungsformulierung (Standard: „Ich habe die Inhalte gelesen
+  und verstanden.“).
+- Sobald der Pflichtbereich bzw. die letzte Seite gelesen ist, erscheint unter dem Reader eine
+  ruhige Karte mit Checkbox und Knopf „Bestätigen“; die Bestätigung wird mit Zeitpunkt gespeichert
+  und beim nächsten Besuch angezeigt.
+- Neue, mit den Seitenregeln kombinierbare Abschlussregel „Lesebestätigung abgegeben“.
+- Eigene Datenbanktabellen, eigener Webservice, eigenes Backup/Restore/Datenschutz-Modul für das
+  Unter-Plugin; „Aktivität duplizieren“ übernimmt die Einstellung, nicht die Bestätigungen der
+  Teilnehmer/innen. Eigene Option beim Kurs-Zurücksetzen.
+- Der Kern (`mod_leafr\local\tool_manager`) wurde dafür allgemein erweitert, damit künftige
+  Unter-Plugins (Pakete G–I) auf demselben Weg eigene Abschlussregeln, Formularfelder und einen
+  eigenen Bereich unter dem Reader beisteuern können, ohne den Kern anzufassen (siehe
+  `tool/README.md`).
+
 ### Paket E – Einzel-/Doppelseite und Buchoptik
 - Neues **Ansicht-Menü** in der Werkzeugleiste (ersetzt die bisherigen Einzelknöpfe für Zoom,
   Einfache Ansicht und Vollbild): **Seitenlayout** (Automatisch/Einzelseite/Doppelseite, als

@@ -140,6 +140,11 @@ class mod_leafr_mod_form extends moodleform_mod {
         if ($type < 1) {
             $defaultvalues['completiontype' . $suffix] = progress::COMPLETION_LASTPAGE;
         }
+
+        $leafrid = (int)($this->current->instance ?? 0);
+        foreach (tool_manager::get_form_data($leafrid) as $field => $value) {
+            $defaultvalues[$field . $suffix] = $value;
+        }
     }
 
     /**
@@ -272,17 +277,35 @@ class mod_leafr_mod_form extends moodleform_mod {
             $elements[] = $chaptersel;
         }
 
+        // Rules contributed by installed leafrtool subplugins (e.g. leafrtool_confirm), each its
+        // own independent checkbox alongside the page-based rule above.
+        foreach (tool_manager::get_completion_rules() as $rulename => $info) {
+            $formname = $rulename . $suffix;
+            $mform->addElement('advcheckbox', $formname, get_string($info['langkey'], $info['component']));
+            $elements[] = $formname;
+            tool_manager::extend_completion_rule($mform, $rulename, $formname, $suffix);
+        }
+
         return $elements;
     }
 
     /**
-     * Whether the custom completion rule is enabled in the submitted data.
+     * Whether a custom completion rule is enabled in the submitted data.
      *
      * @param array $data Submitted data
      * @return bool
      */
     public function completion_rule_enabled($data) {
-        return !empty($data['completionpageseen' . $this->leafr_completion_suffix()]);
+        $suffix = $this->leafr_completion_suffix();
+        if (!empty($data['completionpageseen' . $suffix])) {
+            return true;
+        }
+        foreach (array_keys(tool_manager::get_completion_rules()) as $rulename) {
+            if (!empty($data[$rulename . $suffix])) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

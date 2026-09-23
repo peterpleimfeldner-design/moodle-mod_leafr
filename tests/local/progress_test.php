@@ -16,6 +16,8 @@
 
 namespace mod_leafr\local;
 
+use leafrtool_confirm\local\confirm;
+
 /**
  * Tests for the reading progress and the completion rules.
  *
@@ -168,5 +170,41 @@ final class progress_test extends \advanced_testcase {
         progress::record((int)$leafr->id, (int)$student->id, [12]);
         $this->assertSame(COMPLETION_COMPLETE, $customcompletion->get_state('completionpageseen'));
         $this->assertNotEmpty($customcompletion->get_custom_rule_descriptions()['completionpageseen']);
+    }
+
+    /**
+     * A completion rule contributed by a leafrtool subplugin (leafrtool_confirm) is combined with
+     * the core page-based rule.
+     */
+    public function test_custom_completion_with_subplugin_rule(): void {
+        global $CFG, $DB;
+        require_once($CFG->libdir . '/completionlib.php');
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $this->assertContains('confirmread', \mod_leafr\completion\custom_completion::get_defined_custom_rules());
+
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $leafr = $this->getDataGenerator()->create_module('leafr', [
+            'course' => $course->id,
+            'completion' => COMPLETION_TRACKING_AUTOMATIC,
+            'completionpageseen' => 1,
+            'completiontype' => progress::COMPLETION_LASTPAGE,
+        ]);
+        confirm::save_settings((int)$leafr->id, true, 'Please confirm.');
+
+        $cm = get_fast_modinfo($course)->get_cm($leafr->cmid);
+        $this->assertEqualsCanonicalizing(
+            ['completionpageseen' => 1, 'confirmread' => 1],
+            $cm->customdata['customcompletionrules']
+        );
+
+        $customcompletion = new \mod_leafr\completion\custom_completion($cm, (int)$student->id);
+        $this->assertSame(COMPLETION_INCOMPLETE, $customcompletion->get_state('confirmread'));
+        $this->assertNotEmpty($customcompletion->get_custom_rule_descriptions()['confirmread']);
+
+        confirm::confirm((int)$leafr->id, (int)$student->id);
+        $this->assertSame(COMPLETION_COMPLETE, $customcompletion->get_state('confirmread'));
     }
 }

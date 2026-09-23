@@ -16,8 +16,11 @@
 
 namespace mod_leafr\local;
 
+use leafrtool_confirm\local\confirm;
+
 /**
- * Tests for the leafrtool subplugin discovery and dispatch.
+ * Tests for the leafrtool subplugin discovery and dispatch, using the installed
+ * leafrtool_confirm as the reference subplugin.
  *
  * @package   mod_leafr
  * @category  test
@@ -27,26 +30,89 @@ namespace mod_leafr\local;
  */
 final class tool_manager_test extends \advanced_testcase {
     /**
-     * Without any installed leafrtool subplugin, discovery and dispatch must stay a no-op.
+     * leafrtool_confirm is discovered and contributes its "confirmread" completion rule.
      */
-    public function test_no_tools_installed(): void {
+    public function test_get_enabled_tools_and_completion_rules(): void {
         $this->resetAfterTest();
 
-        $this->assertSame([], tool_manager::get_enabled_tools());
-        $this->assertSame([], tool_manager::get_completion_rules());
+        $this->assertContains('leafrtool_confirm', tool_manager::get_enabled_tools());
+
+        $rules = tool_manager::get_completion_rules();
+        $this->assertArrayHasKey('confirmread', $rules);
+        $this->assertSame('leafrtool_confirm', $rules['confirmread']['component']);
+        $this->assertSame('completionconfirmread', $rules['confirmread']['langkey']);
     }
 
     /**
-     * Extending the settings form must not fail when no subplugin is installed.
+     * A disabled subplugin is not returned by get_enabled_tools(), but delete_instance() still
+     * reaches it so no data is orphaned.
      */
-    public function test_extend_settings_form_without_tools(): void {
+    public function test_disabled_tool_is_excluded_from_enabled_but_not_from_deletion(): void {
+        $this->resetAfterTest();
+
+        set_config('disabled', 1, 'leafrtool_confirm');
+        $this->assertNotContains('leafrtool_confirm', tool_manager::get_enabled_tools());
+
+        confirm::save_settings(41, true, 'Text');
+        confirm::confirm(41, 1);
+        tool_manager::delete_instance(41);
+        $this->assertFalse(confirm::get_settings(41)->requireconfirm);
+        $this->assertFalse(confirm::is_confirmed(41, 1));
+    }
+
+    /**
+     * save_settings()/get_form_data() round-trip through the subplugin's own table.
+     */
+    public function test_save_settings_and_get_form_data(): void {
+        $this->resetAfterTest();
+
+        tool_manager::save_settings((object)['confirmread' => 1, 'confirmtext' => 'Please confirm.'], 42);
+
+        $data = tool_manager::get_form_data(42);
+        $this->assertSame(1, $data['confirmread']);
+        $this->assertSame('Please confirm.', $data['confirmtext']);
+
+        $this->assertTrue(tool_manager::rule_enabled('leafrtool_confirm', (object)['id' => 42]));
+        $this->assertFalse(tool_manager::completion_state('leafrtool_confirm', (object)['id' => 42], 99));
+
+        confirm::confirm(42, 99);
+        $this->assertTrue(tool_manager::completion_state('leafrtool_confirm', (object)['id' => 42], 99));
+    }
+
+    /**
+     * Extending the settings form renders the tool's own elements without failing.
+     */
+    public function test_extend_settings_form(): void {
         $this->resetAfterTest();
 
         require_once($GLOBALS['CFG']->libdir . '/formslib.php');
         $mform = new \MoodleQuickForm('leafrtooltest', 'post', '');
         tool_manager::extend_settings_form($mform, null);
 
-        // No exception, and the form stays untouched.
+        // leafrtool_confirm does not implement extend_settings_form() (its settings live in the
+        // completion rule area instead), so the form stays untouched; the call must not fail.
         $this->assertSame([], $mform->_elements);
+    }
+
+    /**
+     * render_reader() only contributes HTML when the tool is actually required for the activity.
+     */
+    public function test_render_reader(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $leafr = $this->getDataGenerator()->create_module('leafr', ['course' => $course->id]);
+        $cm = get_fast_modinfo($course)->get_cm($leafr->cmid);
+        $context = \context_module::instance($cm->id);
+        $record = $DB->get_record('leafr', ['id' => $leafr->id], '*', MUST_EXIST);
+
+        $this->assertSame('', tool_manager::render_reader($cm, $context, $record));
+
+        confirm::save_settings((int)$leafr->id, true, 'Please confirm reading this.');
+        $html = tool_manager::render_reader($cm, $context, $record);
+        $this->assertStringContainsString('leafrtool-confirm', $html);
+        $this->assertStringContainsString('Please confirm reading this.', $html);
     }
 }

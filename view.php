@@ -25,6 +25,7 @@
 use mod_leafr\local\bookmarks;
 use mod_leafr\local\chapters;
 use mod_leafr\local\progress;
+use mod_leafr\local\tool_manager;
 
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
@@ -126,6 +127,7 @@ echo $OUTPUT->header();
 
 if ($file) {
     echo $OUTPUT->render_from_template('mod_leafr/reader', $templatecontext);
+    echo tool_manager::render_reader($cm, $context, $leafr);
 } else {
     echo $OUTPUT->render_from_template('mod_leafr/error', ['message' => get_string('nopdfuploaded', 'leafr')]);
 }
