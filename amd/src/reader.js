@@ -263,7 +263,7 @@ class Reader {
         const ViewClass = this.simpleView ? ScrollView : FlipbookView;
         this.root.classList.toggle('is-simpleview', this.simpleView);
         this.root.querySelectorAll('[data-action="simpleview"]').forEach((button) => {
-            button.setAttribute('aria-pressed', this.simpleView ? 'true' : 'false');
+            button.setAttribute('aria-checked', this.simpleView ? 'true' : 'false');
         });
         this.stage.scrollTo(0, 0);
 
@@ -699,7 +699,7 @@ class Reader {
             this.root.classList.toggle('is-fullscreen', active);
             const button = this.root.querySelector('[data-action="fullscreen"]');
             const label = active ? this.strings.fullscreen_exit : this.strings.fullscreen_enter;
-            button.setAttribute('aria-pressed', active ? 'true' : 'false');
+            button.setAttribute('aria-checked', active ? 'true' : 'false');
             button.title = label;
             button.querySelector('[data-region="fullscreen-label"]').textContent = label;
             this.fitHeight();

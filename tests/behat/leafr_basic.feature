@@ -112,7 +112,7 @@ Feature: Read a PDF document in a Leafr flipbook
     Then I press "View"
     And the "aria-checked" attribute of "[data-spread='single']" "css_element" should contain "true"
     And I press "Simple view"
-    And "[data-spread='single']" "css_element" should be disabled
+    And the "[data-spread='single']" "css_element" should be disabled
 
   @javascript @_file_upload
   Scenario: A teacher creates a flipbook

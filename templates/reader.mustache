@@ -188,11 +188,11 @@
                     <div class="leafr-viewmenu" data-region="view-menu" role="menu" aria-label="{{#str}}viewmenu, mod_leafr{{/str}}" hidden>
                         <div class="leafr-viewmenu-label" id="{{uniqid}}-spreadlabel">{{#str}}spreadmode, mod_leafr{{/str}}</div>
                         <div class="leafr-viewmenu-group" data-region="spread-group" role="group" aria-labelledby="{{uniqid}}-spreadlabel">
-                            <button type="button" class="leafr-menuitem" role="menuitemradio" data-action="spread-auto" data-spread="auto" disabled>{{#str}}spread_auto, mod_leafr{{/str}}</button>
-                            <button type="button" class="leafr-menuitem" role="menuitemradio" data-action="spread-single" data-spread="single" disabled>{{#str}}spread_single, mod_leafr{{/str}}</button>
-                            <button type="button" class="leafr-menuitem" role="menuitemradio" data-action="spread-double" data-spread="double" disabled>{{#str}}spread_double, mod_leafr{{/str}}</button>
+                            <button type="button" class="leafr-menuitem" role="menuitemradio" aria-checked="true" data-action="spread-auto" data-spread="auto" disabled>{{#str}}spread_auto, mod_leafr{{/str}}</button>
+                            <button type="button" class="leafr-menuitem" role="menuitemradio" aria-checked="false" data-action="spread-single" data-spread="single" disabled>{{#str}}spread_single, mod_leafr{{/str}}</button>
+                            <button type="button" class="leafr-menuitem" role="menuitemradio" aria-checked="false" data-action="spread-double" data-spread="double" disabled>{{#str}}spread_double, mod_leafr{{/str}}</button>
                         </div>
-                        <button type="button" class="leafr-menuitem leafr-menuitem-check" role="menuitemcheckbox" data-action="simpleview" aria-pressed="false" disabled>{{#str}}simpleview, mod_leafr{{/str}}</button>
+                        <button type="button" class="leafr-menuitem leafr-menuitem-check" role="menuitemcheckbox" data-action="simpleview" aria-checked="false" disabled>{{#str}}simpleview, mod_leafr{{/str}}</button>
                         <div class="leafr-viewmenu-label">{{#str}}zoomheading, mod_leafr{{/str}}</div>
                         <div class="leafr-viewmenu-zoom" data-region="fit-group">
                             <button type="button" class="leafr-iconbtn" data-action="zoom-out" title="{{#str}}zoomout, mod_leafr{{/str}}" disabled>
@@ -206,10 +206,10 @@
                             </button>
                         </div>
                         <div class="leafr-viewmenu-group" data-region="fitmode-group" role="group" aria-label="{{#str}}fitmode, mod_leafr{{/str}}">
-                            <button type="button" class="leafr-menuitem" role="menuitemradio" data-action="fit-page" data-fit="page" disabled>{{#str}}fit_page, mod_leafr{{/str}}</button>
-                            <button type="button" class="leafr-menuitem" role="menuitemradio" data-action="fit-width" data-fit="width" disabled>{{#str}}fit_width, mod_leafr{{/str}}</button>
+                            <button type="button" class="leafr-menuitem" role="menuitemradio" aria-checked="true" data-action="fit-page" data-fit="page" disabled>{{#str}}fit_page, mod_leafr{{/str}}</button>
+                            <button type="button" class="leafr-menuitem" role="menuitemradio" aria-checked="false" data-action="fit-width" data-fit="width" disabled>{{#str}}fit_width, mod_leafr{{/str}}</button>
                         </div>
-                        <button type="button" class="leafr-menuitem leafr-menuitem-check" role="menuitemcheckbox" data-action="fullscreen" aria-pressed="false" disabled>
+                        <button type="button" class="leafr-menuitem leafr-menuitem-check" role="menuitemcheckbox" data-action="fullscreen" aria-checked="false" disabled>
                             <span data-region="fullscreen-label">{{#str}}fullscreen_enter, mod_leafr{{/str}}</span>
                         </button>
                     </div>
