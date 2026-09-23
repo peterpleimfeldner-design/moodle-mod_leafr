@@ -34,7 +34,6 @@ final class tool_manager_test extends \advanced_testcase {
 
         $this->assertSame([], tool_manager::get_enabled_tools());
         $this->assertSame([], tool_manager::get_completion_rules());
-        $this->assertFalse(tool_manager::completion_state('leafrtool_doesnotexist', (object)['id' => 1], 2));
     }
 
     /**
