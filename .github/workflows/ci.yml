@@ -80,6 +80,17 @@ jobs:
         if: ${{ !cancelled() }}
         run: moodle-plugin-ci phpdoc --max-warnings 0
 
+      - name: Static analysis (PHPStan)
+        # moodle-plugin-ci has no built-in PHPStan command, so it is installed and run directly.
+        # Runs against every matrix leg on purpose (unlike Grunt): the same code is analysed
+        # against each Moodle version's real classes, which can catch calls to functions that were
+        # removed or renamed in a specific Moodle version (phpcs/phpunit alone would not).
+        if: ${{ !cancelled() }}
+        working-directory: plugin
+        run: |
+          composer require --dev --no-interaction --quiet phpstan/phpstan micaherne/phpstan-moodle phpstan/extension-installer
+          vendor/bin/phpstan analyse --configuration=.github/phpstan.neon --no-progress
+
       - name: Validating
         if: ${{ !cancelled() }}
         run: moodle-plugin-ci validate
@@ -93,7 +104,12 @@ jobs:
         run: moodle-plugin-ci mustache
 
       - name: Grunt (JS lint and check that the AMD build is up to date)
-        # The committed build is created with the Moodle 5.0 toolchain.
+        # Deliberately runs on one leg only: moodle-plugin-ci's grunt command both lints our JS/CSS
+        # and diffs the built output against git, using the node_modules bundled with that specific
+        # Moodle checkout. Different Moodle branches can bundle different eslint/stylelint/terser
+        # versions, which can make the committed build look "out of date" or produce different lint
+        # warnings for identical source - not a real code problem, just toolchain drift. Running on
+        # every leg would trade a small coverage gain for a real risk of spurious failures.
         if: ${{ !cancelled() && matrix.moodle-branch == 'MOODLE_500_STABLE' }}
         run: moodle-plugin-ci grunt --max-lint-warnings 0
 

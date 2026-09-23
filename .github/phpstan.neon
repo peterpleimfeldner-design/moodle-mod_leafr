@@ -1,0 +1,16 @@
+includes:
+    - vendor/micaherne/phpstan-moodle/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - .
+    excludePaths:
+        - vendor/*
+        - amd/build/*
+        - tool/*/amd/build/*
+        - .github/*
+    moodle:
+        rootDirectory: ../moodle
+        addCommonIncludes: true
+    tmpDir: /tmp/phpstan-cache
