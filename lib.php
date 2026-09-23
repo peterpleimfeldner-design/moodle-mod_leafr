@@ -259,6 +259,7 @@ function leafr_pluginfile($course, $cm, $context, $filearea, $args, $forcedownlo
         return false;
     }
     send_stored_file($file, 0, 0, $forcedownload, $options);
+    return true;
 }
 
 /**
