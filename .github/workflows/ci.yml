@@ -87,8 +87,11 @@ jobs:
         # removed or renamed in a specific Moodle version (phpcs/phpunit alone would not).
         if: ${{ !cancelled() }}
         working-directory: plugin
+        # phpstan/extension-installer is deliberately not used: it is a Composer plugin, blocked
+        # by Composer's allow-plugins policy unless explicitly trusted, and unnecessary anyway
+        # since .github/phpstan.neon includes the moodle extension directly.
         run: |
-          composer require --dev --no-interaction --quiet phpstan/phpstan micaherne/phpstan-moodle phpstan/extension-installer
+          composer require --dev --no-interaction --quiet phpstan/phpstan micaherne/phpstan-moodle
           vendor/bin/phpstan analyse --configuration=.github/phpstan.neon --no-progress
 
       - name: Validating
