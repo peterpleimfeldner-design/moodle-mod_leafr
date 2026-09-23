@@ -59,6 +59,8 @@ class backup_leafr_activity_structure_step extends backup_activity_structure_ste
         $leafr->annotate_files('mod_leafr', 'intro', null);
         $leafr->annotate_files('mod_leafr', 'content', null);
 
+        $this->add_subplugin_structure('leafrtool', $leafr, true);
+
         return $this->prepare_activity_structure($leafr);
     }
 }

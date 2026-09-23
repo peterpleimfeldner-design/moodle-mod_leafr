@@ -27,6 +27,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot . '/course/moodleform_mod.php');
 
 use mod_leafr\local\progress;
+use mod_leafr\local\tool_manager;
 
 /**
  * Activity settings form for mod_leafr.
@@ -73,17 +74,19 @@ class mod_leafr_mod_form extends moodleform_mod {
         $mform->setType('initialpage', PARAM_INT);
         $mform->setDefault('initialpage', 1);
 
+        tool_manager::extend_settings_form($mform, $this->current);
+
         $this->standard_coursemodule_elements();
         $this->add_action_buttons();
     }
 
     /**
-     * Returns the suffix of the completion elements (Moodle 4.3+ uses it on the default completion page).
+     * Returns the suffix of the completion elements on the default completion page.
      *
      * @return string
      */
     protected function leafr_completion_suffix(): string {
-        return method_exists($this, 'get_suffix') ? $this->get_suffix() : '';
+        return $this->get_suffix();
     }
 
     /**

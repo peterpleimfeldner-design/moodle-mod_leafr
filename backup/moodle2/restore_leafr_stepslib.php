@@ -42,6 +42,7 @@ class restore_leafr_activity_structure_step extends restore_activity_structure_s
         if ($this->get_setting_value('userinfo')) {
             $paths[] = new restore_path_element('leafr_progress', '/activity/leafr/progresses/progress');
         }
+        $this->add_subplugin_structure('leafrtool', $paths[0], true);
         return $this->prepare_activity_structure($paths);
     }
 

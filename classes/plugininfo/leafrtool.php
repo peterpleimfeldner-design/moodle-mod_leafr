@@ -14,19 +14,20 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace mod_leafr\plugininfo;
+
+use core\plugininfo\base;
+
 /**
- * Version information for mod_leafr.
+ * Subplugin info class for the leafrtool subplugin type (see tool/README.md).
  *
  * @package   mod_leafr
  * @copyright 2026 Peter Pleimfeldner
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->component = 'mod_leafr';
-$plugin->version   = 2026092300;
-$plugin->requires  = 2024100700; // Moodle 4.5 (LTS).
-$plugin->supported = [405, 502];
-$plugin->maturity  = MATURITY_BETA;
-$plugin->release   = '1.1.0';
+class leafrtool extends base {
+    #[\Override]
+    public function is_uninstall_allowed() {
+        return true;
+    }
+}

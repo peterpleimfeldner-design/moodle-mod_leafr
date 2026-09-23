@@ -16,7 +16,7 @@ Leafr is a Moodle activity that shows a PDF document as a book students can leaf
 
 ## Requirements
 
-- Moodle 4.2 or later (tested with 4.2, 4.5, 5.0 and 5.1)
+- Moodle 4.5 or later (tested with 4.5, 5.0, 5.1 and 5.2)
 - PHP 8.1 or later
 
 ## Installation

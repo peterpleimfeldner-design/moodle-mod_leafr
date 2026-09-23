@@ -1,5 +1,20 @@
 # Leafr – Changelog
 
+## 1.2.0 (in Arbeit, Branch `release/1.2.0`)
+
+### Paket 0 – Umbau für die Zukunft
+- Mindestversion auf Moodle 4.5 LTS angehoben (`requires` = 2024100700, `supported` = [405, 502]).
+  CI-Matrix läuft jetzt auf Moodle 4.5, 5.0, 5.1, 5.2 (Moodle 4.2 entfernt).
+- Veralteten Formular-Fallback für `get_suffix()` (nur bis Moodle 4.2 nötig) entfernt.
+- Neuer Subplugin-Typ `leafrtool` (`db/subplugins.json`, Ordner `tool/`, Klasse
+  `\mod_leafr\plugininfo\leafrtool`) für zukünftige Zusatzfunktionen (Textmarker, Word/PowerPoint,
+  Lesebestätigung, Lehrenden-Bericht). Kern bietet dafür `\mod_leafr\local\tool_manager` (Einstellungs-
+  formular erweitern, zusätzliche Abschlussregeln) sowie `add_subplugin_structure()` in Backup/Restore.
+  Datenschutz läuft automatisch über die Moodle-Subplugin-Mechanismen.
+- Sieben neue Testdokumente unter `tests/fixtures/`: 160-seitiges Skript mit 12 Kapiteln (Gliederung),
+  PDF ohne Gliederung, Scan ohne Text, Querformat-Folien, gemischte Seitengrößen, Word mit
+  Überschriften, PowerPoint.
+
 ## 1.1.0 – 2026-09-22 (Überarbeitung nach Gesamt-Review)
 
 Vollständige Überarbeitung auf Basis eines Reviews des gesamten Codes. Getestet im lokalen
