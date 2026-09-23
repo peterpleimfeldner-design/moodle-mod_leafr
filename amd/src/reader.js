@@ -712,6 +712,20 @@ class Reader {
      * @param {string} action Action name
      */
     handleAction(action) {
+        // The view menu contributes several closely related actions (page layout, zoom fit); kept
+        // as a lookup instead of more switch cases so this method's complexity stays manageable.
+        const viewMenuActions = {
+            'view-menu': () => this.toggleViewMenu(),
+            'spread-auto': () => this.setSpreadMode('auto'),
+            'spread-single': () => this.setSpreadMode('single'),
+            'spread-double': () => this.setSpreadMode('double'),
+            'fit-page': () => this.setFitMode('page'),
+            'fit-width': () => this.setFitMode('width'),
+        };
+        if (viewMenuActions[action]) {
+            viewMenuActions[action]();
+            return;
+        }
         switch (action) {
             case 'first':
                 this.goTo(1);
@@ -741,24 +755,6 @@ class Reader {
                 break;
             case 'fullscreen':
                 this.toggleFullscreen();
-                break;
-            case 'view-menu':
-                this.toggleViewMenu();
-                break;
-            case 'spread-auto':
-                this.setSpreadMode('auto');
-                break;
-            case 'spread-single':
-                this.setSpreadMode('single');
-                break;
-            case 'spread-double':
-                this.setSpreadMode('double');
-                break;
-            case 'fit-page':
-                this.setFitMode('page');
-                break;
-            case 'fit-width':
-                this.setFitMode('width');
                 break;
             case 'bookmark':
                 this.toggleBookmark();
