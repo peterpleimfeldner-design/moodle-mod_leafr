@@ -131,11 +131,16 @@ export default class BookmarkList {
         pageButton.textContent = this.strings.pagelabel.replace('{$a}', page);
         pageButton.addEventListener('click', () => this.onNavigate(page));
 
+        const label = document.createElement('label');
+        label.className = 'sr-only';
+        label.setAttribute('for', 'leafr-bookmark-note-' + page + '-' + Math.random().toString(36).slice(2));
+        label.textContent = this.strings.bookmark_note_label + ' ' + pageButton.textContent;
+
         const textarea = document.createElement('textarea');
+        textarea.id = label.htmlFor;
         textarea.className = 'leafr-bookmark-note';
         textarea.value = note;
         textarea.placeholder = this.strings.bookmark_note_placeholder;
-        textarea.setAttribute('aria-label', this.strings.bookmark_note_label + ' ' + pageButton.textContent);
         textarea.addEventListener('input', () => {
             clearTimeout(this.saveTimers.get(page));
             const value = textarea.value;
@@ -149,7 +154,7 @@ export default class BookmarkList {
         remove.textContent = this.strings.bookmark_remove;
         remove.addEventListener('click', () => this.onRemove(page));
 
-        body.append(pageButton, textarea, remove);
+        body.append(pageButton, label, textarea, remove);
         li.append(thumb, body);
         return li;
     }

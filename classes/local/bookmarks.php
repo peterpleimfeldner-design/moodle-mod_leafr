@@ -38,12 +38,13 @@ class bookmarks {
      */
     public static function get_for_user(int $leafrid, int $userid): array {
         global $DB;
-        return $DB->get_records(
+        $records = $DB->get_records(
             'leafr_bookmarks',
             ['leafrid' => $leafrid, 'userid' => $userid],
             'pageno ASC',
             'id, pageno, note, timecreated, timemodified'
         );
+        return array_map([self::class, 'cast_record'], $records);
     }
 
     /**
@@ -65,7 +66,7 @@ class bookmarks {
             $existing->note = $note;
             $existing->timemodified = $now;
             $DB->update_record('leafr_bookmarks', $existing);
-            return $existing;
+            return self::cast_record($existing);
         }
         $record = (object)[
             'leafrid' => $leafrid,
@@ -76,7 +77,7 @@ class bookmarks {
             'timemodified' => $now,
         ];
         $record->id = $DB->insert_record('leafr_bookmarks', $record);
-        return $record;
+        return self::cast_record($record);
     }
 
     /**
@@ -89,7 +90,12 @@ class bookmarks {
      */
     public static function delete(int $leafrid, int $userid, int $pageno): bool {
         global $DB;
-        return $DB->delete_records('leafr_bookmarks', ['leafrid' => $leafrid, 'userid' => $userid, 'pageno' => $pageno]);
+        $params = ['leafrid' => $leafrid, 'userid' => $userid, 'pageno' => $pageno];
+        // delete_records() always returns true when the query itself succeeds, regardless of
+        // whether it matched any rows, so the caller needs an explicit existence check instead.
+        $existed = $DB->record_exists('leafr_bookmarks', $params);
+        $DB->delete_records('leafr_bookmarks', $params);
+        return $existed;
     }
 
     /**
@@ -100,5 +106,21 @@ class bookmarks {
     public static function delete_for_instance(int $leafrid): void {
         global $DB;
         $DB->delete_records('leafr_bookmarks', ['leafrid' => $leafrid]);
+    }
+
+    /**
+     * Casts the numeric fields of a bookmark record, which the database layer can return as
+     * strings, to int.
+     *
+     * @param stdClass $record Bookmark record
+     * @return stdClass The same record, with numeric fields cast to int
+     */
+    protected static function cast_record(stdClass $record): stdClass {
+        foreach (['id', 'leafrid', 'userid', 'pageno', 'timecreated', 'timemodified'] as $field) {
+            if (property_exists($record, $field)) {
+                $record->$field = (int)$record->$field;
+            }
+        }
+        return $record;
     }
 }
