@@ -54,14 +54,16 @@ Feature: Read a PDF document in a Leafr flipbook
   Scenario: A student searches the document
     When I am on the "Handbook" "leafr activity" page logged in as "student1"
     And I press "Sidebar"
-    And I press "Search"
+    # Not "I press 'Search'": Moodle's own site navigation already has a "Search" button,
+    # so the sidebar's search tab needs an unambiguous selector.
+    And I click on "[data-tab='search']" "css_element"
     And I set the field "Search text" to "Chapter 3"
     And I press the enter key
-    And I wait "1" seconds
+    And I wait "2" seconds
     Then I should see "matches" in the ".leafr-search-status" "css_element"
     And I should see "Chapter 3" in the ".leafr-search-results" "css_element"
     And the field "Go to page" matches value "9"
-    And I press "Next match"
+    And I click on "[data-action='search-next']" "css_element"
     And the field "Go to page" matches value "10"
 
   @javascript
