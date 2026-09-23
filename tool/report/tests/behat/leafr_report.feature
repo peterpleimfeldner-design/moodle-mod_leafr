@@ -39,7 +39,9 @@ Feature: See each student's own reading progress in the overview
     And I navigate to "Overview" in current page administration
     Then I should see "Student One"
     And I should see "Student Two"
-    And I should see "Yes" in the "Student One" "table_row"
+    # "Completed" is shown as an icon (not the word "Yes") when true, and as the word "No" when
+    # false - see leafrtool_report\local\report::get_rows()/report.php.
+    And I should not see "No" in the "Student One" "table_row"
     And I should see "No" in the "Student Two" "table_row"
 
   @javascript @accessibility

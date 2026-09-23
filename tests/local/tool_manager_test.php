@@ -137,6 +137,7 @@ final class tool_manager_test extends \advanced_testcase {
         $this->setUser($student);
         $node = new \navigation_node('Leafr: letzte Seite');
         tool_manager::extend_navigation($node, $cm, $context);
-        $this->assertNull($node->get('leafrtoolreport'));
+        // navigation_node::get() returns false (not null) when no matching child exists.
+        $this->assertFalse($node->get('leafrtoolreport'));
     }
 }

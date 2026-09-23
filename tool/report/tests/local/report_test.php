@@ -145,7 +145,8 @@ final class report_test extends \advanced_testcase {
 
         $byuserid = array_column($rows, null, 'userid');
         foreach ($lastnames as $index => $lastname) {
-            $expectedpercent = ($index + 1) * 10; // (index + 1) * 2 pages out of 20 total, as a percent.
+            // Pages seen is (index + 1) * 2 out of 20 total, expressed as a percent.
+            $expectedpercent = ($index + 1) * 10;
             $row = $byuserid[(int)$students[$lastname]->id];
             $this->assertSame($expectedpercent, $row['requiredpercent'], "Wrong percentage for $lastname");
             $this->assertSame($expectedpercent >= 100, $row['requiredseen'], "Wrong requiredseen for $lastname");

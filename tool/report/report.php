@@ -53,7 +53,7 @@ if ($download === 'csv') {
     }
     $yes = get_string('yes');
     $no = get_string('no');
-    $csvrows = array_map(function($row) use ($yes, $no, $showconfirm) {
+    $csvrows = array_map(function ($row) use ($yes, $no, $showconfirm) {
         $out = [
             // Neutralise CSV/formula injection (see report::escape_csv_cell()): a name starting
             // with =, +, -, @ or a tab would otherwise run as a formula when the file is opened in
