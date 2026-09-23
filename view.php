@@ -102,6 +102,8 @@ if ($file) {
         'lastpage' => $lastpage,
         'seenpages' => $seenpages,
         'bookmarks' => $bookmarks,
+        'bookmarknotemaxlength' => bookmarks::MAX_NOTE_LENGTH,
+        'printurl' => (new moodle_url('/mod/leafr/print.php', ['id' => $cm->id]))->out(false),
         'totalpages' => (int)$leafr->totalpages,
         'showtoc' => !empty($leafr->showtoc),
         'simpleview' => $simpleview === null ? '' : (string)(int)$simpleview,

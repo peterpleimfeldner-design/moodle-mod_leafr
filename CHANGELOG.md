@@ -14,6 +14,18 @@
 - Datenschutz (Export/Löschen), Kurs-Zurücksetzen (eigene Einstellung „Lesezeichen aller Personen
   löschen“) und Sicherung/Wiederherstellung (inkl. Aktivität duplizieren) berücksichtigen die
   neue Tabelle.
+- **Nachbesserung (Peters Rückmeldung):** In der Doppelseiten-Ansicht ließ sich nur die linke der
+  beiden sichtbaren Seiten mit einem Lesezeichen versehen. Jede Seite hat jetzt einen eigenen,
+  klickbaren Bereich an der Seitenecke (wie ein Eselsohr), damit links und rechts unabhängig
+  markiert werden können; Werkzeugleisten-Knopf und Taste B bleiben für die einfache Ansicht und
+  die Tastaturbedienung zuständig.
+- **Nachbesserung:** Das Notizfeld zeigt jetzt einen Zeichenzähler („120 von 500 Zeichen“, der ab
+  90 % farblich warnt) und wächst beim Tippen bis zu einer Maximalhöhe mit.
+- **Neu: Druckansicht** (`print.php`, erreichbar über „Drucken oder als PDF speichern“ im
+  Lesezeichen-Reiter): einfache, eigenständige Seite mit allen Lesezeichen (Seitenzahl + Notiz),
+  druckt sauber über die Browser-Druckfunktion bzw. „Als PDF speichern“. Die Zuordnung zu
+  Textstellen/Absätzen ist bewusst Paket H (Textmarker) vorbehalten, das dafür die PDF-Textebene
+  mitbringt.
 
 ### Paket B – Seitenleiste und Wiederfinden
 - Neue Seitenleiste (ersetzt das bisherige Inhaltsverzeichnis-Panel) mit den Reitern **Miniaturen**,

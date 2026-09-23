@@ -30,6 +30,8 @@
     * lastpage - Reading position of the current user, 0 if never opened before
     * seenpages - Pages already seen by the current user, compact ranges (e.g. "1-5,7")
     * bookmarks - Bookmarks of the current user as a JSON array of {page, note}
+    * bookmarknotemaxlength - Maximum length of a bookmark note
+    * printurl - URL of the printable bookmark list
     * totalpages - Known number of pages, 0 if unknown
     * showtoc - Whether the table of contents is enabled
     * simpleview - "1", "0" or "" (no preference)
@@ -47,6 +49,8 @@
         "lastpage": 0,
         "seenpages": "",
         "bookmarks": "[]",
+        "bookmarknotemaxlength": 500,
+        "printurl": "https://example.com/mod/leafr/print.php?id=12",
         "totalpages": 0,
         "showtoc": true,
         "simpleview": "",
@@ -57,7 +61,7 @@
      aria-label="{{readerlabel}}"
      data-cmid="{{cmid}}" data-fileurl="{{fileurl}}" data-startpage="{{startpage}}" data-initialpage="{{initialpage}}"
      data-lastpage="{{lastpage}}" data-seenpages="{{seenpages}}" data-totalpages="{{totalpages}}"
-     data-bookmarks="{{bookmarks}}"
+     data-bookmarks="{{bookmarks}}" data-bookmarknotemaxlength="{{bookmarknotemaxlength}}" data-printurl="{{printurl}}"
      data-simpleview="{{simpleview}}" data-completed="{{#completed}}1{{/completed}}{{^completed}}0{{/completed}}">
 
     <div class="leafr-body">

@@ -50,6 +50,7 @@ const STRING_KEYS = [
     'search_label', 'search_placeholder', 'search_indexing', 'search_noresults',
     'search_noresults_scan', 'search_next', 'search_prev', 'matchofmatches',
     'bookmark_empty', 'bookmark_note_label', 'bookmark_note_placeholder', 'bookmark_remove',
+    'bookmark_page', 'bookmark_note_chars', 'bookmark_print',
 ];
 
 class Reader {
@@ -87,6 +88,7 @@ class Reader {
         this.highlightTimer = null;
         this.bookmarkButton = root.querySelector('[data-action="bookmark"]');
         this.bookmarks = new Map(Reader.parseBookmarks(root.dataset.bookmarks).map((b) => [b.page, b.note]));
+        this.maxNoteLength = parseInt(root.dataset.bookmarknotemaxlength, 10) || 500;
         this.zoomIndex = ZOOM_STEPS.indexOf(1);
         this.announceTimer = null;
         this.resizeTimer = null;
@@ -226,7 +228,7 @@ class Reader {
         if (ZOOM_STEPS[this.zoomIndex] !== 1) {
             this.view.setZoom(ZOOM_STEPS[this.zoomIndex]);
         }
-        this.applyBookmarkFlags();
+        this.syncAllPagesBookmarkUI();
     }
 
     /**
@@ -278,6 +280,8 @@ class Reader {
                 pdfDoc: this.pdfDoc,
                 strings: this.strings,
                 items: this.bookmarks,
+                maxNoteLength: this.maxNoteLength,
+                printUrl: this.root.dataset.printurl,
                 onNavigate: (page) => {
                     this.goTo(page);
                     this.sidebar.closeOnNarrowScreen();
@@ -349,13 +353,17 @@ class Reader {
     }
 
     /**
-     * Adds a bookmark for the current page, or removes it if there already is one.
+     * Adds a bookmark for a page, or removes it if there already is one.
+     *
+     * @param {number} page Page number, defaults to the current reading position. In the
+     * two-page flipbook view, "current" is ambiguous (it is the left of the two visible pages),
+     * so the per-page corner button in {@see syncPageBookmarkUI} passes the exact page instead.
      */
-    toggleBookmark() {
-        if (this.bookmarks.has(this.page)) {
-            this.removeBookmark(this.page);
+    toggleBookmark(page = this.page) {
+        if (this.bookmarks.has(page)) {
+            this.removeBookmark(page);
         } else {
-            this.addBookmark(this.page, '');
+            this.addBookmark(page, '');
         }
     }
 
@@ -374,7 +382,7 @@ class Reader {
                 args: {cmid: this.cmid, pageno: page, note: note},
             }])[0];
             this.bookmarks.set(page, result.note);
-            this.updateBookmarkFlag(page);
+            this.syncPageBookmarkUI(page);
             this.updateBookmarkButton();
             if (this.bookmarkList) {
                 this.bookmarkList.set(page, result.note);
@@ -414,7 +422,7 @@ class Reader {
         try {
             await Ajax.call([{methodname: 'mod_leafr_bookmark_delete', args: {cmid: this.cmid, pageno: page}}])[0];
             this.bookmarks.delete(page);
-            this.updateBookmarkFlag(page);
+            this.syncPageBookmarkUI(page);
             this.updateBookmarkButton();
             if (this.bookmarkList) {
                 this.bookmarkList.remove(page);
@@ -425,22 +433,49 @@ class Reader {
     }
 
     /**
-     * Shows or hides the corner flag of a page depending on whether it is bookmarked.
+     * Shows or hides the corner flag of a page depending on whether it is bookmarked. In the
+     * flipbook view (not the simple view, where the toolbar button is already unambiguous), it
+     * also adds a small button on the corner itself, so each page of a two-page spread can be
+     * bookmarked independently - the toolbar button and the B key alone could only ever reach
+     * the left page of a spread.
      *
      * @param {number} page Page number
      */
-    updateBookmarkFlag(page) {
+    syncPageBookmarkUI(page) {
         const target = this.viewHost.querySelector('[data-page="' + page + '"]');
-        if (target) {
-            target.classList.toggle('is-bookmarked', this.bookmarks.has(page));
+        if (!target) {
+            return;
         }
+        const bookmarked = this.bookmarks.has(page);
+        target.classList.toggle('is-bookmarked', bookmarked);
+        if (this.simpleView) {
+            return;
+        }
+        let button = target.querySelector('.leafr-page-bookmark');
+        if (!button) {
+            button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'leafr-page-bookmark';
+            button.addEventListener('click', (event) => {
+                event.stopPropagation();
+                this.toggleBookmark(page);
+            });
+            target.appendChild(button);
+        }
+        button.setAttribute('aria-pressed', bookmarked ? 'true' : 'false');
+        const label = this.strings.bookmark_page.replace('{$a}', page);
+        button.title = label;
+        button.setAttribute('aria-label', label);
     }
 
     /**
-     * Re-applies the corner flags of all bookmarked pages, e.g. after the view was rebuilt.
+     * Re-applies the corner flags (and, in the flipbook view, the per-page buttons) of every page
+     * currently in the view, e.g. after it was rebuilt following a resize.
      */
-    applyBookmarkFlags() {
-        this.bookmarks.forEach((note, page) => this.updateBookmarkFlag(page));
+    syncAllPagesBookmarkUI() {
+        this.viewHost.querySelectorAll('[data-page]').forEach((el) => {
+            this.syncPageBookmarkUI(parseInt(el.dataset.page, 10));
+        });
     }
 
     /**
@@ -482,7 +517,7 @@ class Reader {
         visible.forEach((visiblepage) => this.seenPages.add(visiblepage));
         this.updateProgressSummary();
         this.updateBookmarkButton();
-        this.applyBookmarkFlags();
+        this.syncAllPagesBookmarkUI();
         this.tracker.record(page, visible);
 
         // Announce the new page to screen readers once the user stops turning pages.

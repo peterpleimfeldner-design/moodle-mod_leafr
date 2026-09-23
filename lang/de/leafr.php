@@ -26,8 +26,11 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['bookmark'] = 'Lesezeichen';
 $string['bookmark_empty'] = 'Noch keine Lesezeichen.';
+$string['bookmark_note_chars'] = '{$a->used} von {$a->max} Zeichen';
 $string['bookmark_note_label'] = 'Notiz zu';
 $string['bookmark_note_placeholder'] = 'Notiz hinzufügen …';
+$string['bookmark_page'] = 'Lesezeichen für Seite {$a}';
+$string['bookmark_print'] = 'Drucken oder als PDF speichern';
 $string['bookmark_remove'] = 'Lesezeichen entfernen';
 $string['close'] = 'Schließen';
 $string['completion_done'] = 'Gut gemacht! Sie haben genug gelesen, um die Aktivität abzuschließen.';

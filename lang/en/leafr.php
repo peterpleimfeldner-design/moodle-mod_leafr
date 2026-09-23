@@ -26,8 +26,11 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['bookmark'] = 'Bookmark';
 $string['bookmark_empty'] = 'No bookmarks yet.';
+$string['bookmark_note_chars'] = '{$a->used} of {$a->max} characters';
 $string['bookmark_note_label'] = 'Note for';
 $string['bookmark_note_placeholder'] = 'Add a note …';
+$string['bookmark_page'] = 'Bookmark page {$a}';
+$string['bookmark_print'] = 'Print or save as PDF';
 $string['bookmark_remove'] = 'Remove bookmark';
 $string['close'] = 'Close';
 $string['completion_done'] = 'Well done! You have read enough of this document to complete the activity.';

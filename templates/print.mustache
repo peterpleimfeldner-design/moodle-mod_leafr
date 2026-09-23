@@ -1,0 +1,62 @@
+{{!
+    This file is part of Moodle - http://moodle.org/
+
+    Moodle is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Moodle is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+}}
+{{!
+    @template mod_leafr/print
+
+    Printable list of the current user's bookmarks, reachable from the bookmarks sidebar tab.
+    Deliberately plain HTML (no reader JavaScript needed), so it always renders and prints
+    cleanly; the browser's own "Print" / "Save as PDF" handles the output format.
+
+    Context variables required for this template:
+    * activityname - Name of the Leafr activity
+    * username - Full name of the current user
+    * exportdate - Formatted date and time of the export
+    * empty - Whether there are no bookmarks
+    * bookmarks - Array of {pagelabel, note}, ordered by page
+
+    Example context (json):
+    {
+        "activityname": "Handbook",
+        "username": "Student One",
+        "exportdate": "23 September 2026, 10:00",
+        "empty": false,
+        "bookmarks": [
+            {"pagelabel": "Page 3", "note": "Remember this for the exam"},
+            {"pagelabel": "Page 9", "note": ""}
+        ]
+    }
+}}
+<div class="leafr-print">
+    <div class="leafr-print-actions">
+        <button type="button" class="btn btn-primary" onclick="window.print()">{{#str}}bookmark_print, mod_leafr{{/str}}</button>
+    </div>
+    <h1 class="leafr-print-title">{{activityname}}</h1>
+    <p class="leafr-print-meta">{{username}} &middot; {{exportdate}}</p>
+    {{#empty}}
+    <p>{{#str}}bookmark_empty, mod_leafr{{/str}}</p>
+    {{/empty}}
+    {{^empty}}
+    <ol class="leafr-print-list">
+        {{#bookmarks}}
+        <li>
+            <strong>{{pagelabel}}</strong>
+            {{#note}}<p>{{note}}</p>{{/note}}
+        </li>
+        {{/bookmarks}}
+    </ol>
+    {{/empty}}
+</div>

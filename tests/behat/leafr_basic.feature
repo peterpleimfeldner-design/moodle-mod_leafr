@@ -76,8 +76,10 @@ Feature: Read a PDF document in a Leafr flipbook
     And I press "Sidebar"
     And I click on "[data-tab='bookmarks']" "css_element"
     Then I should see "Page 3" in the "[data-panel='bookmarks']" "css_element"
+    And "Print or save as PDF" "link" should exist in the "[data-panel='bookmarks']" "css_element"
     And I set the field "Note for Page 3" to "Read again"
     And I wait "1" seconds
+    Then I should see "10 of 500 characters" in the "[data-panel='bookmarks']" "css_element"
     When I reload the page
     And I press "Sidebar"
     And I click on "[data-tab='bookmarks']" "css_element"

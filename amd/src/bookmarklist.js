@@ -31,6 +31,12 @@ const THUMB_WIDTH = 56;
 /** Delay before an edited note is saved, in milliseconds. */
 const SAVE_DELAY = 800;
 
+/** The note field grows with its content up to this height, then scrolls. */
+const MAX_NOTE_HEIGHT = 160;
+
+/** Show the character counter as "near the limit" from this fraction of the maximum onwards. */
+const NEAR_LIMIT_RATIO = 0.9;
+
 export default class BookmarkList {
 
     /**
@@ -41,6 +47,8 @@ export default class BookmarkList {
      * @param {Object} options.pdfDoc PDF.js document proxy
      * @param {Object} options.strings Language strings
      * @param {Map<number, string>} options.items Initial bookmarks, page number => note
+     * @param {number} options.maxNoteLength Maximum note length the server accepts
+     * @param {string} options.printUrl URL of the printable bookmark list
      * @param {Function} options.onNavigate Called with a page number to show it
      * @param {Function} options.onSetNote Called with (page, note), returns a Promise
      * @param {Function} options.onRemove Called with a page number, returns a Promise
@@ -50,6 +58,8 @@ export default class BookmarkList {
         this.pdfDoc = options.pdfDoc;
         this.strings = options.strings;
         this.items = new Map(options.items);
+        this.maxNoteLength = options.maxNoteLength || 500;
+        this.printUrl = options.printUrl;
         this.onNavigate = options.onNavigate;
         this.onSetNote = options.onSetNote;
         this.onRemove = options.onRemove;
@@ -89,6 +99,17 @@ export default class BookmarkList {
      */
     render() {
         this.host.innerHTML = '';
+
+        if (this.printUrl && this.items.size) {
+            const print = document.createElement('a');
+            print.className = 'leafr-bookmark-print';
+            print.href = this.printUrl;
+            print.target = '_blank';
+            print.rel = 'noopener';
+            print.textContent = this.strings.bookmark_print;
+            this.host.appendChild(print);
+        }
+
         if (!this.items.size) {
             const empty = document.createElement('p');
             empty.className = 'leafr-bookmark-empty';
@@ -140,12 +161,33 @@ export default class BookmarkList {
         textarea.id = label.htmlFor;
         textarea.className = 'leafr-bookmark-note';
         textarea.value = note;
+        textarea.maxLength = this.maxNoteLength;
         textarea.placeholder = this.strings.bookmark_note_placeholder;
+
+        const counter = document.createElement('span');
+        counter.className = 'leafr-bookmark-counter';
+        counter.setAttribute('aria-hidden', 'true');
+
+        const updateCounter = () => {
+            const used = textarea.value.length;
+            counter.textContent = this.strings.bookmark_note_chars
+                .replace('{$a->used}', used)
+                .replace('{$a->max}', this.maxNoteLength);
+            counter.classList.toggle('is-near-limit', used >= this.maxNoteLength * NEAR_LIMIT_RATIO);
+        };
+        const growNote = () => {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, MAX_NOTE_HEIGHT) + 'px';
+        };
+        updateCounter();
+        growNote();
         textarea.addEventListener('input', () => {
             clearTimeout(this.saveTimers.get(page));
             const value = textarea.value;
             this.items.set(page, value);
             this.saveTimers.set(page, setTimeout(() => this.onSetNote(page, value), SAVE_DELAY));
+            updateCounter();
+            growNote();
         });
 
         const remove = document.createElement('button');
@@ -154,7 +196,7 @@ export default class BookmarkList {
         remove.textContent = this.strings.bookmark_remove;
         remove.addEventListener('click', () => this.onRemove(page));
 
-        body.append(pageButton, label, textarea, remove);
+        body.append(pageButton, label, textarea, counter, remove);
         li.append(thumb, body);
         return li;
     }

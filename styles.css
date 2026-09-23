@@ -470,6 +470,12 @@
 }
 
 /* Bookmarks tab. */
+.leafr-bookmark-print {
+    display: block;
+    margin: 0.75rem 0.75rem 0;
+    font-size: 0.8rem;
+}
+
 .leafr-bookmark-empty {
     padding: 1rem 0.75rem;
     font-size: 0.8rem;
@@ -533,6 +539,7 @@
 .leafr-bookmark-note {
     width: 100%;
     min-height: 2.25rem;
+    max-height: 160px;
     padding: 0.25rem 0.375rem;
     border: 1px solid var(--leafr-border);
     border-radius: 0.25rem;
@@ -541,7 +548,19 @@
     font: inherit;
     font-size: 0.75rem;
     resize: vertical;
+    overflow-y: auto;
     box-sizing: border-box;
+}
+
+.leafr-bookmark-counter {
+    align-self: flex-end;
+    font-size: 0.7rem;
+    color: var(--leafr-muted);
+}
+
+.leafr-bookmark-counter.is-near-limit {
+    color: #b45309;
+    font-weight: 600;
 }
 
 .leafr-bookmark-remove {
@@ -571,6 +590,31 @@
     clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
     z-index: 3;
     pointer-events: none;
+}
+
+/* Invisible hit target over the corner flag, so each page of a two-page spread can be
+   bookmarked on its own (the toolbar button and the B key only ever reach the left page). */
+.leafr-page-bookmark {
+    position: absolute;
+    top: 0;
+    right: 4px;
+    width: 40px;
+    height: 40px;
+    z-index: 4;
+    border: 0;
+    border-radius: 0 0 0.25rem 0.25rem;
+    background: transparent;
+    cursor: pointer;
+}
+
+.leafr-page-bookmark:hover,
+.leafr-page-bookmark:focus-visible {
+    background: rgba(217, 119, 6, 0.18);
+}
+
+.leafr-page-bookmark:focus-visible {
+    outline: 2px solid var(--leafr-accent);
+    outline-offset: 1px;
 }
 
 /* Highlight box for the active search match, shown on the page itself. */
@@ -815,5 +859,44 @@
 
     .leafr-progress-fill {
         transition: none;
+    }
+}
+
+/* Printable bookmark list (print.php), a plain page independent of the reader itself. */
+.leafr-print {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 1rem 0 2rem;
+}
+
+.leafr-print-actions {
+    margin-bottom: 1.5rem;
+}
+
+.leafr-print-title {
+    margin-bottom: 0.25rem;
+}
+
+.leafr-print-meta {
+    margin-bottom: 1.5rem;
+    color: #6b7280;
+}
+
+.leafr-print-list {
+    padding-left: 1.25rem;
+}
+
+.leafr-print-list li {
+    margin-bottom: 1rem;
+}
+
+.leafr-print-list p {
+    margin: 0.25rem 0 0;
+    white-space: pre-line;
+}
+
+@media print {
+    .leafr-print-actions {
+        display: none;
     }
 }

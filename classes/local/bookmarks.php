@@ -91,7 +91,7 @@ class bookmarks {
     public static function delete(int $leafrid, int $userid, int $pageno): bool {
         global $DB;
         $params = ['leafrid' => $leafrid, 'userid' => $userid, 'pageno' => $pageno];
-        // delete_records() always returns true when the query itself succeeds, regardless of
+        // Delete_records() always returns true when the query itself succeeds, regardless of
         // whether it matched any rows, so the caller needs an explicit existence check instead.
         $existed = $DB->record_exists('leafr_bookmarks', $params);
         $DB->delete_records('leafr_bookmarks', $params);
