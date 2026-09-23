@@ -165,5 +165,27 @@ function xmldb_leafr_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026092301, 'leafr');
     }
 
+    if ($oldversion < 2026092400) {
+        // Package D: manually defined chapters and the page/chapter based completion rule.
+        $table = new xmldb_table('leafr');
+
+        $field = new xmldb_field('completionpages', XMLDB_TYPE_TEXT, null, null, null, null, null, 'completionpage');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('manualchapters', XMLDB_TYPE_TEXT, null, null, null, null, null, 'totalpages');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('usemanualchapters', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'manualchapters');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2026092400, 'leafr');
+    }
+
     return true;
 }

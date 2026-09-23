@@ -40,6 +40,7 @@ export default class Thumbnails {
      * @param {Object} options.pdfDoc PDF.js document proxy
      * @param {number} options.total Number of pages
      * @param {Set<number>} options.seenPages Pages already read
+     * @param {Set<number>} options.requiredPages Pages required by the completion rule
      * @param {number} options.currentPage Current reading position
      * @param {Object} options.strings Language strings
      * @param {Function} options.onNavigate Called with the chosen page number
@@ -50,6 +51,7 @@ export default class Thumbnails {
         this.total = options.total;
         this.currentPage = options.currentPage;
         this.seenPages = options.seenPages || new Set();
+        this.requiredPages = options.requiredPages || new Set();
         this.strings = options.strings;
         this.onNavigate = options.onNavigate;
         this.buttons = [];
@@ -68,7 +70,15 @@ export default class Thumbnails {
             button.type = 'button';
             button.className = 'leafr-thumb';
             button.dataset.page = i;
-            button.setAttribute('aria-label', this.strings.pagelabel.replace('{$a}', i));
+            const isRequired = this.requiredPages.has(i);
+            if (isRequired) {
+                button.classList.add('is-required');
+            }
+            let label = this.strings.pagelabel.replace('{$a}', i);
+            if (isRequired) {
+                label += ', ' + this.strings.required_badge;
+            }
+            button.setAttribute('aria-label', label);
             const canvas = document.createElement('canvas');
             canvas.className = 'leafr-thumb-canvas';
             const check = document.createElement('span');

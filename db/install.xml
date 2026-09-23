@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/leafr/db" VERSION="20260923" COMMENT="XMLDB file for Moodle mod/leafr"
+<XMLDB PATH="mod/leafr/db" VERSION="20260924" COMMENT="XMLDB file for Moodle mod/leafr"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -12,13 +12,16 @@
         <FIELD NAME="intro" TYPE="text" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="filearea" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="content" SEQUENCE="false" COMMENT="File area holding the PDF"/>
-        <FIELD NAME="completiontype" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=off, 1=last page, 2=percentage of pages, 3=specific page"/>
+        <FIELD NAME="completiontype" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="0=off, 1=last page, 2=percentage of pages, 3=specific page, 4=specific pages/chapters"/>
         <FIELD NAME="completionpercent" TYPE="int" LENGTH="3" NOTNULL="true" DEFAULT="100" SEQUENCE="false" COMMENT="Required percentage when completiontype=2"/>
         <FIELD NAME="completionpage" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Required page when completiontype=3"/>
+        <FIELD NAME="completionpages" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Required pages as compact ranges when completiontype=4"/>
         <FIELD NAME="downloadallowed" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="showtoc" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="initialpage" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="totalpages" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Number of pages in the PDF, 0 while unknown"/>
+        <FIELD NAME="manualchapters" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Manually defined chapters as JSON [{title,page}], used when the PDF has no outline"/>
+        <FIELD NAME="usemanualchapters" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Always use the manual chapter list, even if the PDF has an outline"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>

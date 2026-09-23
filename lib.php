@@ -23,6 +23,7 @@
  */
 
 use mod_leafr\local\bookmarks;
+use mod_leafr\local\chapters;
 use mod_leafr\local\progress;
 
 /**
@@ -63,6 +64,19 @@ function leafr_normalise_settings(stdClass $data): void {
     $data->downloadallowed = empty($data->downloadallowed) ? 0 : 1;
     $data->showtoc = empty($data->showtoc) ? 0 : 1;
     $data->initialpage = max(1, (int)($data->initialpage ?? 1));
+
+    $chapterlist = chapters::from_submitted($data->chaptertitle ?? [], $data->chapterpage ?? []);
+    $data->manualchapters = chapters::encode($chapterlist);
+    $data->usemanualchapters = empty($data->usemanualchapters) ? 0 : 1;
+
+    if ($data->completiontype === progress::COMPLETION_SPECIFICRANGE) {
+        $pages = progress::decode_pages($data->completionpages ?? '');
+        $selected = array_map('intval', $data->completionchapters ?? []);
+        $pages = array_merge($pages, chapters::pages_for_selection($chapterlist, $selected, (int)($data->totalpages ?? 0)));
+        $data->completionpages = progress::encode_pages($pages);
+    } else {
+        $data->completionpages = $data->completionpages ?? '';
+    }
 }
 
 /**
@@ -131,6 +145,7 @@ function leafr_add_instance($data, $mform = null) {
 function leafr_update_instance($data, $mform = null) {
     global $DB;
 
+    $data->totalpages = (int)$DB->get_field('leafr', 'totalpages', ['id' => $data->instance]);
     leafr_normalise_settings($data);
     $data->id = $data->instance;
     $data->timemodified = time();

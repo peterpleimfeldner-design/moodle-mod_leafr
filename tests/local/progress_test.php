@@ -79,14 +79,18 @@ final class progress_test extends \advanced_testcase {
      */
     public static function completion_provider(): array {
         return [
-            'last page seen' => [progress::COMPLETION_LASTPAGE, 0, 0, [10], true],
-            'last page not seen' => [progress::COMPLETION_LASTPAGE, 0, 0, [1, 2, 9], false],
-            'percent reached' => [progress::COMPLETION_PERCENT, 50, 0, [1, 2, 3, 4, 5], true],
-            'percent not reached' => [progress::COMPLETION_PERCENT, 50, 0, [1, 2, 3, 4], false],
-            'specific page seen' => [progress::COMPLETION_SPECIFICPAGE, 0, 4, [4], true],
-            'specific page not seen' => [progress::COMPLETION_SPECIFICPAGE, 0, 4, [5], false],
-            'specific page beyond the end' => [progress::COMPLETION_SPECIFICPAGE, 0, 25, [10], true],
-            'rule disabled' => [progress::COMPLETION_NONE, 0, 0, [1, 10], false],
+            'last page seen' => [progress::COMPLETION_LASTPAGE, 0, 0, '', [10], true],
+            'last page not seen' => [progress::COMPLETION_LASTPAGE, 0, 0, '', [1, 2, 9], false],
+            'percent reached' => [progress::COMPLETION_PERCENT, 50, 0, '', [1, 2, 3, 4, 5], true],
+            'percent not reached' => [progress::COMPLETION_PERCENT, 50, 0, '', [1, 2, 3, 4], false],
+            'specific page seen' => [progress::COMPLETION_SPECIFICPAGE, 0, 4, '', [4], true],
+            'specific page not seen' => [progress::COMPLETION_SPECIFICPAGE, 0, 4, '', [5], false],
+            'specific page beyond the end' => [progress::COMPLETION_SPECIFICPAGE, 0, 25, '', [10], true],
+            'range fully seen' => [progress::COMPLETION_SPECIFICRANGE, 0, 0, '1-3,7', [1, 2, 3, 7, 9], true],
+            'range partially seen' => [progress::COMPLETION_SPECIFICRANGE, 0, 0, '1-3,7', [1, 2, 3], false],
+            'range beyond the end is ignored' => [progress::COMPLETION_SPECIFICRANGE, 0, 0, '1-2,25', [1, 2], true],
+            'range empty is never complete' => [progress::COMPLETION_SPECIFICRANGE, 0, 0, '', [1, 2, 3], false],
+            'rule disabled' => [progress::COMPLETION_NONE, 0, 0, '', [1, 10], false],
         ];
     }
 
@@ -97,20 +101,33 @@ final class progress_test extends \advanced_testcase {
      * @param int $type Completion type
      * @param int $percent Required percentage
      * @param int $page Required page
+     * @param string $pages Required pages (compact ranges) for the range completion type
      * @param array $seen Seen pages
      * @param bool $expected Expected result
      */
-    public function test_is_complete(int $type, int $percent, int $page, array $seen, bool $expected): void {
+    public function test_is_complete(int $type, int $percent, int $page, string $pages, array $seen, bool $expected): void {
         $this->resetAfterTest();
         $leafr = (object)[
             'id' => 3,
             'completiontype' => $type,
             'completionpercent' => $percent,
             'completionpage' => $page,
+            'completionpages' => $pages,
             'totalpages' => 10,
         ];
         progress::record(3, 11, $seen);
         $this->assertSame($expected, progress::is_complete($leafr, 11));
+    }
+
+    /**
+     * required_pages() filters out pages beyond the document's actual length.
+     */
+    public function test_required_pages(): void {
+        $leafr = (object)['completionpages' => '1-3,7,25', 'totalpages' => 10];
+        $this->assertSame([1, 2, 3, 7], progress::required_pages($leafr));
+
+        $leafr->totalpages = 0;
+        $this->assertSame([1, 2, 3, 7, 25], progress::required_pages($leafr));
     }
 
     /**

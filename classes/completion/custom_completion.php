@@ -41,7 +41,7 @@ class custom_completion extends activity_custom_completion {
         $leafr = $DB->get_record(
             'leafr',
             ['id' => $this->cm->instance],
-            'id, completiontype, completionpercent, completionpage, totalpages',
+            'id, completiontype, completionpercent, completionpage, completionpages, totalpages',
             MUST_EXIST
         );
         return progress::is_complete($leafr, $this->userid) ? COMPLETION_COMPLETE : COMPLETION_INCOMPLETE;
@@ -67,7 +67,7 @@ class custom_completion extends activity_custom_completion {
         $leafr = $DB->get_record(
             'leafr',
             ['id' => $this->cm->instance],
-            'id, completiontype, completionpercent, completionpage'
+            'id, completiontype, completionpercent, completionpage, completionpages, totalpages'
         );
         $description = '';
         if ($leafr) {
@@ -80,6 +80,10 @@ class custom_completion extends activity_custom_completion {
                     break;
                 case progress::COMPLETION_SPECIFICPAGE:
                     $description = get_string('completiondetail:page', 'leafr', (int)$leafr->completionpage);
+                    break;
+                case progress::COMPLETION_SPECIFICRANGE:
+                    $range = progress::encode_pages(progress::required_pages($leafr));
+                    $description = get_string('completiondetail:range', 'leafr', $range !== '' ? $range : '-');
                     break;
             }
         }

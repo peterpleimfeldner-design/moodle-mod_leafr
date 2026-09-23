@@ -46,11 +46,11 @@ const HIGHLIGHT_DURATION = 4000;
 /** Language strings used by the reader. */
 const STRING_KEYS = [
     'pagelabel', 'pageofpages', 'pagesofpages', 'totalpages', 'toc_empty',
-    'fullscreen_enter', 'fullscreen_exit', 'zoomlevel', 'continuenotice', 'progresssummary',
+    'fullscreen_enter', 'fullscreen_exit', 'zoomlevel', 'continuenotice', 'progresssummary', 'requiredsummary',
     'search_label', 'search_placeholder', 'search_indexing', 'search_noresults',
     'search_noresults_scan', 'search_next', 'search_prev', 'matchofmatches',
     'bookmark_empty', 'bookmark_note_label', 'bookmark_note_placeholder', 'bookmark_remove',
-    'bookmark_page', 'bookmark_note_chars', 'bookmark_print',
+    'bookmark_page', 'bookmark_note_chars', 'bookmark_print', 'required_badge',
 ];
 
 class Reader {
@@ -99,6 +99,10 @@ class Reader {
         this.initialPage = Math.max(1, parseInt(root.dataset.initialpage, 10) || 1);
         this.continuePage = parseInt(root.dataset.lastpage, 10) || 0;
         this.seenPages = Reader.parsePageRanges(root.dataset.seenpages);
+        this.requiredPages = Reader.parsePageRanges(root.dataset.requiredpages);
+        this.manualChapters = Reader.parseBookmarks(root.dataset.manualchapters);
+        this.useManualChapters = root.dataset.usemanualchapters === '1';
+        this.requiredSummary = root.querySelector('[data-region="required-summary"]');
 
         const stored = root.dataset.simpleview;
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -251,6 +255,7 @@ class Reader {
                 pdfDoc: this.pdfDoc,
                 total: this.total,
                 seenPages: this.seenPages,
+                requiredPages: this.requiredPages,
                 currentPage: this.page,
                 strings: this.strings,
                 onNavigate: (page) => {
@@ -305,10 +310,15 @@ class Reader {
             return;
         }
         let entries = [];
-        try {
-            entries = await getOutline(this.pdfDoc);
-        } catch (error) {
-            entries = [];
+        if (!this.useManualChapters) {
+            try {
+                entries = await getOutline(this.pdfDoc);
+            } catch (error) {
+                entries = [];
+            }
+        }
+        if (!entries.length && this.manualChapters.length) {
+            entries = this.manualChapters.map((chapter) => ({title: chapter.title, page: chapter.page, children: []}));
         }
         if (!entries.length) {
             button.title = this.strings.toc_empty;
@@ -317,6 +327,8 @@ class Reader {
         this.toc = new Toc({
             panel: panel,
             entries: entries,
+            requiredPages: this.requiredPages,
+            requiredBadge: this.strings.required_badge,
             onNavigate: (page) => {
                 this.goTo(page);
                 this.sidebar.closeOnNarrowScreen();
@@ -564,6 +576,14 @@ class Reader {
         this.progressSummary.textContent = this.strings.progresssummary
             .replace('{$a->seen}', this.seenPages.size)
             .replace('{$a->total}', this.total);
+
+        if (this.requiredPages.size) {
+            const seenRequired = [...this.requiredPages].filter((page) => this.seenPages.has(page)).length;
+            this.requiredSummary.textContent = this.strings.requiredsummary
+                .replace('{$a->seen}', seenRequired)
+                .replace('{$a->total}', this.requiredPages.size);
+            this.requiredSummary.hidden = false;
+        }
     }
 
     /**

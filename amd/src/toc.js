@@ -30,13 +30,18 @@ export default class Toc {
      * @param {Object} options
      * @param {HTMLElement} options.panel The tab panel the outline is rendered into
      * @param {Array} options.entries Outline entries {title, page, children}
+     * @param {Set<number>} [options.requiredPages] Pages required by the completion rule
+     * @param {string} [options.requiredBadge] Label of the badge shown on chapters covering required pages
      * @param {Function} options.onNavigate Called with the page number of a chosen entry
      */
     constructor(options) {
         this.panel = options.panel;
         this.onNavigate = options.onNavigate;
+        this.requiredPages = options.requiredPages || new Set();
+        this.requiredBadge = options.requiredBadge || '';
         this.links = [];
         this.render(options.entries);
+        this.markRequired();
     }
 
     /**
@@ -73,6 +78,33 @@ export default class Toc {
         };
         this.panel.innerHTML = '';
         this.panel.appendChild(build(entries));
+    }
+
+    /**
+     * Adds a badge to entries whose span (from their own page up to, but excluding, the next
+     * entry's page) contains a page required by the completion rule. Entries are assumed to
+     * appear in the sidebar in page order, as a normal PDF outline does.
+     */
+    markRequired() {
+        if (!this.requiredPages.size) {
+            return;
+        }
+        this.links.forEach((link, index) => {
+            const start = parseInt(link.dataset.page, 10);
+            const next = this.links[index + 1] ? parseInt(this.links[index + 1].dataset.page, 10) : Infinity;
+            let covers = false;
+            this.requiredPages.forEach((page) => {
+                if (page >= start && page < next) {
+                    covers = true;
+                }
+            });
+            if (covers) {
+                const badge = document.createElement('span');
+                badge.className = 'leafr-toc-badge';
+                badge.textContent = this.requiredBadge;
+                link.appendChild(badge);
+            }
+        });
     }
 
     /**

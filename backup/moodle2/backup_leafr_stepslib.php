@@ -42,7 +42,8 @@ class backup_leafr_activity_structure_step extends backup_activity_structure_ste
 
         $leafr = new backup_nested_element('leafr', ['id'], [
             'name', 'intro', 'introformat', 'filearea', 'completiontype', 'completionpercent', 'completionpage',
-            'downloadallowed', 'showtoc', 'initialpage', 'totalpages', 'timecreated', 'timemodified',
+            'completionpages', 'downloadallowed', 'showtoc', 'initialpage', 'totalpages', 'manualchapters',
+            'usemanualchapters', 'timecreated', 'timemodified',
         ]);
         $progresses = new backup_nested_element('progresses');
         $progress = new backup_nested_element('progress', ['id'], ['userid', 'seenpages', 'lastpage', 'timemodified']);

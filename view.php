@@ -23,6 +23,7 @@
  */
 
 use mod_leafr\local\bookmarks;
+use mod_leafr\local\chapters;
 use mod_leafr\local\progress;
 
 require_once(__DIR__ . '/../../config.php');
@@ -69,6 +70,10 @@ if ($file) {
         ));
     }
     $simpleview = get_user_preferences('mod_leafr_simpleview', null);
+    $requiredpages = $leafr->completiontype == progress::COMPLETION_SPECIFICRANGE
+        ? progress::encode_pages(progress::required_pages($leafr))
+        : '';
+    $manualchapters = json_encode(chapters::decode($leafr->manualchapters ?? null));
 
     $downloadurl = '';
     if ($leafr->downloadallowed && has_capability('mod/leafr:download', $context)) {
@@ -108,6 +113,9 @@ if ($file) {
         'showtoc' => !empty($leafr->showtoc),
         'simpleview' => $simpleview === null ? '' : (string)(int)$simpleview,
         'completed' => $completed,
+        'requiredpages' => $requiredpages,
+        'manualchapters' => $manualchapters,
+        'usemanualchapters' => !empty($leafr->usemanualchapters),
     ];
     $PAGE->requires->js_call_amd('mod_leafr/reader', 'init', ['#' . $uniqid]);
 }

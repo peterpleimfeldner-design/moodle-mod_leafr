@@ -36,6 +36,9 @@
     * showtoc - Whether the table of contents is enabled
     * simpleview - "1", "0" or "" (no preference)
     * completed - Whether the page based completion rule is already fulfilled
+    * requiredpages - Pages required by the completion rule, compact ranges (e.g. "1-5,8"), empty if none
+    * manualchapters - Manually defined chapters as a JSON array of {title, page}, "[]" if none
+    * usemanualchapters - Whether the manual chapter list should always be used instead of the PDF outline
 
     Example context (json):
     {
@@ -54,7 +57,10 @@
         "totalpages": 0,
         "showtoc": true,
         "simpleview": "",
-        "completed": false
+        "completed": false,
+        "requiredpages": "",
+        "manualchapters": "[]",
+        "usemanualchapters": false
     }
 }}
 <div id="{{uniqid}}" class="leafr-reader" data-region="leafr-reader" role="region"
@@ -62,7 +68,9 @@
      data-cmid="{{cmid}}" data-fileurl="{{fileurl}}" data-startpage="{{startpage}}" data-initialpage="{{initialpage}}"
      data-lastpage="{{lastpage}}" data-seenpages="{{seenpages}}" data-totalpages="{{totalpages}}"
      data-bookmarks="{{bookmarks}}" data-bookmarknotemaxlength="{{bookmarknotemaxlength}}" data-printurl="{{printurl}}"
-     data-simpleview="{{simpleview}}" data-completed="{{#completed}}1{{/completed}}{{^completed}}0{{/completed}}">
+     data-simpleview="{{simpleview}}" data-completed="{{#completed}}1{{/completed}}{{^completed}}0{{/completed}}"
+     data-requiredpages="{{requiredpages}}" data-manualchapters="{{manualchapters}}"
+     data-usemanualchapters="{{#usemanualchapters}}1{{/usemanualchapters}}{{^usemanualchapters}}0{{/usemanualchapters}}">
 
     <div class="leafr-body">
         <aside class="leafr-sidebar" data-region="sidebar" aria-label="{{#str}}sidebar, mod_leafr{{/str}}" hidden>
@@ -134,6 +142,7 @@
             <div class="leafr-progress-fill" data-region="progress-fill"></div>
         </div>
         <div class="leafr-progress-summary" data-region="progress-summary" aria-hidden="true"></div>
+        <div class="leafr-progress-summary leafr-progress-summary-required" data-region="required-summary" aria-hidden="true" hidden></div>
         <div class="leafr-toolbar-inner">
             <div class="leafr-toolbar-group">
                 <button type="button" class="leafr-iconbtn" data-action="sidebar" aria-expanded="false" title="{{#str}}sidebar, mod_leafr{{/str}}" disabled>

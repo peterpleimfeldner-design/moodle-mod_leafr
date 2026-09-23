@@ -38,6 +38,9 @@ class progress {
     /** @var int Completion type: a specific page must be seen. */
     public const COMPLETION_SPECIFICPAGE = 3;
 
+    /** @var int Completion type: specific pages/chapters must all be seen. */
+    public const COMPLETION_SPECIFICRANGE = 4;
+
     /** @var int Upper limit for page numbers accepted from clients. */
     public const MAX_PAGES = 100000;
 
@@ -164,6 +167,19 @@ class progress {
     }
 
     /**
+     * The pages required by the "specific pages/chapters" completion rule, limited to the
+     * document's actual page count.
+     *
+     * @param stdClass $leafr Leafr instance record (needs completionpages and totalpages)
+     * @return int[]
+     */
+    public static function required_pages(stdClass $leafr): array {
+        $total = (int)$leafr->totalpages;
+        $pages = self::decode_pages($leafr->completionpages ?? '');
+        return $total >= 1 ? array_values(array_filter($pages, fn($p) => $p <= $total)) : $pages;
+    }
+
+    /**
      * Whether a user fulfils the page based completion rule of an activity.
      *
      * @param stdClass $leafr Leafr instance record
@@ -186,6 +202,9 @@ class progress {
             case self::COMPLETION_SPECIFICPAGE:
                 $page = max(1, min($total, (int)$leafr->completionpage));
                 return in_array($page, $seen, true);
+            case self::COMPLETION_SPECIFICRANGE:
+                $required = self::required_pages($leafr);
+                return !empty($required) && !array_diff($required, $seen);
             default:
                 return false;
         }

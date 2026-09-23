@@ -2,6 +2,22 @@
 
 ## 1.2.0 (in Arbeit, Branch `release/1.2.0`)
 
+### Paket D – Kapitel und Pflicht-Lernstoff
+- Neuer Formularbereich **Kapitel**: beliebig viele Zeilen mit Titel und Startseite, plus
+  Einstellung „Immer die manuelle Liste verwenden“. Wird für den Reiter „Inhalt“ genutzt, wenn das
+  PDF keine eigene Gliederung hat (oder immer, wenn die Einstellung aktiv ist).
+- Neue Abschlussregel **„Bestimmte Seiten/Kapitel lesen“** (Typ 4): Seitenbereiche als Text
+  („1-5, 8, 12-20“, mit Eingabeprüfung) und/oder Auswahl bereits gespeicherter Kapitel, die beim
+  Speichern zu den Pflichtseiten hinzugefügt werden.
+- Pflichtbereiche sind im Reader sichtbar: zweite Fortschrittsanzeige „X von Y Pflichtseiten
+  gelesen“, ein Punkt an den betroffenen Miniaturen und ein „Pflicht“-Abzeichen bei den
+  entsprechenden Kapiteln im Inhaltsreiter.
+- Hilfetext bei „Kapiteltitel“ erklärt, wie PDFs mit Gliederung erzeugt werden (Word:
+  Überschrift-Formatvorlagen; PowerPoint-Export: „Textmarken erstellen mit: Überschriften“).
+- Neue Klasse `mod_leafr\local\chapters` (Kapitelliste aus dem Formular bauen/speichern, Auswahl in
+  Seitenzahlen umrechnen), Upgrade-Schritt für die neuen Felder `completionpages`,
+  `manualchapters`, `usemanualchapters`.
+
 ### Paket C – Lesezeichen
 - Neue Tabelle `leafr_bookmarks` (Seite, optionale Notiz bis 500 Zeichen, pro Person privat), neue
   Webservices `mod_leafr_bookmark_set`, `mod_leafr_bookmark_delete`, `mod_leafr_bookmark_list`
