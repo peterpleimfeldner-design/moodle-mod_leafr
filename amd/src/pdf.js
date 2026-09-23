@@ -180,7 +180,7 @@ export const getTextItems = async(pdfDoc, pageNum) => {
     const viewport = page.getViewport({scale: 1});
     const content = await page.getTextContent();
     return content.items.filter((item) => item.str && item.str.trim() !== '').map((item) => {
-        // item.width/height are already in page units; only the origin needs the viewport
+        // Item.width/height are already in page units; only the origin needs the viewport
         // transform (which accounts for the page's y-flip and any rotation).
         const t = pdfjsLib.Util.transform(viewport.transform, item.transform);
         return {

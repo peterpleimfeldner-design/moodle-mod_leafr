@@ -56,6 +56,7 @@ Feature: Read a PDF document in a Leafr flipbook
     And I press "Sidebar"
     And I press "Search"
     And I set the field "Search text" to "Chapter 3"
+    And I press the enter key
     And I wait "1" seconds
     Then I should see "matches" in the ".leafr-search-status" "css_element"
     And I should see "Chapter 3" in the ".leafr-search-results" "css_element"
