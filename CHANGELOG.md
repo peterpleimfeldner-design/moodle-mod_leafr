@@ -2,6 +2,18 @@
 
 ## 1.2.0 (in Arbeit, Branch `release/1.2.0`)
 
+### Paket A – Grundlagen und UX-Fehler
+- Reader-Höhe berücksichtigt jetzt alle fixierten/klebenden Leisten am oberen Rand (nicht nur die
+  erste gefundene), damit die eigene Werkzeugleiste bei Themes mit mehreren Navigationsleisten
+  sichtbar bleibt. Die Messung läuft entprellt bei jeder Fenstergrößenänderung.
+- Neuer Weiterlesen-Hinweis: Wird die zuletzt gelesene Seite statt der Startseite geöffnet,
+  erscheint eine kurze, per Tastatur erreichbare Meldung „Weiter bei Seite X“ mit dem Knopf
+  „Von vorne beginnen“ (verschwindet nach 8 Sekunden von selbst).
+- Der Fortschrittsbalken ist jetzt ein barrierefreier Slider (ARIA, Tastatur mit Pfeiltasten/
+  Pos1/Ende, anklickbar) statt einer rein dekorativen Anzeige.
+- Neue Anzeige „X von Y Seiten gelesen“ neben dem Fortschrittsbalken.
+- Veralteten `get_strings()`-Fallback (nur bis Moodle 4.2 nötig) aus `reader.js` entfernt.
+
 ### Paket 0 – Umbau für die Zukunft
 - Mindestversion auf Moodle 4.5 LTS angehoben (`requires` = 2024100700, `supported` = [405, 502]).
   CI-Matrix läuft jetzt auf Moodle 4.5, 5.0, 5.1, 5.2 (Moodle 4.2 entfernt).

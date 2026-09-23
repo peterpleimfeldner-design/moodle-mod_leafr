@@ -277,8 +277,15 @@
 }
 
 .leafr-progress {
+    position: relative;
     height: 3px;
     background: rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+}
+
+.leafr-progress:focus-visible {
+    outline: 2px solid #9fd9d9;
+    outline-offset: 2px;
 }
 
 .leafr-progress-fill {
@@ -286,6 +293,14 @@
     height: 100%;
     background: #5eb8b8;
     transition: width 0.2s ease-out;
+}
+
+.leafr-progress-summary {
+    padding: 0.125rem 0.75rem 0;
+    font-size: 0.75rem;
+    color: var(--leafr-toolbar-fg);
+    opacity: 0.75;
+    text-align: right;
 }
 
 .leafr-toolbar-inner {
@@ -393,6 +408,27 @@
     color: #fff;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
     transform: translateX(-50%);
+}
+
+.leafr-toast-info {
+    background: #1f2937;
+}
+
+.leafr-toast-action {
+    flex: 0 0 auto;
+    padding: 0.25rem 0.625rem;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 0.25rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.leafr-toast-action:hover,
+.leafr-toast-action:focus-visible {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 /* Keyboard help. */

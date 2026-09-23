@@ -39,7 +39,7 @@ const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3];
 /** Language strings used by the reader. */
 const STRING_KEYS = [
     'pagelabel', 'pageofpages', 'pagesofpages', 'totalpages', 'toc_empty', 'toc',
-    'fullscreen_enter', 'fullscreen_exit', 'zoomlevel',
+    'fullscreen_enter', 'fullscreen_exit', 'zoomlevel', 'continuenotice', 'progresssummary',
 ];
 
 class Reader {
@@ -59,7 +59,10 @@ class Reader {
         this.viewHost = root.querySelector('[data-region="view"]');
         this.pageInput = root.querySelector('[data-region="page-input"]');
         this.pageTotal = root.querySelector('[data-region="page-total"]');
+        this.progressBar = root.querySelector('[data-region="progress"]');
         this.progressFill = root.querySelector('[data-region="progress-fill"]');
+        this.progressSummary = root.querySelector('[data-region="progress-summary"]');
+        this.continueToast = root.querySelector('[data-region="continue"]');
         this.live = root.querySelector('[data-region="live"]');
         this.helpDialog = root.querySelector('[data-region="help"]');
         this.tocPanel = root.querySelector('[data-region="toc"]');
@@ -68,7 +71,12 @@ class Reader {
         this.toc = null;
         this.zoomIndex = ZOOM_STEPS.indexOf(1);
         this.announceTimer = null;
+        this.resizeTimer = null;
+        this.continueTimer = null;
         this.helpReturnFocus = null;
+        this.initialPage = Math.max(1, parseInt(root.dataset.initialpage, 10) || 1);
+        this.continuePage = parseInt(root.dataset.lastpage, 10) || 0;
+        this.seenPages = Reader.parsePageRanges(root.dataset.seenpages);
 
         const stored = root.dataset.simpleview;
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -83,13 +91,15 @@ class Reader {
     async init() {
         const pending = new Pending('mod_leafr/reader:init');
         this.fitHeight();
-        window.addEventListener('resize', () => this.fitHeight());
+        window.addEventListener('resize', () => {
+            clearTimeout(this.resizeTimer);
+            this.resizeTimer = setTimeout(() => this.fitHeight(), 100);
+        });
         this.bindEvents();
 
         try {
             const [strings, pdfDoc] = await Promise.all([
-                // The function getStrings() exists from Moodle 4.3, get_strings() before.
-                (Str.getStrings || Str.get_strings)(STRING_KEYS.map((key) => ({key, component: 'mod_leafr'}))),
+                Str.getStrings(STRING_KEYS.map((key) => ({key, component: 'mod_leafr'}))),
                 loadDocument(this.fileurl),
             ]);
             this.strings = {};
@@ -108,6 +118,7 @@ class Reader {
 
             this.pageTotal.textContent = this.strings.totalpages.replace('{$a}', this.total);
             this.pageInput.setAttribute('max', this.total);
+            this.progressBar.setAttribute('aria-valuemax', this.total);
             this.root.querySelectorAll('.leafr-toolbar button[disabled], .leafr-pageinput').forEach((el) => {
                 if (el.dataset.action !== 'toc') {
                     el.disabled = false;
@@ -119,6 +130,8 @@ class Reader {
             await this.showView();
             this.setLoading(false);
             await this.initToc();
+            this.updateProgressSummary();
+            this.showContinueNotice();
         } catch (error) {
             this.showError();
         }
@@ -134,16 +147,40 @@ class Reader {
     }
 
     /**
-     * Makes the reader as high as the window below the fixed navigation bar of the theme.
+     * Makes the reader as high as the window below the fixed or sticky bars of the theme, so its
+     * own toolbar always stays visible. Some themes stack more than one such bar (e.g. a site
+     * navbar plus a second, theme-specific course navigation bar), so all of them are measured.
      */
     fitHeight() {
         if (document.fullscreenElement === this.root) {
             this.root.style.removeProperty('--leafr-height');
             return;
         }
-        const navbar = document.querySelector('.navbar.fixed-top, nav.fixed-top');
-        const offset = navbar ? navbar.offsetHeight : 0;
+        const offset = this.getFixedTopOffset();
         this.root.style.setProperty('--leafr-height', Math.max(window.innerHeight - offset - 32, 420) + 'px');
+    }
+
+    /**
+     * Measures how far down the fixed or sticky bars anchored to the top of the page reach.
+     *
+     * @returns {number} Offset in pixels
+     */
+    getFixedTopOffset() {
+        let bottom = 0;
+        document.body.querySelectorAll('*').forEach((el) => {
+            if (this.root.contains(el) || !el.offsetHeight) {
+                return;
+            }
+            const position = window.getComputedStyle(el).position;
+            if (position !== 'fixed' && position !== 'sticky') {
+                return;
+            }
+            const rect = el.getBoundingClientRect();
+            if (rect.top <= 4 && rect.bottom > bottom) {
+                bottom = rect.bottom;
+            }
+        });
+        return Math.max(bottom, 0);
     }
 
     /**
@@ -216,6 +253,11 @@ class Reader {
             this.pageInput.value = page;
         }
         this.progressFill.style.width = (this.total > 1 ? (last - 1) / (this.total - 1) * 100 : 100) + '%';
+        this.progressBar.setAttribute('aria-valuenow', page);
+        this.progressBar.setAttribute(
+            'aria-valuetext',
+            this.strings.pageofpages.replace('{$a->page}', page).replace('{$a->total}', this.total)
+        );
         this.root.querySelector('[data-action="first"]').disabled = page <= 1;
         this.root.querySelector('[data-action="prev"]').disabled = page <= 1;
         this.root.querySelector('[data-action="next"]').disabled = last >= this.total;
@@ -223,6 +265,8 @@ class Reader {
         if (this.toc) {
             this.toc.setCurrentPage(page);
         }
+        visible.forEach((visiblepage) => this.seenPages.add(visiblepage));
+        this.updateProgressSummary();
         this.tracker.record(page, visible);
 
         // Announce the new page to screen readers once the user stops turning pages.
@@ -233,6 +277,40 @@ class Reader {
                 : this.strings.pageofpages.replace('{$a->page}', page);
             this.live.textContent = text.replace('{$a->total}', this.total);
         }, 400);
+    }
+
+    /**
+     * Updates the "X of Y pages read" text next to the progress bar.
+     */
+    updateProgressSummary() {
+        if (!this.total) {
+            return;
+        }
+        this.progressSummary.textContent = this.strings.progresssummary
+            .replace('{$a->seen}', this.seenPages.size)
+            .replace('{$a->total}', this.total);
+    }
+
+    /**
+     * Shows a dismissible notice when the reader opened at a previously reached page instead of
+     * silently jumping there, offering a way back to the configured start page.
+     */
+    showContinueNotice() {
+        if (this.continuePage <= 1 || this.continuePage === this.initialPage) {
+            return;
+        }
+        this.continueToast.querySelector('[data-region="continue-text"]').textContent =
+            this.strings.continuenotice.replace('{$a}', this.continuePage);
+        this.continueToast.hidden = false;
+        this.continueTimer = setTimeout(() => this.hideContinueNotice(), 8000);
+    }
+
+    /**
+     * Hides the "continue reading" notice.
+     */
+    hideContinueNotice() {
+        clearTimeout(this.continueTimer);
+        this.continueToast.hidden = true;
     }
 
     /**
@@ -269,6 +347,9 @@ class Reader {
 
         this.root.addEventListener('keydown', (event) => this.handleKey(event));
         this.stage.addEventListener('mousedown', () => this.stage.focus({preventScroll: true}));
+
+        this.progressBar.addEventListener('click', (event) => this.handleProgressClick(event));
+        this.progressBar.addEventListener('keydown', (event) => this.handleProgressKey(event));
 
         document.addEventListener('fullscreenchange', () => {
             const active = document.fullscreenElement === this.root;
@@ -337,6 +418,47 @@ class Reader {
             case 'reload':
                 window.location.reload();
                 break;
+            case 'restart':
+                this.hideContinueNotice();
+                this.goTo(this.initialPage);
+                break;
+        }
+    }
+
+    /**
+     * Jumps to the page corresponding to a click position on the progress bar.
+     *
+     * @param {MouseEvent} event Click event
+     */
+    handleProgressClick(event) {
+        if (!this.total) {
+            return;
+        }
+        const rect = this.progressBar.getBoundingClientRect();
+        const ratio = rect.width ? Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)) : 0;
+        this.goTo(Math.round(1 + ratio * (this.total - 1)));
+    }
+
+    /**
+     * Moves the reading position with the keyboard while the progress bar (an ARIA slider) has
+     * the focus.
+     *
+     * @param {KeyboardEvent} event Key event
+     */
+    handleProgressKey(event) {
+        // Use the same actions as the toolbar buttons: in the flipbook view, a "page" is often a
+        // two-page spread, so next/prev is not always the same as goTo(page +/- 1).
+        const actions = {
+            ArrowRight: () => this.handleAction('next'),
+            ArrowUp: () => this.handleAction('next'),
+            ArrowLeft: () => this.handleAction('prev'),
+            ArrowDown: () => this.handleAction('prev'),
+            Home: () => this.goTo(1),
+            End: () => this.goTo(this.total),
+        };
+        if (actions[event.key]) {
+            event.preventDefault();
+            actions[event.key]();
         }
     }
 
@@ -356,7 +478,7 @@ class Reader {
             }
             return;
         }
-        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName)) {
+        if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName) || event.target === this.progressBar) {
             return;
         }
         const action = this.getKeyAction(event);
@@ -513,6 +635,31 @@ class Reader {
         this.setLoading(false);
         this.root.querySelector('[data-region="error"]').hidden = false;
         this.viewHost.hidden = true;
+    }
+
+    /**
+     * Decodes compact page ranges (e.g. "1-5,7") as used by {@see \mod_leafr\local\progress}.
+     *
+     * @param {string} encoded Encoded ranges
+     * @returns {Set<number>}
+     */
+    static parsePageRanges(encoded) {
+        const pages = new Set();
+        (encoded || '').split(',').forEach((part) => {
+            part = part.trim();
+            if (!part) {
+                return;
+            }
+            if (part.includes('-')) {
+                const [from, to] = part.split('-').map((value) => parseInt(value, 10));
+                for (let p = from; p <= to; p++) {
+                    pages.add(p);
+                }
+            } else {
+                pages.add(parseInt(part, 10));
+            }
+        });
+        return pages;
     }
 }
 

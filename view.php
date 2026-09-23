@@ -56,9 +56,11 @@ if ($file) {
 
     $lastpage = 0;
     $completed = false;
+    $seenpages = '';
     if (isloggedin() && !isguestuser()) {
         $lastpage = progress::get_last_page((int)$leafr->id, (int)$USER->id);
         $completed = $leafr->completiontype > 0 && progress::is_complete($leafr, (int)$USER->id);
+        $seenpages = progress::encode_pages(progress::get_seen_pages((int)$leafr->id, (int)$USER->id));
     }
     $simpleview = get_user_preferences('mod_leafr_simpleview', null);
 
@@ -90,6 +92,9 @@ if ($file) {
         'fileurl' => $fileurl->out(false),
         'downloadurl' => $downloadurl,
         'startpage' => $lastpage ?: max(1, (int)$leafr->initialpage),
+        'initialpage' => max(1, (int)$leafr->initialpage),
+        'lastpage' => $lastpage,
+        'seenpages' => $seenpages,
         'totalpages' => (int)$leafr->totalpages,
         'showtoc' => !empty($leafr->showtoc),
         'simpleview' => $simpleview === null ? '' : (string)(int)$simpleview,

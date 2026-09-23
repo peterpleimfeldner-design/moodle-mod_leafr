@@ -47,6 +47,18 @@ Feature: Read a PDF document in a Leafr flipbook
     And the field "Go to page" matches value "9"
     And I press "Table of contents"
     And I should see "Chapter 3: Summary"
+    And I should see "of 12 pages read" in the ".leafr-toolbar" "css_element"
+
+  @javascript
+  Scenario: A returning student sees a notice instead of a silent jump
+    Given I am on the "Handbook" "leafr activity" page logged in as "student1"
+    And I press "Next page"
+    And the field "Go to page" matches value "3"
+    And I wait "2" seconds
+    When I reload the page
+    Then I should see "Continue on page 3"
+    And I press "Start from the beginning"
+    And the field "Go to page" matches value "1"
 
   @javascript @_file_upload
   Scenario: A teacher creates a flipbook

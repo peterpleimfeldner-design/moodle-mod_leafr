@@ -26,6 +26,9 @@
     * fileurl - URL of the PDF file
     * downloadurl - URL to download the PDF, empty if downloading is not allowed
     * startpage - Page to open first
+    * initialpage - Configured start page, used by the "start from the beginning" action
+    * lastpage - Reading position of the current user, 0 if never opened before
+    * seenpages - Pages already seen by the current user, compact ranges (e.g. "1-5,7")
     * totalpages - Known number of pages, 0 if unknown
     * showtoc - Whether the table of contents is enabled
     * simpleview - "1", "0" or "" (no preference)
@@ -39,6 +42,9 @@
         "fileurl": "https://example.com/pluginfile.php/34/mod_leafr/content/0/handbook.pdf",
         "downloadurl": "https://example.com/pluginfile.php/34/mod_leafr/content/0/handbook.pdf?forcedownload=1",
         "startpage": 1,
+        "initialpage": 1,
+        "lastpage": 0,
+        "seenpages": "",
         "totalpages": 0,
         "showtoc": true,
         "simpleview": "",
@@ -47,7 +53,8 @@
 }}
 <div id="{{uniqid}}" class="leafr-reader" data-region="leafr-reader" role="region"
      aria-label="{{readerlabel}}"
-     data-cmid="{{cmid}}" data-fileurl="{{fileurl}}" data-startpage="{{startpage}}" data-totalpages="{{totalpages}}"
+     data-cmid="{{cmid}}" data-fileurl="{{fileurl}}" data-startpage="{{startpage}}" data-initialpage="{{initialpage}}"
+     data-lastpage="{{lastpage}}" data-seenpages="{{seenpages}}" data-totalpages="{{totalpages}}"
      data-simpleview="{{simpleview}}" data-completed="{{#completed}}1{{/completed}}{{^completed}}0{{/completed}}">
 
     <div class="leafr-body">
@@ -83,7 +90,12 @@
     </div>
 
     <div class="leafr-toolbar" role="toolbar" aria-label="{{#str}}toolbar, mod_leafr{{/str}}">
-        <div class="leafr-progress" aria-hidden="true"><div class="leafr-progress-fill" data-region="progress-fill"></div></div>
+        <div class="leafr-progress" data-region="progress" role="slider" tabindex="0"
+             aria-label="{{#str}}pageprogress, mod_leafr{{/str}}" aria-valuemin="1" aria-valuemax="{{totalpages}}"
+             aria-valuenow="{{startpage}}">
+            <div class="leafr-progress-fill" data-region="progress-fill"></div>
+        </div>
+        <div class="leafr-progress-summary" data-region="progress-summary" aria-hidden="true"></div>
         <div class="leafr-toolbar-inner">
             <div class="leafr-toolbar-group">
                 {{#showtoc}}
@@ -152,6 +164,10 @@
     </div>
 
     <div class="sr-only" data-region="live" aria-live="polite" aria-atomic="true"></div>
+    <div class="leafr-toast leafr-toast-info" data-region="continue" role="status" hidden>
+        <span data-region="continue-text"></span>
+        <button type="button" class="leafr-toast-action" data-action="restart">{{#str}}restartreading, mod_leafr{{/str}}</button>
+    </div>
     <div class="leafr-toast" data-region="completion" role="status" hidden>
         <svg aria-hidden="true" focusable="false" width="22" height="22" viewBox="0 0 256 256" fill="currentColor"><path d="M173.66 98.34a8 8 0 0 1 0 11.32l-56 56a8 8 0 0 1-11.32 0l-24-24a8 8 0 0 1 11.32-11.32L112 148.69l50.34-50.35a8 8 0 0 1 11.32 0ZM232 128A104 104 0 1 1 128 24a104.11 104.11 0 0 1 104 104Zm-16 0a88 88 0 1 0-88 88a88.1 88.1 0 0 0 88-88Z"/></svg>
         <span>{{#str}}completion_done, mod_leafr{{/str}}</span>
