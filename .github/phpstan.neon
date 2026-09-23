@@ -1,5 +1,8 @@
 includes:
-    - vendor/micaherne/phpstan-moodle/extension.neon
+    # PHPStan resolves "includes" paths relative to this config file's own directory
+    # (.github/), not the working directory the analyser runs from - hence "../vendor/..."
+    # to reach the vendor/ folder that composer installs at the plugin root.
+    - ../vendor/micaherne/phpstan-moodle/extension.neon
 
 parameters:
     level: 5
