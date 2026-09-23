@@ -24,6 +24,7 @@ use core_privacy\local\request\helper;
 use core_privacy\local\request\transform;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
+use mod_leafr\local\bookmarks;
 use mod_leafr\local\progress;
 
 /**
@@ -51,6 +52,13 @@ class provider implements
             'lastpage' => 'privacy:metadata:leafr_progress:lastpage',
             'timemodified' => 'privacy:metadata:leafr_progress:timemodified',
         ], 'privacy:metadata:leafr_progress');
+        $collection->add_database_table('leafr_bookmarks', [
+            'userid' => 'privacy:metadata:leafr_bookmarks:userid',
+            'pageno' => 'privacy:metadata:leafr_bookmarks:pageno',
+            'note' => 'privacy:metadata:leafr_bookmarks:note',
+            'timecreated' => 'privacy:metadata:leafr_bookmarks:timecreated',
+            'timemodified' => 'privacy:metadata:leafr_bookmarks:timemodified',
+        ], 'privacy:metadata:leafr_bookmarks');
         $collection->add_user_preference('mod_leafr_simpleview', 'privacy:metadata:preference:simpleview');
         return $collection;
     }
@@ -67,12 +75,22 @@ class provider implements
                   JOIN {course_modules} cm ON cm.instance = p.leafrid
                   JOIN {modules} m ON m.id = cm.module AND m.name = :modname
                   JOIN {context} ctx ON ctx.instanceid = cm.id AND ctx.contextlevel = :contextlevel
-                 WHERE p.userid = :userid";
+                 WHERE p.userid = :userid
+                UNION
+                SELECT ctx.id
+                  FROM {leafr_bookmarks} b
+                  JOIN {course_modules} cm ON cm.instance = b.leafrid
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modname2
+                  JOIN {context} ctx ON ctx.instanceid = cm.id AND ctx.contextlevel = :contextlevel2
+                 WHERE b.userid = :userid2";
         $contextlist = new contextlist();
         $contextlist->add_from_sql($sql, [
             'modname' => 'leafr',
             'contextlevel' => CONTEXT_MODULE,
             'userid' => $userid,
+            'modname2' => 'leafr',
+            'contextlevel2' => CONTEXT_MODULE,
+            'userid2' => $userid,
         ]);
         return $contextlist;
     }
@@ -93,6 +111,13 @@ class provider implements
                   JOIN {modules} m ON m.id = cm.module AND m.name = :modname
                  WHERE cm.id = :cmid";
         $userlist->add_from_sql('userid', $sql, ['modname' => 'leafr', 'cmid' => $context->instanceid]);
+
+        $sql = "SELECT b.userid
+                  FROM {leafr_bookmarks} b
+                  JOIN {course_modules} cm ON cm.instance = b.leafrid
+                  JOIN {modules} m ON m.id = cm.module AND m.name = :modname
+                 WHERE cm.id = :cmid";
+        $userlist->add_from_sql('userid', $sql, ['modname' => 'leafr', 'cmid' => $context->instanceid]);
     }
 
     /**
@@ -108,15 +133,26 @@ class provider implements
                 continue;
             }
             $record = progress::get_record($leafrid, $user->id);
-            if (!$record) {
-                continue;
+            if ($record) {
+                $data = helper::get_context_data($context, $user);
+                $data->seenpages = $record->seenpages;
+                $data->lastpage = (int)$record->lastpage;
+                $data->timemodified = transform::datetime($record->timemodified);
+                writer::with_context($context)->export_data([], $data);
+                helper::export_context_files($context, $user);
             }
-            $data = helper::get_context_data($context, $user);
-            $data->seenpages = $record->seenpages;
-            $data->lastpage = (int)$record->lastpage;
-            $data->timemodified = transform::datetime($record->timemodified);
-            writer::with_context($context)->export_data([], $data);
-            helper::export_context_files($context, $user);
+
+            foreach (bookmarks::get_for_user($leafrid, $user->id) as $bookmark) {
+                writer::with_context($context)->export_data(
+                    [get_string('privacy:bookmarkssubcontext', 'leafr'), $bookmark->pageno],
+                    (object)[
+                        'pageno' => (int)$bookmark->pageno,
+                        'note' => $bookmark->note,
+                        'timecreated' => transform::datetime($bookmark->timecreated),
+                        'timemodified' => transform::datetime($bookmark->timemodified),
+                    ]
+                );
+            }
         }
     }
 
@@ -146,6 +182,7 @@ class provider implements
         $leafrid = self::get_instance_id($context);
         if ($leafrid) {
             progress::delete_for_instance($leafrid);
+            bookmarks::delete_for_instance($leafrid);
         }
     }
 
@@ -161,6 +198,7 @@ class provider implements
             $leafrid = self::get_instance_id($context);
             if ($leafrid) {
                 $DB->delete_records('leafr_progress', ['leafrid' => $leafrid, 'userid' => $userid]);
+                $DB->delete_records('leafr_bookmarks', ['leafrid' => $leafrid, 'userid' => $userid]);
             }
         }
     }
@@ -180,6 +218,7 @@ class provider implements
         [$insql, $params] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED);
         $params['leafrid'] = $leafrid;
         $DB->delete_records_select('leafr_progress', "leafrid = :leafrid AND userid {$insql}", $params);
+        $DB->delete_records_select('leafr_bookmarks', "leafrid = :leafrid AND userid {$insql}", $params);
     }
 
     /**

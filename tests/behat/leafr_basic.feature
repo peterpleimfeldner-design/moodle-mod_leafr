@@ -67,6 +67,26 @@ Feature: Read a PDF document in a Leafr flipbook
     And the field "Go to page" matches value "10"
 
   @javascript
+  Scenario: A student bookmarks a page, adds a note and it survives a reload
+    When I am on the "Handbook" "leafr activity" page logged in as "student1"
+    And I press "Next page"
+    And the field "Go to page" matches value "3"
+    And I click on "[data-action='bookmark']" "css_element"
+    And I wait "1" seconds
+    And I press "Sidebar"
+    And I click on "[data-tab='bookmarks']" "css_element"
+    Then I should see "Page 3" in the "[data-panel='bookmarks']" "css_element"
+    And I set the field "Note for Page 3" to "Read again"
+    And I wait "1" seconds
+    When I reload the page
+    And I press "Sidebar"
+    And I click on "[data-tab='bookmarks']" "css_element"
+    Then the field "Note for Page 3" matches value "Read again"
+    And I click on "[data-panel='bookmarks'] .leafr-bookmark-remove" "css_element"
+    And I wait "1" seconds
+    And I should see "No bookmarks yet." in the "[data-panel='bookmarks']" "css_element"
+
+  @javascript
   Scenario: A returning student sees a notice instead of a silent jump
     Given I am on the "Handbook" "leafr activity" page logged in as "student1"
     And I press "Next page"

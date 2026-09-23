@@ -41,6 +41,7 @@ class restore_leafr_activity_structure_step extends restore_activity_structure_s
         $paths = [new restore_path_element('leafr', '/activity/leafr')];
         if ($this->get_setting_value('userinfo')) {
             $paths[] = new restore_path_element('leafr_progress', '/activity/leafr/progresses/progress');
+            $paths[] = new restore_path_element('leafr_bookmark', '/activity/leafr/bookmarks/bookmark');
         }
         $this->add_subplugin_structure('leafrtool', $paths[0]);
         return $this->prepare_activity_structure($paths);
@@ -80,6 +81,31 @@ class restore_leafr_activity_structure_step extends restore_activity_structure_s
         }
         $newitemid = $DB->insert_record('leafr_progress', $data);
         $this->set_mapping('leafr_progress', $oldid, $newitemid);
+    }
+
+    /**
+     * Restores a bookmark of a user.
+     *
+     * @param array $data Backup data
+     */
+    protected function process_leafr_bookmark($data) {
+        global $DB;
+
+        $data = (object)$data;
+        $oldid = $data->id;
+        $data->leafrid = $this->get_new_parentid('leafr');
+        $data->userid = $this->get_mappingid('user', $data->userid);
+        $data->timecreated = $this->apply_date_offset($data->timecreated);
+        $data->timemodified = $this->apply_date_offset($data->timemodified);
+        $exists = $DB->record_exists(
+            'leafr_bookmarks',
+            ['leafrid' => $data->leafrid, 'userid' => $data->userid, 'pageno' => $data->pageno]
+        );
+        if (!$data->userid || $exists) {
+            return;
+        }
+        $newitemid = $DB->insert_record('leafr_bookmarks', $data);
+        $this->set_mapping('leafr_bookmarks', $oldid, $newitemid);
     }
 
     /**

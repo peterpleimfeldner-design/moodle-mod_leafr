@@ -33,4 +33,28 @@ $functions = [
         'capabilities' => 'mod/leafr:view',
         'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
     ],
+    'mod_leafr_bookmark_set' => [
+        'classname' => 'mod_leafr\external\bookmark_set',
+        'description' => 'Creates or updates a bookmark of the current user.',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'mod/leafr:view',
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
+    'mod_leafr_bookmark_delete' => [
+        'classname' => 'mod_leafr\external\bookmark_delete',
+        'description' => 'Deletes a bookmark of the current user.',
+        'type' => 'write',
+        'ajax' => true,
+        'capabilities' => 'mod/leafr:view',
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
+    'mod_leafr_bookmark_list' => [
+        'classname' => 'mod_leafr\external\bookmark_list',
+        'description' => 'Lists the bookmarks of the current user in an activity.',
+        'type' => 'read',
+        'ajax' => true,
+        'capabilities' => 'mod/leafr:view',
+        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
+    ],
 ];

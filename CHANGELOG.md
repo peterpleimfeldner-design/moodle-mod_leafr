@@ -2,6 +2,19 @@
 
 ## 1.2.0 (in Arbeit, Branch `release/1.2.0`)
 
+### Paket C – Lesezeichen
+- Neue Tabelle `leafr_bookmarks` (Seite, optionale Notiz bis 500 Zeichen, pro Person privat), neue
+  Webservices `mod_leafr_bookmark_set`, `mod_leafr_bookmark_delete`, `mod_leafr_bookmark_list`
+  (alle mit Kontext- und Rechteprüfung, nur eigene Daten).
+- Neuer Reiter **Lesezeichen** in der Seitenleiste (zwischen Inhalt und Suche): Miniatur, Seitenzahl
+  und editierbare Notiz je Lesezeichen, Notiz wird automatisch gespeichert.
+- Neuer Knopf in der Werkzeugleiste und Taste **B**: setzt oder entfernt das Lesezeichen der
+  aktuellen Seite. Eine kleine Fähnchen-Markierung erscheint an der oberen Seitenkante, sowohl in
+  der Buch- als auch in der einfachen Ansicht.
+- Datenschutz (Export/Löschen), Kurs-Zurücksetzen (eigene Einstellung „Lesezeichen aller Personen
+  löschen“) und Sicherung/Wiederherstellung (inkl. Aktivität duplizieren) berücksichtigen die
+  neue Tabelle.
+
 ### Paket B – Seitenleiste und Wiederfinden
 - Neue Seitenleiste (ersetzt das bisherige Inhaltsverzeichnis-Panel) mit den Reitern **Miniaturen**,
   **Inhalt** und **Suche** (ARIA-Tabs, mit Pfeiltasten bedienbar). Der Reiter „Lesezeichen“ folgt in

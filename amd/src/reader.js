@@ -24,6 +24,7 @@
 import Ajax from 'core/ajax';
 import Pending from 'core/pending';
 import * as Str from 'core/str';
+import BookmarkList from 'mod_leafr/bookmarklist';
 import FlipbookView from 'mod_leafr/flipbook';
 import ScrollView from 'mod_leafr/scrollview';
 import Sidebar from 'mod_leafr/sidebar';
@@ -48,6 +49,7 @@ const STRING_KEYS = [
     'fullscreen_enter', 'fullscreen_exit', 'zoomlevel', 'continuenotice', 'progresssummary',
     'search_label', 'search_placeholder', 'search_indexing', 'search_noresults',
     'search_noresults_scan', 'search_next', 'search_prev', 'matchofmatches',
+    'bookmark_empty', 'bookmark_note_label', 'bookmark_note_placeholder', 'bookmark_remove',
 ];
 
 class Reader {
@@ -81,7 +83,10 @@ class Reader {
         this.toc = null;
         this.thumbnails = null;
         this.search = null;
+        this.bookmarkList = null;
         this.highlightTimer = null;
+        this.bookmarkButton = root.querySelector('[data-action="bookmark"]');
+        this.bookmarks = new Map(Reader.parseBookmarks(root.dataset.bookmarks).map((b) => [b.page, b.note]));
         this.zoomIndex = ZOOM_STEPS.indexOf(1);
         this.announceTimer = null;
         this.resizeTimer = null;
@@ -221,6 +226,7 @@ class Reader {
         if (ZOOM_STEPS[this.zoomIndex] !== 1) {
             this.view.setZoom(ZOOM_STEPS[this.zoomIndex]);
         }
+        this.applyBookmarkFlags();
     }
 
     /**
@@ -264,6 +270,22 @@ class Reader {
             });
             this.search.init();
             this.search.focus();
+        });
+
+        this.sidebar.onFirstActivate('bookmarks', () => {
+            this.bookmarkList = new BookmarkList({
+                host: this.root.querySelector('[data-panel="bookmarks"]'),
+                pdfDoc: this.pdfDoc,
+                strings: this.strings,
+                items: this.bookmarks,
+                onNavigate: (page) => {
+                    this.goTo(page);
+                    this.sidebar.closeOnNarrowScreen();
+                },
+                onSetNote: (page, note) => this.saveBookmarkNote(page, note),
+                onRemove: (page) => this.removeBookmark(page),
+            });
+            this.bookmarkList.init();
         });
     }
 
@@ -327,6 +349,108 @@ class Reader {
     }
 
     /**
+     * Adds a bookmark for the current page, or removes it if there already is one.
+     */
+    toggleBookmark() {
+        if (this.bookmarks.has(this.page)) {
+            this.removeBookmark(this.page);
+        } else {
+            this.addBookmark(this.page, '');
+        }
+    }
+
+    /**
+     * Creates or updates a bookmark and reflects it in the toolbar, the page flag and the
+     * sidebar list.
+     *
+     * @param {number} page Page number
+     * @param {string} note Note
+     * @returns {Promise<void>}
+     */
+    async addBookmark(page, note) {
+        try {
+            const result = await Ajax.call([{
+                methodname: 'mod_leafr_bookmark_set',
+                args: {cmid: this.cmid, pageno: page, note: note},
+            }])[0];
+            this.bookmarks.set(page, result.note);
+            this.updateBookmarkFlag(page);
+            this.updateBookmarkButton();
+            if (this.bookmarkList) {
+                this.bookmarkList.set(page, result.note);
+            }
+        } catch (error) {
+            // Keep the previous state; the user can try again.
+            return;
+        }
+    }
+
+    /**
+     * Saves an edited note of an existing bookmark without touching the toolbar or the flag.
+     *
+     * @param {number} page Page number
+     * @param {string} note Note
+     * @returns {Promise<void>}
+     */
+    async saveBookmarkNote(page, note) {
+        try {
+            const result = await Ajax.call([{
+                methodname: 'mod_leafr_bookmark_set',
+                args: {cmid: this.cmid, pageno: page, note: note},
+            }])[0];
+            this.bookmarks.set(page, result.note);
+        } catch (error) {
+            return;
+        }
+    }
+
+    /**
+     * Removes a bookmark and reflects it in the toolbar, the page flag and the sidebar list.
+     *
+     * @param {number} page Page number
+     * @returns {Promise<void>}
+     */
+    async removeBookmark(page) {
+        try {
+            await Ajax.call([{methodname: 'mod_leafr_bookmark_delete', args: {cmid: this.cmid, pageno: page}}])[0];
+            this.bookmarks.delete(page);
+            this.updateBookmarkFlag(page);
+            this.updateBookmarkButton();
+            if (this.bookmarkList) {
+                this.bookmarkList.remove(page);
+            }
+        } catch (error) {
+            return;
+        }
+    }
+
+    /**
+     * Shows or hides the corner flag of a page depending on whether it is bookmarked.
+     *
+     * @param {number} page Page number
+     */
+    updateBookmarkFlag(page) {
+        const target = this.viewHost.querySelector('[data-page="' + page + '"]');
+        if (target) {
+            target.classList.toggle('is-bookmarked', this.bookmarks.has(page));
+        }
+    }
+
+    /**
+     * Re-applies the corner flags of all bookmarked pages, e.g. after the view was rebuilt.
+     */
+    applyBookmarkFlags() {
+        this.bookmarks.forEach((note, page) => this.updateBookmarkFlag(page));
+    }
+
+    /**
+     * Reflects whether the current page is bookmarked in the toolbar button.
+     */
+    updateBookmarkButton() {
+        this.bookmarkButton.setAttribute('aria-pressed', this.bookmarks.has(this.page) ? 'true' : 'false');
+    }
+
+    /**
      * Updates toolbar, progress and tracking when the visible pages change.
      *
      * @param {number} page First visible page
@@ -357,6 +481,8 @@ class Reader {
         }
         visible.forEach((visiblepage) => this.seenPages.add(visiblepage));
         this.updateProgressSummary();
+        this.updateBookmarkButton();
+        this.applyBookmarkFlags();
         this.tracker.record(page, visible);
 
         // Announce the new page to screen readers once the user stops turning pages.
@@ -489,6 +615,9 @@ class Reader {
             case 'fullscreen':
                 this.toggleFullscreen();
                 break;
+            case 'bookmark':
+                this.toggleBookmark();
+                break;
             case 'sidebar':
                 if (this.sidebar.isOpen()) {
                     this.sidebar.close();
@@ -597,6 +726,7 @@ class Reader {
             '+': () => this.changeZoom(1),
             '-': () => this.changeZoom(-1),
             t: this.toc ? () => this.sidebar.toggle('toc') : null,
+            b: () => this.toggleBookmark(),
             f: () => this.toggleFullscreen(),
             '?': () => this.openHelp(),
             Escape: this.sidebar && this.sidebar.isOpen() ? () => this.sidebar.close() : null,
@@ -750,6 +880,21 @@ class Reader {
             }
         });
         return pages;
+    }
+
+    /**
+     * Parses the bookmarks passed by the server as a JSON string.
+     *
+     * @param {string} encoded JSON array of {page, note}
+     * @returns {Array<{page: number, note: string}>}
+     */
+    static parseBookmarks(encoded) {
+        try {
+            const parsed = JSON.parse(encoded || '[]');
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (error) {
+            return [];
+        }
     }
 }
 

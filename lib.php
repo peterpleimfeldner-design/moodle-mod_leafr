@@ -22,6 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_leafr\local\bookmarks;
 use mod_leafr\local\progress;
 
 /**
@@ -166,6 +167,7 @@ function leafr_delete_instance($id) {
         \core_completion\api::update_completion_date_event($cm->id, 'leafr', $id, null);
     }
     progress::delete_for_instance($id);
+    bookmarks::delete_for_instance($id);
     $DB->delete_records('leafr', ['id' => $id]);
     return true;
 }
@@ -274,6 +276,7 @@ function leafr_view(stdClass $leafr, stdClass $course, $cm, context_module $cont
 function leafr_reset_course_form_definition(&$mform) {
     $mform->addElement('header', 'leafrheader', get_string('modulenameplural', 'leafr'));
     $mform->addElement('advcheckbox', 'reset_leafr_progress', get_string('resetprogress', 'leafr'));
+    $mform->addElement('advcheckbox', 'reset_leafr_bookmarks', get_string('resetbookmarks', 'leafr'));
 }
 
 /**
@@ -283,7 +286,7 @@ function leafr_reset_course_form_definition(&$mform) {
  * @return array
  */
 function leafr_reset_course_form_defaults($course) {
-    return ['reset_leafr_progress' => 1];
+    return ['reset_leafr_progress' => 1, 'reset_leafr_bookmarks' => 1];
 }
 
 /**
@@ -305,6 +308,18 @@ function leafr_reset_userdata($data) {
         $status[] = [
             'component' => get_string('modulenameplural', 'leafr'),
             'item' => get_string('resetprogress', 'leafr'),
+            'error' => false,
+        ];
+    }
+    if (!empty($data->reset_leafr_bookmarks)) {
+        $DB->delete_records_select(
+            'leafr_bookmarks',
+            'leafrid IN (SELECT id FROM {leafr} WHERE course = :courseid)',
+            ['courseid' => $data->courseid]
+        );
+        $status[] = [
+            'component' => get_string('modulenameplural', 'leafr'),
+            'item' => get_string('resetbookmarks', 'leafr'),
             'error' => false,
         ];
     }

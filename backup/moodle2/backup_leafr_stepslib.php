@@ -46,16 +46,24 @@ class backup_leafr_activity_structure_step extends backup_activity_structure_ste
         ]);
         $progresses = new backup_nested_element('progresses');
         $progress = new backup_nested_element('progress', ['id'], ['userid', 'seenpages', 'lastpage', 'timemodified']);
+        $bookmarks = new backup_nested_element('bookmarks');
+        $bookmark = new backup_nested_element('bookmark', ['id'], [
+            'userid', 'pageno', 'note', 'timecreated', 'timemodified',
+        ]);
 
         $leafr->add_child($progresses);
         $progresses->add_child($progress);
+        $leafr->add_child($bookmarks);
+        $bookmarks->add_child($bookmark);
 
         $leafr->set_source_table('leafr', ['id' => backup::VAR_ACTIVITYID]);
         if ($userinfo) {
             $progress->set_source_table('leafr_progress', ['leafrid' => backup::VAR_PARENTID]);
+            $bookmark->set_source_table('leafr_bookmarks', ['leafrid' => backup::VAR_PARENTID]);
         }
 
         $progress->annotate_ids('user', 'userid');
+        $bookmark->annotate_ids('user', 'userid');
         $leafr->annotate_files('mod_leafr', 'intro', null);
         $leafr->annotate_files('mod_leafr', 'content', null);
 

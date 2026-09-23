@@ -21,6 +21,7 @@ use core_privacy\local\request\approved_userlist;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 use core_privacy\tests\provider_testcase;
+use mod_leafr\local\bookmarks;
 use mod_leafr\local\progress;
 
 /**
@@ -63,6 +64,8 @@ final class provider_test extends provider_testcase {
         $this->student2 = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
         progress::record((int)$this->leafr->id, (int)$this->student1->id, [1, 2, 3], 3);
         progress::record((int)$this->leafr->id, (int)$this->student2->id, [1], 1);
+        bookmarks::set((int)$this->leafr->id, (int)$this->student1->id, 2, 'Remember this');
+        bookmarks::set((int)$this->leafr->id, (int)$this->student2->id, 1, '');
     }
 
     /**
@@ -81,7 +84,22 @@ final class provider_test extends provider_testcase {
     }
 
     /**
-     * The progress of a user is exported.
+     * A user is found via bookmarks alone, even without reading progress.
+     */
+    public function test_contexts_for_bookmarks_only_user(): void {
+        $bookmarker = $this->getDataGenerator()->create_and_enrol($this->course, 'student');
+        bookmarks::set((int)$this->leafr->id, (int)$bookmarker->id, 5, '');
+
+        $contextlist = provider::get_contexts_for_userid((int)$bookmarker->id);
+        $this->assertEquals([$this->context->id], $contextlist->get_contextids());
+
+        $userlist = new userlist($this->context, 'mod_leafr');
+        provider::get_users_in_context($userlist);
+        $this->assertContains((int)$bookmarker->id, $userlist->get_userids());
+    }
+
+    /**
+     * The progress and the bookmarks of a user are exported.
      */
     public function test_export_user_data(): void {
         $this->export_context_data_for_user((int)$this->student1->id, $this->context, 'mod_leafr');
@@ -90,6 +108,10 @@ final class provider_test extends provider_testcase {
         $data = $writer->get_data([]);
         $this->assertEquals('1-3', $data->seenpages);
         $this->assertEquals(3, $data->lastpage);
+
+        $bookmarkdata = $writer->get_data([get_string('privacy:bookmarkssubcontext', 'leafr'), 2]);
+        $this->assertEquals(2, $bookmarkdata->pageno);
+        $this->assertEquals('Remember this', $bookmarkdata->note);
     }
 
     /**
@@ -109,6 +131,7 @@ final class provider_test extends provider_testcase {
         global $DB;
         provider::delete_data_for_all_users_in_context($this->context);
         $this->assertEquals(0, $DB->count_records('leafr_progress', ['leafrid' => $this->leafr->id]));
+        $this->assertEquals(0, $DB->count_records('leafr_bookmarks', ['leafrid' => $this->leafr->id]));
     }
 
     /**
@@ -120,6 +143,7 @@ final class provider_test extends provider_testcase {
         provider::delete_data_for_user($contextlist);
         $this->assertFalse($DB->record_exists('leafr_progress', ['userid' => $this->student1->id]));
         $this->assertTrue($DB->record_exists('leafr_progress', ['userid' => $this->student2->id]));
+        $this->assertFalse($DB->record_exists('leafr_bookmarks', ['userid' => $this->student1->id]));
     }
 
     /**
@@ -131,5 +155,7 @@ final class provider_test extends provider_testcase {
         provider::delete_data_for_users($userlist);
         $this->assertTrue($DB->record_exists('leafr_progress', ['userid' => $this->student1->id]));
         $this->assertFalse($DB->record_exists('leafr_progress', ['userid' => $this->student2->id]));
+        $this->assertTrue($DB->record_exists('leafr_bookmarks', ['userid' => $this->student1->id]));
+        $this->assertFalse($DB->record_exists('leafr_bookmarks', ['userid' => $this->student2->id]));
     }
 }

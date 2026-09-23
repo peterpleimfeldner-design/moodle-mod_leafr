@@ -22,6 +22,7 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_leafr\local\bookmarks;
 use mod_leafr\local\progress;
 
 require_once(__DIR__ . '/../../config.php');
@@ -57,10 +58,15 @@ if ($file) {
     $lastpage = 0;
     $completed = false;
     $seenpages = '';
+    $bookmarks = '[]';
     if (isloggedin() && !isguestuser()) {
         $lastpage = progress::get_last_page((int)$leafr->id, (int)$USER->id);
         $completed = $leafr->completiontype > 0 && progress::is_complete($leafr, (int)$USER->id);
         $seenpages = progress::encode_pages(progress::get_seen_pages((int)$leafr->id, (int)$USER->id));
+        $bookmarks = json_encode(array_map(
+            fn($b) => ['page' => (int)$b->pageno, 'note' => (string)$b->note],
+            array_values(bookmarks::get_for_user((int)$leafr->id, (int)$USER->id))
+        ));
     }
     $simpleview = get_user_preferences('mod_leafr_simpleview', null);
 
@@ -95,6 +101,7 @@ if ($file) {
         'initialpage' => max(1, (int)$leafr->initialpage),
         'lastpage' => $lastpage,
         'seenpages' => $seenpages,
+        'bookmarks' => $bookmarks,
         'totalpages' => (int)$leafr->totalpages,
         'showtoc' => !empty($leafr->showtoc),
         'simpleview' => $simpleview === null ? '' : (string)(int)$simpleview,
