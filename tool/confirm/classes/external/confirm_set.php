@@ -67,7 +67,7 @@ class confirm_set extends external_api {
             throw new \moodle_exception('confirmnotrequired', 'leafrtool_confirm');
         }
 
-        $time = confirm::confirm($leafrid, (int)$USER->id);
+        $time = confirm::record_confirmation($leafrid, (int)$USER->id);
 
         $completion = new \completion_info($course);
         if ($completion->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC) {

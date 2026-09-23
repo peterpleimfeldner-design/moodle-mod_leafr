@@ -100,7 +100,7 @@ class confirm {
      * @param int $userid User id
      * @return int Unix timestamp of the confirmation
      */
-    public static function confirm(int $leafrid, int $userid): int {
+    public static function record_confirmation(int $leafrid, int $userid): int {
         global $DB;
         $existing = self::get_confirmed_time($leafrid, $userid);
         if ($existing) {

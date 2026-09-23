@@ -54,7 +54,7 @@ final class tool_manager_test extends \advanced_testcase {
         $this->assertNotContains('leafrtool_confirm', tool_manager::get_enabled_tools());
 
         confirm::save_settings(41, true, 'Text');
-        confirm::confirm(41, 1);
+        confirm::record_confirmation(41, 1);
         tool_manager::delete_instance(41);
         $this->assertFalse(confirm::get_settings(41)->requireconfirm);
         $this->assertFalse(confirm::is_confirmed(41, 1));
@@ -75,7 +75,7 @@ final class tool_manager_test extends \advanced_testcase {
         $this->assertTrue(tool_manager::rule_enabled('leafrtool_confirm', (object)['id' => 42]));
         $this->assertFalse(tool_manager::completion_state('leafrtool_confirm', (object)['id' => 42], 99));
 
-        confirm::confirm(42, 99);
+        confirm::record_confirmation(42, 99);
         $this->assertTrue(tool_manager::completion_state('leafrtool_confirm', (object)['id' => 42], 99));
     }
 
@@ -89,7 +89,7 @@ final class tool_manager_test extends \advanced_testcase {
         $mform = new \MoodleQuickForm('leafrtooltest', 'post', '');
         tool_manager::extend_settings_form($mform, null);
 
-        // leafrtool_confirm does not implement extend_settings_form() (its settings live in the
+        // Leafrtool_confirm does not implement extend_settings_form() (its settings live in the
         // completion rule area instead), so the form stays untouched; the call must not fail.
         $this->assertSame([], $mform->_elements);
     }

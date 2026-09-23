@@ -204,7 +204,7 @@ final class progress_test extends \advanced_testcase {
         $this->assertSame(COMPLETION_INCOMPLETE, $customcompletion->get_state('confirmread'));
         $this->assertNotEmpty($customcompletion->get_custom_rule_descriptions()['confirmread']);
 
-        confirm::confirm((int)$leafr->id, (int)$student->id);
+        confirm::record_confirmation((int)$leafr->id, (int)$student->id);
         $this->assertSame(COMPLETION_COMPLETE, $customcompletion->get_state('confirmread'));
     }
 }

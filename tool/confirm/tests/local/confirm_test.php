@@ -63,13 +63,13 @@ final class confirm_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $this->assertFalse(confirm::is_confirmed(3, 11));
-        $first = confirm::confirm(3, 11);
+        $first = confirm::record_confirmation(3, 11);
         $this->assertGreaterThan(0, $first);
         $this->assertTrue(confirm::is_confirmed(3, 11));
         $this->assertSame($first, confirm::get_confirmed_time(3, 11));
 
         // Confirming again keeps the original timestamp.
-        $this->assertSame($first, confirm::confirm(3, 11));
+        $this->assertSame($first, confirm::record_confirmation(3, 11));
 
         $this->assertFalse(confirm::is_confirmed(3, 12));
         $this->assertFalse(confirm::is_confirmed(4, 11));
@@ -82,9 +82,9 @@ final class confirm_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         confirm::save_settings(7, true, 'Text');
-        confirm::confirm(7, 21);
+        confirm::record_confirmation(7, 21);
         confirm::save_settings(8, true, 'Other text');
-        confirm::confirm(8, 21);
+        confirm::record_confirmation(8, 21);
 
         confirm::delete_for_instance(7);
 
@@ -103,7 +103,7 @@ final class confirm_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         confirm::save_settings(9, true, 'Text');
-        confirm::confirm(9, 31);
+        confirm::record_confirmation(9, 31);
 
         confirm::delete_confirmations_for_instance(9);
 
