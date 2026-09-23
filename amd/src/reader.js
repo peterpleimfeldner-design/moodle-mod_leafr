@@ -79,6 +79,19 @@ class Reader {
         this.sidebarRoot = root.querySelector('[data-region="sidebar"]');
         this.sidebarToggle = root.querySelector('[data-action="sidebar"]');
         this.zoomLabel = root.querySelector('[data-region="zoom-label"]');
+        this.viewMenu = root.querySelector('[data-region="view-menu"]');
+        this.viewMenuButton = root.querySelector('[data-action="view-menu"]');
+        this.spreadMode = ['auto', 'single', 'double'].includes(root.dataset.spreadmode) ? root.dataset.spreadmode : 'auto';
+        // On a phone-sized screen, a full-width single page reads better than one that is
+        // height-fitted and leaves the sides empty; larger screens still default to fitting the
+        // whole page so both pages of a spread stay fully visible without scrolling.
+        this.fitMode = window.innerWidth < 768 ? 'width' : 'page';
+        this.handleViewMenuOutsideClick = (event) => {
+            if (!this.viewMenu.contains(event.target) && event.target !== this.viewMenuButton &&
+                    !this.viewMenuButton.contains(event.target)) {
+                this.closeViewMenu();
+            }
+        };
         this.view = null;
         this.sidebar = null;
         this.toc = null;
@@ -107,6 +120,36 @@ class Reader {
         const stored = root.dataset.simpleview;
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         this.simpleView = stored === '' ? reducedMotion : stored === '1';
+
+        Reader.applyThemeAccent(root);
+    }
+
+    /**
+     * Uses the Moodle theme's primary colour (Boost's `--bs-primary`) as the reader's accent
+     * colour instead of the built-in Leafr petrol, but only if it is a plain hex colour with
+     * enough contrast against a white background (WCAG AA, 4.5:1) to stay safe as text.
+     * Left untouched in dark mode: the theme's primary is rarely tuned for a dark background, so
+     * the fixed accent from {@see styles.css} is kept there regardless of the theme.
+     *
+     * @param {HTMLElement} root The reader element
+     */
+    static applyThemeAccent(root) {
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            return;
+        }
+        const raw = getComputedStyle(document.documentElement).getPropertyValue('--bs-primary').trim();
+        const match = /^#([0-9a-f]{6}|[0-9a-f]{3})$/i.exec(raw);
+        if (!match) {
+            return;
+        }
+        const hex = match[1].length === 3 ? [...match[1]].map((c) => c + c).join('') : match[1];
+        const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.substring(i, i + 2), 16) / 255);
+        const linear = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+        const luminance = 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
+        const contrastOnWhite = 1.05 / (luminance + 0.05);
+        if (contrastOnWhite >= 4.5) {
+            root.style.setProperty('--leafr-accent', raw);
+        }
     }
 
     /**
@@ -219,7 +262,9 @@ class Reader {
         }
         const ViewClass = this.simpleView ? ScrollView : FlipbookView;
         this.root.classList.toggle('is-simpleview', this.simpleView);
-        this.root.querySelector('[data-action="simpleview"]').setAttribute('aria-pressed', this.simpleView ? 'true' : 'false');
+        this.root.querySelectorAll('[data-action="simpleview"]').forEach((button) => {
+            button.setAttribute('aria-pressed', this.simpleView ? 'true' : 'false');
+        });
         this.stage.scrollTo(0, 0);
 
         this.view = new ViewClass({
@@ -228,6 +273,8 @@ class Reader {
             pdfDoc: this.pdfDoc,
             startPage: this.page,
             strings: this.strings,
+            spreadMode: this.spreadMode,
+            fitMode: this.fitMode,
             onPageChange: (page, visible) => this.handlePageChange(page, visible),
         });
         await this.view.init();
@@ -235,6 +282,7 @@ class Reader {
             this.view.setZoom(ZOOM_STEPS[this.zoomIndex]);
         }
         this.syncAllPagesBookmarkUI();
+        this.updateViewMenuState();
     }
 
     /**
@@ -694,6 +742,24 @@ class Reader {
             case 'fullscreen':
                 this.toggleFullscreen();
                 break;
+            case 'view-menu':
+                this.toggleViewMenu();
+                break;
+            case 'spread-auto':
+                this.setSpreadMode('auto');
+                break;
+            case 'spread-single':
+                this.setSpreadMode('single');
+                break;
+            case 'spread-double':
+                this.setSpreadMode('double');
+                break;
+            case 'fit-page':
+                this.setFitMode('page');
+                break;
+            case 'fit-width':
+                this.setFitMode('width');
+                break;
             case 'bookmark':
                 this.toggleBookmark();
                 break;
@@ -774,6 +840,12 @@ class Reader {
                 event.preventDefault();
                 this.closeHelp();
             }
+            return;
+        }
+        if (!this.viewMenu.hidden && event.key === 'Escape') {
+            event.preventDefault();
+            this.closeViewMenu();
+            this.viewMenuButton.focus();
             return;
         }
         if (['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target.tagName) || event.target === this.progressBar) {
@@ -865,6 +937,85 @@ class Reader {
             methodname: 'core_user_update_user_preferences',
             args: {preferences: [{type: 'mod_leafr_simpleview', value: this.simpleView ? '1' : '0'}]},
         }])[0].catch(() => null);
+    }
+
+    /**
+     * Opens or closes the "view" menu (page layout, zoom and full screen).
+     */
+    toggleViewMenu() {
+        if (this.viewMenu.hidden) {
+            this.openViewMenu();
+        } else {
+            this.closeViewMenu();
+        }
+    }
+
+    /**
+     * Opens the view menu.
+     */
+    openViewMenu() {
+        this.viewMenu.hidden = false;
+        this.viewMenuButton.setAttribute('aria-expanded', 'true');
+        // The listener is added on open (not once in bindEvents) so it never fires for the very
+        // click that opened the menu, and is removed again on close to avoid piling up handlers.
+        document.addEventListener('click', this.handleViewMenuOutsideClick, true);
+    }
+
+    /**
+     * Closes the view menu.
+     */
+    closeViewMenu() {
+        this.viewMenu.hidden = true;
+        this.viewMenuButton.setAttribute('aria-expanded', 'false');
+        document.removeEventListener('click', this.handleViewMenuOutsideClick, true);
+    }
+
+    /**
+     * Reflects the current spread mode, fit mode and simple-view state in the view menu, and
+     * disables the flipbook-only options (page layout, zoom fit) while the simple view is active.
+     */
+    updateViewMenuState() {
+        this.viewMenu.querySelectorAll('[data-spread]').forEach((button) => {
+            button.setAttribute('aria-checked', button.dataset.spread === this.spreadMode ? 'true' : 'false');
+            button.disabled = this.simpleView;
+        });
+        this.viewMenu.querySelectorAll('[data-fit]').forEach((button) => {
+            button.setAttribute('aria-checked', button.dataset.fit === this.fitMode ? 'true' : 'false');
+            button.disabled = this.simpleView;
+        });
+    }
+
+    /**
+     * Changes the spread mode of the flipbook view ('auto', 'single' or 'double') and remembers
+     * the choice. Has no effect in the simple view, which is always a single scrollable column.
+     *
+     * @param {string} mode New spread mode
+     */
+    setSpreadMode(mode) {
+        this.spreadMode = mode;
+        this.updateViewMenuState();
+        if (this.view && this.view.setSpreadMode) {
+            this.view.setSpreadMode(mode);
+        }
+        Ajax.call([{
+            methodname: 'core_user_update_user_preferences',
+            args: {preferences: [{type: 'mod_leafr_spreadmode', value: mode}]},
+        }])[0].catch(() => null);
+    }
+
+    /**
+     * Changes how the flipbook fits the available space ('page' fits the whole page, 'width'
+     * fills the width and may need vertical scrolling). Not persisted: it is a short-lived reading
+     * aid rather than a lasting preference, and always starts back at "page" on the next visit.
+     *
+     * @param {string} mode New fit mode
+     */
+    setFitMode(mode) {
+        this.fitMode = mode;
+        this.updateViewMenuState();
+        if (this.view && this.view.setFitMode) {
+            this.view.setFitMode(mode);
+        }
     }
 
     /**

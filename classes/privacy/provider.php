@@ -60,6 +60,7 @@ class provider implements
             'timemodified' => 'privacy:metadata:leafr_bookmarks:timemodified',
         ], 'privacy:metadata:leafr_bookmarks');
         $collection->add_user_preference('mod_leafr_simpleview', 'privacy:metadata:preference:simpleview');
+        $collection->add_user_preference('mod_leafr_spreadmode', 'privacy:metadata:preference:spreadmode');
         return $collection;
     }
 
@@ -169,6 +170,16 @@ class provider implements
                 'mod_leafr_simpleview',
                 transform::yesno($simpleview),
                 get_string('privacy:metadata:preference:simpleview', 'leafr')
+            );
+        }
+
+        $spreadmode = get_user_preferences('mod_leafr_spreadmode', null, $userid);
+        if ($spreadmode !== null) {
+            writer::export_user_preference(
+                'mod_leafr',
+                'mod_leafr_spreadmode',
+                $spreadmode,
+                get_string('privacy:metadata:preference:spreadmode', 'leafr')
             );
         }
     }

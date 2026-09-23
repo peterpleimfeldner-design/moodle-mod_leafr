@@ -99,6 +99,21 @@ Feature: Read a PDF document in a Leafr flipbook
     And I press "Start from the beginning"
     And the field "Go to page" matches value "1"
 
+  @javascript
+  Scenario: A student changes the page layout and it is remembered
+    Given I am on the "Handbook" "leafr activity" page logged in as "student1"
+    And I press "View"
+    And I press "Single page"
+    And the "aria-checked" attribute of "[data-spread='single']" "css_element" should contain "true"
+    # The chosen layout is saved to the user preference asynchronously; give it a moment before
+    # reloading, otherwise the reload can race the save and load the old preference.
+    And I wait "1" seconds
+    When I reload the page
+    Then I press "View"
+    And the "aria-checked" attribute of "[data-spread='single']" "css_element" should contain "true"
+    And I press "Simple view"
+    And "[data-spread='single']" "css_element" should be disabled
+
   @javascript @_file_upload
   Scenario: A teacher creates a flipbook
     Given I am on the "Course 1" course page logged in as "teacher1"

@@ -353,5 +353,11 @@ function leafr_user_preferences(): array {
             'null' => NULL_NOT_ALLOWED,
             'default' => false,
         ],
+        'mod_leafr_spreadmode' => [
+            'type' => PARAM_ALPHA,
+            'null' => NULL_NOT_ALLOWED,
+            'default' => 'auto',
+            'choices' => ['auto', 'single', 'double'],
+        ],
     ];
 }

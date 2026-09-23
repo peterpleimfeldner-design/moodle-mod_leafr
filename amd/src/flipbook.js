@@ -47,6 +47,8 @@ export default class FlipbookView {
      * @param {Object} options.pdfDoc PDF.js document proxy
      * @param {number} options.startPage First page to show
      * @param {Object} options.strings Language strings
+     * @param {string} [options.spreadMode] 'auto' (default), 'single' or 'double'
+     * @param {string} [options.fitMode] 'page' (default, fits the whole page) or 'width'
      * @param {Function} options.onPageChange Called with (firstVisiblePage, visiblePages)
      */
     constructor(options) {
@@ -57,6 +59,8 @@ export default class FlipbookView {
         this.strings = options.strings;
         this.onPageChange = options.onPageChange;
         this.page = Math.min(Math.max(1, options.startPage), this.total);
+        this.spreadMode = options.spreadMode || 'auto';
+        this.fitMode = options.fitMode || 'page';
         this.zoom = 1;
         this.pageFlip = null;
         this.canvases = [];
@@ -88,22 +92,54 @@ export default class FlipbookView {
     /**
      * Computes the size of the pages for the available space.
      *
+     * A forced "double" spread is still overridden to a single page below {@see SPREAD_MIN_WIDTH}:
+     * two columns squeezed into a phone-sized screen would be unreadable, so the width floor wins
+     * even when the person chose "double" on a larger screen before switching devices.
+     *
      * @returns {{single: boolean, pageWidth: number, pageHeight: number}}
      */
     computeLayout() {
         const ratio = this.pageSize.width / this.pageSize.height;
         const availableWidth = Math.max(this.stage.clientWidth - 2 * PADDING, 120);
         const availableHeight = Math.max(this.stage.clientHeight - 2 * PADDING, 160);
-        const single = this.stage.clientWidth < SPREAD_MIN_WIDTH || ratio > 1 || this.total === 1;
+        const tooNarrowForSpread = this.stage.clientWidth < SPREAD_MIN_WIDTH || ratio > 1 || this.total === 1;
+        const single = this.spreadMode === 'single' || tooNarrowForSpread;
         const columns = single ? 1 : 2;
 
-        let pageHeight = availableHeight;
-        let pageWidth = pageHeight * ratio;
-        if (pageWidth * columns > availableWidth) {
+        let pageWidth;
+        let pageHeight;
+        if (this.fitMode === 'width') {
             pageWidth = availableWidth / columns;
             pageHeight = pageWidth / ratio;
+        } else {
+            pageHeight = availableHeight;
+            pageWidth = pageHeight * ratio;
+            if (pageWidth * columns > availableWidth) {
+                pageWidth = availableWidth / columns;
+                pageHeight = pageWidth / ratio;
+            }
         }
         return {single, pageWidth: Math.floor(pageWidth), pageHeight: Math.floor(pageHeight)};
+    }
+
+    /**
+     * Changes the spread mode ('auto', 'single' or 'double') and rebuilds the book.
+     *
+     * @param {string} mode New spread mode
+     */
+    setSpreadMode(mode) {
+        this.spreadMode = mode;
+        this.build();
+    }
+
+    /**
+     * Changes the fit mode ('page' or 'width') and rebuilds the book.
+     *
+     * @param {string} mode New fit mode
+     */
+    setFitMode(mode) {
+        this.fitMode = mode;
+        this.build();
     }
 
     /**

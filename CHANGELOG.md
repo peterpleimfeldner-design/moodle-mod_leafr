@@ -2,6 +2,24 @@
 
 ## 1.2.0 (in Arbeit, Branch `release/1.2.0`)
 
+### Paket E – Einzel-/Doppelseite und Buchoptik
+- Neues **Ansicht-Menü** in der Werkzeugleiste (ersetzt die bisherigen Einzelknöpfe für Zoom,
+  Einfache Ansicht und Vollbild): **Seitenlayout** (Automatisch/Einzelseite/Doppelseite, als
+  Nutzerpräferenz gespeichert), **Einfache Ansicht**, Zoom, **An Seite anpassen**/**An Breite
+  anpassen** (auf dem Handy automatisch „An Breite"), Vollbild. Menü schließt per Klick außerhalb
+  oder Escape.
+- **Buchoptik**: dezenter Schatten unter dem Buch, angedeutete Seitenkanten.
+- **Werkzeugleiste neu geordnet**: Seitenleiste links, Navigation mittig, Ansicht-Menü,
+  Lesezeichen, Download und Hilfe rechts. Seitenleiste, Ansicht und Lesezeichen zeigen ab
+  Tablet-Breite eine sichtbare Beschriftung neben dem Symbol, darunter nur Tooltip.
+- **Neues Logo**: ein Blatt mit umgeknickter Ecke wie eine umgeblätterte Buchseite, farbig
+  (`pix/icon.svg`) und einfarbig (`pix/monologo.svg`, als Aussparung umgesetzt, damit es in jeder
+  Theme-Farbe funktioniert).
+- **Farben**: Primärfarbe wird von der Moodle-Theme-Variable `--bs-primary` übernommen, wenn deren
+  Kontrast gegen Weiß WCAG AA (4,5:1) erreicht, sonst bleibt die feste Leafr-Petrol-Farbe
+  `#0E6A62`. Gilt nur im hellen Modus; der dunkle Modus (Systemeinstellung) behält seine eigene,
+  geprüfte Akzentfarbe unabhängig vom Theme.
+
 ### Paket D – Kapitel und Pflicht-Lernstoff
 - Neuer Formularbereich **Kapitel**: beliebig viele Zeilen mit Titel und Startseite, plus
   Einstellung „Immer die manuelle Liste verwenden“. Wird für den Reiter „Inhalt“ genutzt, wenn das

@@ -119,9 +119,11 @@ final class provider_test extends provider_testcase {
      */
     public function test_export_user_preferences(): void {
         set_user_preference('mod_leafr_simpleview', 1, $this->student1);
+        set_user_preference('mod_leafr_spreadmode', 'double', $this->student1);
         provider::export_user_preferences((int)$this->student1->id);
         $preference = writer::with_context(\context_system::instance())->get_user_preferences('mod_leafr');
         $this->assertNotEmpty($preference->mod_leafr_simpleview);
+        $this->assertNotEmpty($preference->mod_leafr_spreadmode);
     }
 
     /**

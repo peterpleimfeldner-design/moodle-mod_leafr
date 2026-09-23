@@ -70,6 +70,7 @@ if ($file) {
         ));
     }
     $simpleview = get_user_preferences('mod_leafr_simpleview', null);
+    $spreadmode = get_user_preferences('mod_leafr_spreadmode', 'auto');
     $requiredpages = $leafr->completiontype == progress::COMPLETION_SPECIFICRANGE
         ? progress::encode_pages(progress::required_pages($leafr))
         : '';
@@ -112,6 +113,7 @@ if ($file) {
         'totalpages' => (int)$leafr->totalpages,
         'showtoc' => !empty($leafr->showtoc),
         'simpleview' => $simpleview === null ? '' : (string)(int)$simpleview,
+        'spreadmode' => in_array($spreadmode, ['auto', 'single', 'double'], true) ? $spreadmode : 'auto',
         'completed' => $completed,
         'requiredpages' => $requiredpages,
         'manualchapters' => $manualchapters,
