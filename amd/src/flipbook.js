@@ -38,11 +38,23 @@ const PADDING = 16;
 
 /**
  * Fraction of the page height, measured from the top and bottom, within which a page can be
- * grabbed to turn it. StPageFlip itself does not confine dragging to the corners - pressing down
- * anywhere on the page and moving the mouse grabs the nearest corner - so this is enforced in
- * {@see FlipbookView#blockFlipGesture} before the gesture ever reaches the library.
+ * dragged to turn it (StPageFlip's own "grab and follow the cursor" behaviour). StPageFlip itself
+ * does not confine dragging to the corners - pressing down anywhere on the page and moving the
+ * mouse grabs the nearest corner - so this is enforced in {@see FlipbookView#blockFlipGesture}
+ * before the gesture ever reaches the library.
  */
 const CORNER_ZONE_RATIO = 0.15;
+
+/**
+ * Fraction of the book's width, measured from each outer edge, that turns the page on a plain
+ * click/tap (no drag), independently of {@see CORNER_ZONE_RATIO} - covers the full height, not
+ * just the corners (Peter's feedback, 24.09.2026: the drag "attraction" should stay limited to the
+ * corners, but a click anywhere along the left/right edge should still turn the page).
+ */
+const EDGE_CLICK_RATIO = 0.2;
+
+/** Maximum pointer movement (CSS pixels) between press and release that still counts as a click. */
+const CLICK_MOVE_TOLERANCE = 8;
 
 export default class FlipbookView {
 
@@ -77,6 +89,7 @@ export default class FlipbookView {
         this.resizeTimer = null;
         this.zoomTimer = null;
         this.pan = null;
+        this.edgeClickCleanups = [];
         this.destroyed = false;
 
         this.handleResize = this.handleResize.bind(this);
@@ -354,7 +367,9 @@ export default class FlipbookView {
 
     /**
      * Prevents StPageFlip from starting a page turn while zoomed (panning starts instead) or when
-     * the gesture starts outside the corner zone (see {@see CORNER_ZONE_RATIO}).
+     * a drag starts outside the corner zone (see {@see CORNER_ZONE_RATIO}). Outside the corner
+     * zone, a plain click/tap along the edge still turns the page via {@see watchForEdgeClick} -
+     * only the "grab and follow the cursor" behaviour is confined to the corners.
      *
      * @param {Event} event Mouse or touch event
      */
@@ -370,11 +385,15 @@ export default class FlipbookView {
             }
             return;
         }
-        if (!this.isInCornerZone(event)) {
-            // Swallowed here, in the capture phase, before StPageFlip's own listener (bound directly
-            // to the book element) ever sees it.
-            event.stopPropagation();
+        if (this.isInCornerZone(event)) {
+            // Let StPageFlip handle it natively (corner drag-follow and click both work as usual).
+            return;
         }
+        // Swallowed here, in the capture phase, before StPageFlip's own listener (bound directly to
+        // the book element) ever sees it - this is what keeps the drag-follow confined to the
+        // corners. A plain click is still turned into a page turn separately, below.
+        event.stopPropagation();
+        this.watchForEdgeClick(event);
     }
 
     /**
@@ -391,6 +410,62 @@ export default class FlipbookView {
         }
         const relativeY = (point.clientY - rect.top) / rect.height;
         return relativeY <= CORNER_ZONE_RATIO || relativeY >= (1 - CORNER_ZONE_RATIO);
+    }
+
+    /**
+     * Watches a press that started outside the corner zone and, if it ends without much movement
+     * (a click, not a drag), turns the page if it was near the left or right edge.
+     *
+     * @param {Event} startEvent The mousedown/touchstart that started the press
+     */
+    watchForEdgeClick(startEvent) {
+        const start = startEvent.touches && startEvent.touches.length ? startEvent.touches[0] : startEvent;
+        const startX = start.clientX;
+        const startY = start.clientY;
+        const isTouch = startEvent.type === 'touchstart';
+        const moveType = isTouch ? 'touchmove' : 'mousemove';
+        const endType = isTouch ? 'touchend' : 'mouseup';
+        let moved = false;
+
+        const onMove = (event) => {
+            const point = event.touches && event.touches.length ? event.touches[0] : event;
+            if (Math.hypot(point.clientX - startX, point.clientY - startY) > CLICK_MOVE_TOLERANCE) {
+                moved = true;
+            }
+        };
+        const onEnd = () => {
+            window.removeEventListener(moveType, onMove);
+            window.removeEventListener(endType, onEnd);
+            this.edgeClickCleanups = this.edgeClickCleanups.filter((cleanup) => cleanup !== cleanupWatch);
+            if (!moved) {
+                this.handleEdgeClick(startX);
+            }
+        };
+        const cleanupWatch = () => {
+            window.removeEventListener(moveType, onMove);
+            window.removeEventListener(endType, onEnd);
+        };
+        window.addEventListener(moveType, onMove);
+        window.addEventListener(endType, onEnd);
+        this.edgeClickCleanups.push(cleanupWatch);
+    }
+
+    /**
+     * Turns the page if a click landed near the left or right edge of the book.
+     *
+     * @param {number} clientX Horizontal click position, in viewport pixels
+     */
+    handleEdgeClick(clientX) {
+        const rect = this.book.getBoundingClientRect();
+        if (!rect.width) {
+            return;
+        }
+        const relativeX = (clientX - rect.left) / rect.width;
+        if (relativeX <= EDGE_CLICK_RATIO) {
+            this.prev();
+        } else if (relativeX >= (1 - EDGE_CLICK_RATIO)) {
+            this.next();
+        }
     }
 
     /**
@@ -439,6 +514,8 @@ export default class FlipbookView {
      */
     teardownBook() {
         this.handlePanEnd();
+        this.edgeClickCleanups.forEach((cleanup) => cleanup());
+        this.edgeClickCleanups = [];
         this.canvases.forEach(releaseCanvas);
         this.canvases = [];
         this.rendered.clear();

@@ -34,8 +34,14 @@ import Toc from 'mod_leafr/toc';
 import Tracker from 'mod_leafr/tracker';
 import {getOutline, getPageSize, loadDocument} from 'mod_leafr/pdf';
 
-/** Time a page turn animation needs, in milliseconds. */
-const TURN_DURATION = 900;
+/**
+ * Time a page turn animation needs, in milliseconds. Kept a margin above FlipbookView's
+ * `flippingTime` (900ms) - waiting for exactly the animation's own duration is racy: a rapid
+ * second turn can arrive while StPageFlip is still finishing the first and gets dropped (this
+ * broke the CI Behat scenario that presses "Next page" three times in a row, 24.09.2026, when
+ * flippingTime was raised from 700ms to the same 900ms this constant already used).
+ */
+const TURN_DURATION = 1100;
 
 /** Available zoom factors. */
 const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3];
