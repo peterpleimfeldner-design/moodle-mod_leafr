@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Leafr — ein Blätter-PDF-Reader für Moodle</title>
+<meta name="description" content="Leafr ist eine kostenlose, quelloffene Moodle-Aktivität, die ein PDF zu einem Buch macht, das Lernende durchblättern können — mit echter Lesestand-Erfassung und ohne externe Dienste.">
+<link rel="icon" type="image/svg+xml" href="../assets/icon.svg">
+<style>
+  :root {
+    --teal-dark: #0E6A62;
+    --teal-light: #6FC3B8;
+    --bg: #ffffff;
+    --bg-alt: #F4F8F7;
+    --text: #182524;
+    --text-muted: #4B5A58;
+    --border: #DCE6E4;
+    --card-bg: #ffffff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101716;
+      --bg-alt: #16211F;
+      --text: #EAF2F0;
+      --text-muted: #A9BBB8;
+      --border: #26332F;
+      --card-bg: #16211F;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.55;
+  }
+  a { color: var(--teal-dark); }
+  @media (prefers-color-scheme: dark) { a { color: var(--teal-light); } }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+
+  header.site { border-bottom: 1px solid var(--border); padding: 16px 0; }
+  header.site .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.15rem; text-decoration: none; color: var(--text); }
+  .brand img { width: 28px; height: 28px; }
+  nav.site-nav { display: flex; gap: 20px; flex-wrap: wrap; font-size: 0.95rem; }
+  nav.site-nav a { text-decoration: none; color: var(--text-muted); }
+  nav.site-nav a:hover { color: var(--teal-dark); }
+  .lang-switch { font-size: 0.85rem; }
+  .lang-switch a { text-decoration: none; }
+
+  .hero { padding: 64px 0 48px; text-align: center; }
+  .hero h1 { font-size: clamp(1.9rem, 4vw, 2.7rem); margin: 0 0 16px; letter-spacing: -0.01em; }
+  .hero p.lead { font-size: 1.15rem; color: var(--text-muted); max-width: 640px; margin: 0 auto 28px; }
+  .cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 40px; }
+  .btn { display: inline-block; padding: 11px 22px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 0.95rem; border: 1px solid transparent; }
+  .btn-primary { background: var(--teal-dark); color: #fff; }
+  .btn-primary:hover { background: #0a5951; }
+  .btn-secondary { background: transparent; color: var(--text); border-color: var(--border); }
+  .btn-secondary:hover { border-color: var(--teal-dark); color: var(--teal-dark); }
+  .hero-shot { max-width: 720px; width: 100%; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 12px 32px rgba(14,106,98,0.12); }
+
+  section { padding: 48px 0; }
+  section.alt { background: var(--bg-alt); }
+  h2 { font-size: 1.6rem; margin: 0 0 8px; }
+  p.section-lead { color: var(--text-muted); max-width: 680px; margin: 0 0 32px; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 24px; }
+  @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+  .card h3 { margin: 0 0 10px; font-size: 1.05rem; }
+  .card p { margin: 0; color: var(--text-muted); font-size: 0.95rem; }
+
+  .who-box { border-left: 3px solid var(--teal-light); padding: 4px 0 4px 20px; margin: 28px 0; color: var(--text-muted); }
+
+  .privacy-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; padding: 32px; margin-top: 20px; }
+  .privacy-box ul { margin: 14px 0 0; padding-left: 20px; color: var(--text-muted); }
+  .privacy-box li { margin-bottom: 6px; }
+
+  details.faq { border-bottom: 1px solid var(--border); padding: 16px 0; }
+  details.faq summary { cursor: pointer; font-weight: 600; font-size: 1.02rem; list-style: none; }
+  details.faq summary::-webkit-details-marker { display: none; }
+  details.faq summary::before { content: "+ "; color: var(--teal-dark); }
+  details.faq[open] summary::before { content: "– "; }
+  details.faq p { color: var(--text-muted); margin: 12px 0 0; }
+
+  footer.site { border-top: 1px solid var(--border); padding: 32px 0 48px; text-align: center; color: var(--text-muted); font-size: 0.9rem; }
+  footer.site a { color: var(--text-muted); }
+  footer.site .foot-links { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px; }
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="#top"><img src="../assets/icon.svg" alt=""> Leafr</a>
+    <nav class="site-nav">
+      <a href="#was">Was ist Leafr</a>
+      <a href="#funktionen">Funktionen</a>
+      <a href="#datenschutz">Datenschutz</a>
+      <a href="#faq">FAQ</a>
+      <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr">GitHub</a>
+    </nav>
+    <span class="lang-switch"><a href="../">English</a></span>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero wrap">
+    <h1>Ein Blätter-PDF-Reader für Moodle — mit einer Lesestand-Erfassung, die wirklich etwas aussagt.</h1>
+    <p class="lead">Leafr macht aus einem PDF ein Buch, das Lernende direkt im Kurs durchblättern können. Kein externer Dienst, kein zusätzliches Login, keine Daten verlassen deine Moodle-Instanz.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/releases/latest">Neuestes Release herunterladen</a>
+      <a class="btn btn-secondary" href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr">Auf GitHub ansehen</a>
+    </div>
+    <img class="hero-shot" src="../assets/screenshots/sidebar-thumbnails.png" alt="Leafr-Reader mit Seiten-Miniaturansichten in der Seitenleiste, Häkchen für gelesene Seiten und Punkt für Pflichtseiten">
+  </section>
+
+  <section id="was" class="wrap">
+    <h2>Wofür Leafr gedacht ist</h2>
+    <p class="section-lead">Moodle erlaubt es schon, ein PDF als einfache Datei anzuhängen. Leafr ist für die Fälle gedacht, in denen das nicht reicht.</p>
+    <div class="grid-cards">
+      <div class="card">
+        <h3>Wissen, wer es wirklich gelesen hat</h3>
+        <p>Abschluss nach letzter Seite, nach Prozentsatz der Seiten oder nach bestimmten Pflichtseiten und Kapiteln — nicht nur, wer die Datei heruntergeladen hat.</p>
+      </div>
+      <div class="card">
+        <h3>Lange Dokumente navigierbar machen</h3>
+        <p>Inhaltsverzeichnis, Seiten-Miniaturansichten, Volltextsuche und Lesezeichen mit Notizen statt endlosem Scrollen.</p>
+      </div>
+      <div class="card">
+        <h3>Eine aktive Bestätigung einfordern</h3>
+        <p>Eine optionale Lesebestätigung für Richtlinien, Sicherheitshandbücher oder Vereinbarungen — ein bewusster Klick, kein abgeleiteter Zeitstempel.</p>
+      </div>
+      <div class="card">
+        <h3>Fortschritt sehen, nicht überwachen</h3>
+        <p>Ein Überblick für Lehrende zu Abschluss und gelesenen Pflichtseiten — ohne Lesezeiten oder ein Protokoll jeder einzelnen Seitenansicht.</p>
+      </div>
+    </div>
+    <p class="who-box">Wenn nichts davon zutrifft und eine einfache Datei oder die Aktivität „Textseite/Datei“ für dein PDF ausreicht, brauchst du Leafr nicht — auch das ist ein völlig valides Ergebnis.</p>
+  </section>
+
+  <section id="funktionen" class="alt">
+    <div class="wrap">
+      <h2>Funktionen</h2>
+      <p class="section-lead">Alles unten ist Teil des kostenlosen Plugins. Es gibt keine kostenpflichtige Stufe und nichts wird zurückgehalten.</p>
+      <div class="grid-2">
+        <div class="card">
+          <h3>Für Lernende</h3>
+          <p>
+            Buchansicht mit realistischem Seitenumblättern oder eine einfache, scrollbare Ansicht, die vollständig
+            für Screenreader zugänglich ist. „Weiterlesen“ springt zur zuletzt gelesenen Seite. Seitenleiste mit
+            Miniaturansichten, Inhaltsverzeichnis, Lesezeichen mit Notizen und Volltextsuche. Zoom, Vollbild und
+            Tastaturkürzel. Funktioniert auf Smartphone und Tablet mit Wisch-Navigation.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Für Lehrende</h3>
+          <p>
+            Abschluss nach letzter Seite, Prozentsatz oder bestimmten Seiten/Kapiteln. Optionale Lesebestätigung.
+            Ein Überblicksbericht je Teilnehmer:in mit Gruppenfilter und CSV-Export. Manuelle Kapitel für PDFs ohne
+            eigenes Inhaltsverzeichnis. Optionaler PDF-Download. Backup, Wiederherstellung, Duplizierung,
+            Kursreset und volle Unterstützung der Privacy-API.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="datenschutz" class="wrap">
+    <h2>Bewusst datensparsam gebaut</h2>
+    <p class="section-lead">Das ist kein nachträglicher Compliance-Gedanke — es bestimmt von Anfang an, was Leafr überhaupt erfasst.</p>
+    <div class="privacy-box">
+      <p>Leafr speichert je Nutzer:in und Aktivität nur, was für die Funktion nötig ist:</p>
+      <ul>
+        <li>welche Seiten angesehen wurden, und die zuletzt gelesene Position</li>
+        <li>Lesezeichen (Seitenzahl und Notiz)</li>
+        <li>den Zeitpunkt einer Lesebestätigung, falls aktiviert</li>
+        <li>zwei Oberflächen-Einstellungen (einfache Ansicht, Seitenlayout)</li>
+      </ul>
+      <p style="margin-top:16px;">
+        All das kann über die Standard-Privacy-API von Moodle exportiert und gelöscht werden. Keine Lesezeiten,
+        keine Verweildauer je Seite, keine Daten an externe Dienste — alles bleibt in deiner eigenen
+        Moodle-Installation.
+      </p>
+    </div>
+  </section>
+
+  <section id="faq" class="alt">
+    <div class="wrap">
+      <h2>Häufige Fragen</h2>
+      <details class="faq">
+        <summary>Warum kein Word- oder PowerPoint-Support?</summary>
+        <p>Leafr stellt PDFs mit PDF.js dar — das ermöglicht seitengenaue Navigation, Textsuche und eine stabile Seitenzahl als Grundlage für die Abschlusserfassung. Word- und PowerPoint-Dateien haben kein festes Seitenlayout über verschiedene Geräte hinweg, es gibt also keine verlässliche „Seite“ zum Erfassen. Exportiere dein Material zuerst als PDF — das kann jede gängige Office-Suite.</p>
+      </details>
+      <details class="faq">
+        <summary>Warum gibt es keine kostenpflichtige „Pro“-Version?</summary>
+        <p>Gibt es nicht, und ist auch nicht geplant. Leafr ist unter der GPLv3 lizenziert; alles im Repository ist das vollständige Plugin, ohne Lizenzschlüssel, ohne gesperrte Funktionen und ohne gehostete Komponente.</p>
+      </details>
+      <details class="faq">
+        <summary>Welche Daten speichert Leafr, und verlässt etwas meine Moodle-Instanz?</summary>
+        <p>Nur das, was oben unter „Bewusst datensparsam gebaut“ steht, und das bleibt in deiner Moodle-Installation und -Datenbank. Leafr ruft keinen externen Dienst, kein Analyse-Tool und keine API auf.</p>
+      </details>
+      <details class="faq">
+        <summary>Sehen Lehrende, wie lange jemand gelesen hat oder bei welcher Seite länger verweilt wurde?</summary>
+        <p>Nein, bewusst nicht. Der Überblicksbericht zeigt nur, ob die Aktivität abgeschlossen ist, welche Pflichtseiten gelesen wurden und das Datum der Lesebestätigung.</p>
+      </details>
+      <details class="faq">
+        <summary>Gibt es eine Cloud- oder gehostete Version von Leafr?</summary>
+        <p>Nein. Leafr ist ein normales Moodle-Plugin, das vollständig auf deinem eigenen Moodle-Server läuft, unter dessen bestehenden Hosting- und Backup-Regeln.</p>
+      </details>
+      <details class="faq">
+        <summary>Welche Moodle- und PHP-Versionen werden unterstützt?</summary>
+        <p>Moodle 4.5 bis 5.2 (getestet mit 4.5, 5.0, 5.1 und 5.2), PHP 8.1 oder neuer.</p>
+      </details>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site">
+  <div class="wrap">
+    <div class="foot-links">
+      <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr">GitHub-Repository</a>
+      <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/releases/latest">Neuestes Release</a>
+      <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/issues">Problem melden</a>
+      <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/blob/main/LICENSE">GPLv3-Lizenz</a>
+    </div>
+    <p>Leafr ist freie und quelloffene Software, © 2026 Peter Pleimfeldner.</p>
+  </div>
+</footer>
+
+</body>
+</html>
