@@ -87,11 +87,11 @@ class mod_leafr_mod_form extends moodleform_mod {
         $existingchapters = chapters::decode($this->current->manualchapters ?? null);
         // Title and start page share one row per chapter ("Chapter 1: [title] [page]"); the group does
         // not append its name, so the fields keep their names chaptertitle[n] and chapterpage[n].
+        $titleattributes = ['size' => '40', 'placeholder' => get_string('chaptertitle', 'leafr')];
+        $pageattributes = ['size' => '4', 'placeholder' => get_string('chapterpage', 'leafr'), 'inputmode' => 'numeric'];
         $chapterfields = [
-            $mform->createElement('text', 'chaptertitle', get_string('chaptertitle', 'leafr'),
-                ['size' => '40', 'placeholder' => get_string('chaptertitle', 'leafr')]),
-            $mform->createElement('text', 'chapterpage', get_string('chapterpage', 'leafr'),
-                ['size' => '4', 'placeholder' => get_string('chapterpage', 'leafr'), 'inputmode' => 'numeric']),
+            $mform->createElement('text', 'chaptertitle', get_string('chaptertitle', 'leafr'), $titleattributes),
+            $mform->createElement('text', 'chapterpage', get_string('chapterpage', 'leafr'), $pageattributes),
         ];
         $repeatarray = [
             $mform->createElement('group', 'chaptergroup', get_string('chapterno', 'leafr'), $chapterfields, ' ', false),
