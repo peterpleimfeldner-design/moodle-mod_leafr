@@ -212,11 +212,13 @@ export default class FlipbookView {
             flippingTime: 900,
             mobileScrollSupport: false,
             swipeDistance: 60,
-            // Showing the corner fold on every mouse move (StPageFlip's own behaviour, regardless of
-            // whether a button is pressed) is what made the book seem to "jump" whenever the cursor
-            // came near it. Turned off here; CORNER_ZONE_RATIO below still lets the page be grabbed
-            // and turned, just without the constant hover preview.
-            showPageCorners: false,
+            // REVERTED to true (24.09.2026): false stopped the hover-preview "jump", but broke
+            // forward page turns from the toolbar AND the keyboard - neither goes anywhere near our
+            // own mousedown-gating code below, so the only plausible explanation is that this
+            // setting also affects StPageFlip's own flip-completion logic internally, not just the
+            // cosmetic hover preview as its name suggests. A correctness regression outweighs a
+            // cosmetic one; the hover "jump" needs a different fix that doesn't touch this setting.
+            showPageCorners: true,
             disableFlipByClick: true,
             clickEventForward: true,
             useMouseEvents: true,
