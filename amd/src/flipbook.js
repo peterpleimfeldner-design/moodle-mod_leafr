@@ -175,6 +175,15 @@ export default class FlipbookView {
         this.zoomBox.className = 'leafr-zoombox';
         this.book = document.createElement('div');
         this.book.className = 'leafr-book';
+        // StPageFlip only honours usePortrait (single page) if its wrapper is already narrower
+        // than two page widths *at construction time* - it measures this once, not continuously,
+        // and applyZoom() below (which sets the same width) runs too late to matter to that first
+        // measurement. Without this, single-page mode still behaved like double-page internally: a
+        // phantom, hoverable/clickable second page slot remained where it would have been, showing
+        // its own corner-flip preview and letting a click there flip through it (Peter's feedback,
+        // 24.09.2026).
+        this.book.style.width = pageWidth * (single ? 1 : 2) + 'px';
+        this.book.style.height = pageHeight + 'px';
         this.zoomBox.appendChild(this.book);
         this.host.appendChild(this.zoomBox);
 
