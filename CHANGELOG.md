@@ -2,6 +2,23 @@
 
 ## 1.2.0 (in Arbeit, Branch `release/1.2.0`)
 
+### Paket I – Word und PowerPoint (`leafrtool_office`)
+- Neues Unter-Plugin `leafrtool_office`: Word- (.docx/.doc), PowerPoint- (.pptx/.ppt) und
+  OpenDocument-Dateien (.odt/.odp) können hochgeladen und über Moodles eingebaute
+  Dokumentkonvertierung (`\core_files\converter`) im Hintergrund zu PDF umgewandelt werden. Solange
+  keine Website-Administration einen Dokumentkonverter eingerichtet hat, akzeptiert das
+  Hauptformular weiterhin nur PDF (mit Hinweistext) – keine Sonderbehandlung im Kern nötig.
+- Umwandlung läuft als Moodle-Hintergrundaufgabe (reiht sich selbst erneut ein, solange die
+  Konvertierung noch läuft, nach dem Vorbild von `assignfeedback_editpdf`); die Aktivitätsseite
+  zeigt währenddessen „Dokument wird vorbereitet“ und lädt automatisch neu.
+- Neue Einstellung „Original-Datei zum Download anbieten“ (statt PDF).
+- Kern um drei neue, generische Hooks erweitert (`get_accepted_file_types`,
+  `handle_content_saved`, `get_converted_file`, `get_download_file`, siehe `tool/README.md`) –
+  keine Sonderbehandlung für Office-Dateien im Kern selbst.
+- Noch offen: mangels eines auf diesem Test-Moodle eingerichteten Dokumentkonverters (reines
+  LibreOffice reicht nicht, siehe ROADMAP.md) ist die eigentliche Umwandlung bisher nur gegen die
+  Moodle-API geprüft, nicht Ende-zu-Ende mit einer echten Konvertierung.
+
 ### Paket H3 – Spanisches Sprachpaket
 - Neue Übersetzung `lang/es/leafr.php` sowie `tool/confirm/lang/es/` und `tool/report/lang/es/`
   (zusammen rund 160 Strings). Erster Entwurf, sollte vor der Veröffentlichung von einer

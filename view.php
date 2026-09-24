@@ -46,13 +46,29 @@ $PAGE->set_title(format_string($leafr->name));
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->set_activity_record($leafr);
 
-$file = leafr_get_pdf_file($context);
+$originalfile = leafr_get_pdf_file($context);
+$file = $originalfile;
+$conversion = null;
+if ($originalfile && $originalfile->get_mimetype() !== 'application/pdf') {
+    $conversion = tool_manager::get_converted_file((int)$leafr->id, $context);
+    if ($conversion === null) {
+        // No tool has ever noticed this file yet (e.g. after "duplicate activity", which copies
+        // the original file but not a leafrtool_office subplugin's own conversion cache): give
+        // every tool one more chance to pick it up, then check again.
+        tool_manager::handle_content_saved((int)$leafr->id, $context);
+        $conversion = tool_manager::get_converted_file((int)$leafr->id, $context);
+    }
+    $file = ($conversion && $conversion['status'] === 'ready') ? $conversion['file'] : null;
+}
 if ($file) {
+    // $file may be a converted PDF owned by a leafrtool subplugin rather than mod_leafr's own
+    // "content" file area, so the URL is built from the file's own identity, not assumed to be
+    // mod_leafr's content area; the owning component must serve it via its own _pluginfile().
     $fileurl = moodle_url::make_pluginfile_url(
-        $context->id,
-        'mod_leafr',
-        'content',
-        0,
+        $file->get_contextid(),
+        $file->get_component(),
+        $file->get_filearea(),
+        $file->get_itemid(),
         $file->get_filepath(),
         $file->get_filename()
     );
@@ -79,13 +95,14 @@ if ($file) {
 
     $downloadurl = '';
     if ($leafr->downloadallowed && has_capability('mod/leafr:download', $context)) {
+        $downloadfile = tool_manager::get_download_file((int)$leafr->id, $context, $file);
         $downloadurl = moodle_url::make_pluginfile_url(
-            $context->id,
-            'mod_leafr',
-            'content',
-            0,
-            $file->get_filepath(),
-            $file->get_filename(),
+            $downloadfile->get_contextid(),
+            $downloadfile->get_component(),
+            $downloadfile->get_filearea(),
+            $downloadfile->get_itemid(),
+            $downloadfile->get_filepath(),
+            $downloadfile->get_filename(),
             true
         )->out(false);
     }
@@ -123,11 +140,21 @@ if ($file) {
     $PAGE->requires->js_call_amd('mod_leafr/reader', 'init', ['#' . $uniqid]);
 }
 
+if ($conversion && $conversion['status'] === 'pending') {
+    // Simple, JS-independent refresh instead of polling: the background conversion normally only
+    // takes a few seconds, and this page is cheap to reload.
+    $PAGE->set_periodic_refresh_delay(15);
+}
+
 echo $OUTPUT->header();
 
 if ($file) {
     echo $OUTPUT->render_from_template('mod_leafr/reader', $templatecontext);
     echo tool_manager::render_reader($cm, $context, $leafr);
+} else if ($conversion && $conversion['status'] === 'pending') {
+    echo $OUTPUT->render_from_template('mod_leafr/error', ['message' => get_string('conversionpending', 'leafr')]);
+} else if ($conversion && $conversion['status'] === 'failed') {
+    echo $OUTPUT->render_from_template('mod_leafr/error', ['message' => get_string('conversionfailed', 'leafr')]);
 } else {
     echo $OUTPUT->render_from_template('mod_leafr/error', ['message' => get_string('nopdfuploaded', 'leafr')]);
 }
