@@ -164,6 +164,36 @@ export const getPageText = async(pdfDoc, pageNum) => {
 };
 
 /**
+ * Returns the text items of a page with their position and size in PDF page units (the same
+ * units {@see getPageSize} uses), so a caller can position a highlight over a match without
+ * knowing about the current zoom or the page-turning transform of the flipbook view.
+ *
+ * This does not build a full, selectable text layer (that would be a separate text-highlighting feature) - it is only precise
+ * enough to place a highlight box over a search match.
+ *
+ * @param {Object} pdfDoc PDF.js document proxy
+ * @param {number} pageNum 1-based page number
+ * @returns {Promise<Array<{str: string, left: number, top: number, width: number, height: number}>>}
+ */
+export const getTextItems = async(pdfDoc, pageNum) => {
+    const page = await pdfDoc.getPage(pageNum);
+    const viewport = page.getViewport({scale: 1});
+    const content = await page.getTextContent();
+    return content.items.filter((item) => item.str && item.str.trim() !== '').map((item) => {
+        // Item.width/height are already in page units; only the origin needs the viewport
+        // transform (which accounts for the page's y-flip and any rotation).
+        const t = pdfjsLib.Util.transform(viewport.transform, item.transform);
+        return {
+            str: item.str,
+            left: t[4],
+            top: t[5] - item.height,
+            width: item.width,
+            height: item.height,
+        };
+    });
+};
+
+/**
  * Resolves a PDF outline (bookmarks) into a tree of titles and page numbers.
  *
  * @param {Object} pdfDoc PDF.js document proxy

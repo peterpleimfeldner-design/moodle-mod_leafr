@@ -14,7 +14,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Table of contents built from the bookmarks (outline) of the PDF.
+ * Content of the "Contents" sidebar tab, built from the bookmarks (outline) of the PDF.
+ * Showing and hiding the tab itself is handled by mod_leafr/sidebar.
  *
  * @module     mod_leafr/toc
  * @copyright  2026 Peter Pleimfeldner
@@ -27,18 +28,20 @@ export default class Toc {
      * Constructor.
      *
      * @param {Object} options
-     * @param {HTMLElement} options.panel The navigation panel
-     * @param {HTMLElement} options.toggle The toolbar button that opens the panel
+     * @param {HTMLElement} options.panel The tab panel the outline is rendered into
      * @param {Array} options.entries Outline entries {title, page, children}
+     * @param {Set<number>} [options.requiredPages] Pages required by the completion rule
+     * @param {string} [options.requiredBadge] Label of the badge shown on chapters covering required pages
      * @param {Function} options.onNavigate Called with the page number of a chosen entry
      */
     constructor(options) {
         this.panel = options.panel;
-        this.toggleButton = options.toggle;
         this.onNavigate = options.onNavigate;
-        this.content = this.panel.querySelector('[data-region="toc-content"]');
+        this.requiredPages = options.requiredPages || new Set();
+        this.requiredBadge = options.requiredBadge || '';
         this.links = [];
         this.render(options.entries);
+        this.markRequired();
     }
 
     /**
@@ -63,12 +66,7 @@ export default class Toc {
                 page.className = 'leafr-toc-link-page';
                 page.textContent = item.page;
                 button.append(title, page);
-                button.addEventListener('click', () => {
-                    this.onNavigate(item.page);
-                    if (window.matchMedia('(max-width: 767.98px)').matches) {
-                        this.close();
-                    }
-                });
+                button.addEventListener('click', () => this.onNavigate(item.page));
                 li.appendChild(button);
                 this.links.push(button);
                 if (item.children && item.children.length) {
@@ -78,54 +76,35 @@ export default class Toc {
             });
             return list;
         };
-        this.content.innerHTML = '';
-        this.content.appendChild(build(entries));
+        this.panel.innerHTML = '';
+        this.panel.appendChild(build(entries));
     }
 
     /**
-     * Whether the panel is open.
-     *
-     * @returns {boolean}
+     * Adds a badge to entries whose span (from their own page up to, but excluding, the next
+     * entry's page) contains a page required by the completion rule. Entries are assumed to
+     * appear in the sidebar in page order, as a normal PDF outline does.
      */
-    isOpen() {
-        return !this.panel.hidden;
-    }
-
-    /**
-     * Opens the panel and moves the focus into it.
-     */
-    open() {
-        this.panel.hidden = false;
-        this.toggleButton.setAttribute('aria-expanded', 'true');
-        const target = this.content.querySelector('.leafr-toc-link.is-current') || this.content.querySelector('.leafr-toc-link');
-        if (target) {
-            target.focus();
-            target.scrollIntoView({block: 'nearest'});
+    markRequired() {
+        if (!this.requiredPages.size) {
+            return;
         }
-    }
-
-    /**
-     * Closes the panel and returns the focus to the toolbar button.
-     *
-     * @param {boolean} restoreFocus Whether to focus the toolbar button
-     */
-    close(restoreFocus = true) {
-        this.panel.hidden = true;
-        this.toggleButton.setAttribute('aria-expanded', 'false');
-        if (restoreFocus) {
-            this.toggleButton.focus();
-        }
-    }
-
-    /**
-     * Toggles the panel.
-     */
-    toggle() {
-        if (this.isOpen()) {
-            this.close();
-        } else {
-            this.open();
-        }
+        this.links.forEach((link, index) => {
+            const start = parseInt(link.dataset.page, 10);
+            const next = this.links[index + 1] ? parseInt(this.links[index + 1].dataset.page, 10) : Infinity;
+            let covers = false;
+            this.requiredPages.forEach((page) => {
+                if (page >= start && page < next) {
+                    covers = true;
+                }
+            });
+            if (covers) {
+                const badge = document.createElement('span');
+                badge.className = 'leafr-toc-badge';
+                badge.textContent = this.requiredBadge;
+                link.appendChild(badge);
+            }
+        });
     }
 
     /**

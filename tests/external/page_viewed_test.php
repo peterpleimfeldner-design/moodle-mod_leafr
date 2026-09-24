@@ -69,7 +69,9 @@ final class page_viewed_test extends \advanced_testcase {
         $this->assertEquals(12, $DB->get_field('leafr', 'totalpages', ['id' => $leafr->id]));
         $this->assertSame([1, 2, 3], progress::get_seen_pages((int)$leafr->id, (int)$student->id));
         $this->assertSame(3, progress::get_last_page((int)$leafr->id, (int)$student->id));
-        $events = array_filter($sink->get_events(), fn($e) => $e instanceof \mod_leafr\event\page_viewed);
+        $events = array_filter($sink->get_events(), function ($e) {
+            return $e instanceof \mod_leafr\event\page_viewed;
+        });
         $this->assertCount(3, $events);
         $sink->close();
 

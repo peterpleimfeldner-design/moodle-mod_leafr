@@ -22,7 +22,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_leafr\local\bookmarks;
+use mod_leafr\local\chapters;
 use mod_leafr\local\progress;
+use mod_leafr\local\tool_manager;
 
 require_once(__DIR__ . '/../../config.php');
 require_once(__DIR__ . '/lib.php');
@@ -56,11 +59,28 @@ if ($file) {
 
     $lastpage = 0;
     $completed = false;
+    $seenpages = '';
+    $bookmarks = '[]';
     if (isloggedin() && !isguestuser()) {
         $lastpage = progress::get_last_page((int)$leafr->id, (int)$USER->id);
         $completed = $leafr->completiontype > 0 && progress::is_complete($leafr, (int)$USER->id);
+        $seenpages = progress::encode_pages(progress::get_seen_pages((int)$leafr->id, (int)$USER->id));
+        $bookmarklist = [];
+        foreach (array_values(bookmarks::get_for_user((int)$leafr->id, (int)$USER->id)) as $bookmark) {
+            $bookmarklist[] = ['page' => (int)$bookmark->pageno, 'note' => (string)$bookmark->note];
+        }
+        $bookmarks = json_encode($bookmarklist);
     }
     $simpleview = get_user_preferences('mod_leafr_simpleview', null);
+    $spreadmode = get_user_preferences('mod_leafr_spreadmode', 'auto');
+    // Whether a page based reading rule decides when reading is complete; without one, the reader
+    // itself treats reaching the last page as the end of reading (e.g. for a read confirmation alone).
+    $readingrule = $leafr->completiontype > 0
+        && (new completion_info($course))->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC;
+    $requiredpages = $leafr->completiontype == progress::COMPLETION_SPECIFICRANGE
+        ? progress::encode_pages(progress::required_pages($leafr))
+        : '';
+    $manualchapters = json_encode(chapters::decode($leafr->manualchapters ?? null));
 
     $downloadurl = '';
     if ($leafr->downloadallowed && has_capability('mod/leafr:download', $context)) {
@@ -83,17 +103,30 @@ if ($file) {
     ], JSON_UNESCAPED_SLASHES) . '});');
 
     $uniqid = html_writer::random_id('leafr-reader-');
+    // Not HTML-escaped here: the template escapes it, and escaping twice would show "&amp;".
+    $plainname = format_string($leafr->name, true, ['context' => $context, 'escape' => false]);
     $templatecontext = [
         'uniqid' => $uniqid,
         'cmid' => $cm->id,
-        'readerlabel' => get_string('readerlabel', 'leafr', format_string($leafr->name, true, ['context' => $context])),
+        'readerlabel' => get_string('readerlabel', 'leafr', $plainname),
         'fileurl' => $fileurl->out(false),
         'downloadurl' => $downloadurl,
         'startpage' => $lastpage ?: max(1, (int)$leafr->initialpage),
+        'initialpage' => max(1, (int)$leafr->initialpage),
+        'lastpage' => $lastpage,
+        'seenpages' => $seenpages,
+        'bookmarks' => $bookmarks,
+        'bookmarknotemaxlength' => bookmarks::MAX_NOTE_LENGTH,
+        'printurl' => (new moodle_url('/mod/leafr/print.php', ['id' => $cm->id]))->out(false),
         'totalpages' => (int)$leafr->totalpages,
         'showtoc' => !empty($leafr->showtoc),
         'simpleview' => $simpleview === null ? '' : (string)(int)$simpleview,
+        'spreadmode' => in_array($spreadmode, ['auto', 'single', 'double'], true) ? $spreadmode : 'auto',
         'completed' => $completed,
+        'readingrule' => $readingrule,
+        'requiredpages' => $requiredpages,
+        'manualchapters' => $manualchapters,
+        'usemanualchapters' => !empty($leafr->usemanualchapters),
     ];
     $PAGE->requires->js_call_amd('mod_leafr/reader', 'init', ['#' . $uniqid]);
 }
@@ -102,6 +135,7 @@ echo $OUTPUT->header();
 
 if ($file) {
     echo $OUTPUT->render_from_template('mod_leafr/reader', $templatecontext);
+    echo tool_manager::render_reader($cm, $context, $leafr);
 } else {
     echo $OUTPUT->render_from_template('mod_leafr/error', ['message' => get_string('nopdfuploaded', 'leafr')]);
 }

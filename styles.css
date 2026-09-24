@@ -7,7 +7,7 @@
  */
 
 .leafr-reader {
-    --leafr-accent: #1b6e6e;
+    --leafr-accent: #0e6a62;
     --leafr-stage-bg: #e9edf1;
     --leafr-toolbar-bg: #1f2937;
     --leafr-toolbar-fg: #f3f4f6;
@@ -27,16 +27,16 @@
     background: var(--leafr-stage-bg);
 }
 
-@media (prefers-color-scheme: dark) {
-    .leafr-reader {
-        --leafr-accent: #5eb8b8;
-        --leafr-stage-bg: #1b1f24;
-        --leafr-toolbar-bg: #111827;
-        --leafr-panel-bg: #1f2937;
-        --leafr-panel-fg: #f3f4f6;
-        --leafr-border: #374151;
-        --leafr-muted: #9ca3af;
-    }
+/* Dark colours only when the Moodle page around the reader is dark too (set by the reader from
+   the page background): a dark reader inside Moodle's usual white page looked out of place. */
+.leafr-reader.is-dark {
+    --leafr-accent: #5eb8b8;
+    --leafr-stage-bg: #1b1f24;
+    --leafr-toolbar-bg: #111827;
+    --leafr-panel-bg: #1f2937;
+    --leafr-panel-fg: #f3f4f6;
+    --leafr-border: #374151;
+    --leafr-muted: #9ca3af;
 }
 
 .leafr-reader .sr-only {
@@ -100,10 +100,24 @@
     position: relative;
     flex: 0 0 auto;
     margin: auto;
+    /* In single-page mode, StPageFlip still keeps internal space for a second, invisible page to
+       its left (its portrait-mode bounds rectangle is a page-and-a-half wider than what we size
+       this box to) and draws its hover/flip preview there without being asked to stay inside our
+       narrower box. Clipping it here hides that phantom page's visuals; it does not affect the
+       real page's own flip animation, which stays within this box already (feedback from testing,
+       24.09.2026). */
+    overflow: hidden;
 }
 
 .leafr-zoombox.is-zoomed {
     cursor: grab;
+}
+
+/* StPageFlip only allows vertical touch panning on its book (touch-action: pan-y). While zoomed,
+   the enlarged page must also be movable sideways with a finger. */
+.leafr-zoombox.is-zoomed .stf__parent,
+.leafr-zoombox.is-zoomed .stf__block {
+    touch-action: auto;
 }
 
 .leafr-zoombox.is-panning {
@@ -112,16 +126,27 @@
 
 .leafr-book {
     transform-origin: 0 0;
+    /* A soft, book-like shadow under the whole spread; StPageFlip adds its own animated shadow at
+       the spine on top of this while a page turns. */
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18), 0 1px 0 rgba(0, 0, 0, 0.06);
 }
 
 .leafr-page {
+    position: relative;
     background: #fff;
+    /* A faint inner edge suggests the paper's cut edge without drawing attention away from the
+       page content itself. */
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
 }
 
 .leafr-page-canvas {
     display: block;
     width: 100%;
     height: 100%;
+    /* All pages share the size of the first page in the book; a page with a different shape (e.g.
+       a landscape page in a portrait document) keeps its own proportions and is centred on white
+       instead of being stretched (feedback from testing, issue #13). */
+    object-fit: contain;
 }
 
 .leafr-reader .stf__parent {
@@ -189,37 +214,71 @@
     }
 }
 
-/* Table of contents. */
-.leafr-toc {
+/* Sidebar: thumbnails, contents and search, organised as tabs. */
+.leafr-sidebar {
     display: flex;
     flex-direction: column;
     flex: 0 0 18rem;
+    width: 18rem;
+    min-width: 0;
     max-width: 85%;
     background: var(--leafr-panel-bg);
     color: var(--leafr-panel-fg);
     border-right: 1px solid var(--leafr-border);
 }
 
-.leafr-toc-header {
+.leafr-sidebar-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem 0.5rem 0.5rem 1rem;
+    padding: 0.25rem 0.25rem 0.25rem 0.5rem;
     border-bottom: 1px solid var(--leafr-border);
 }
 
-.leafr-toc-title {
-    margin: 0;
-    font-size: 1rem;
-    font-weight: 600;
+.leafr-sidebar-tabs {
+    display: flex;
+    gap: 0.125rem;
 }
 
-.leafr-toc-content {
+.leafr-sidebar-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: 0.25rem 0.25rem 0 0;
+    background: none;
+    color: inherit;
+}
+
+.leafr-sidebar-tab:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.leafr-sidebar-tab:focus-visible {
+    outline: 2px solid var(--leafr-accent);
+    outline-offset: -2px;
+}
+
+.leafr-sidebar-tab[aria-selected="true"] {
+    border-bottom-color: var(--leafr-accent);
+    color: var(--leafr-accent);
+}
+
+.leafr-sidebar-tab:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.leafr-sidebar-panel {
     flex: 1 1 auto;
     overflow-y: auto;
     padding: 0.25rem 0;
 }
 
+/* Contents tab (table of contents / outline). */
 .leafr-toc-list {
     margin: 0;
     padding: 0;
@@ -269,16 +328,491 @@
     font-variant-numeric: tabular-nums;
 }
 
+.leafr-toc-badge {
+    flex: 0 0 auto;
+    padding: 0.05rem 0.4rem;
+    border: 1px solid var(--leafr-border);
+    border-radius: 1rem;
+    color: var(--leafr-muted);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+/* Thumbnails tab. */
+.leafr-thumb-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    padding: 0.5rem 0.75rem 0;
+    color: var(--leafr-muted);
+    font-size: 0.7rem;
+}
+
+.leafr-thumb-legend-required::before,
+.leafr-thumb-legend-seen::before {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.3rem;
+    vertical-align: -0.1em;
+}
+
+.leafr-thumb-legend-required::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--leafr-accent);
+}
+
+.leafr-thumb-legend-seen::before {
+    content: "\2713";
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 50%;
+    background: var(--leafr-accent);
+    color: #fff;
+    font-size: 0.55rem;
+}
+
+.leafr-thumb-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+    gap: 0.625rem;
+    padding: 0.75rem;
+}
+
+.leafr-thumb {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border: 2px solid transparent;
+    border-radius: 0.25rem;
+    background: none;
+    color: inherit;
+}
+
+.leafr-thumb:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.leafr-thumb:focus-visible {
+    outline: 2px solid var(--leafr-accent);
+    outline-offset: 1px;
+}
+
+.leafr-thumb.is-current {
+    border-color: var(--leafr-accent);
+}
+
+.leafr-thumb-canvas {
+    display: block;
+    width: 100%;
+    min-height: 56px;
+    height: auto;
+    background: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.leafr-thumb-check {
+    position: absolute;
+    top: 0.375rem;
+    right: 0.375rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 1.125rem;
+    height: 1.125rem;
+    border-radius: 50%;
+    background: var(--leafr-accent);
+    color: #fff;
+    font-size: 0.7rem;
+    line-height: 1;
+}
+
+.leafr-thumb-check::after {
+    content: "\2713";
+}
+
+.leafr-thumb.is-seen .leafr-thumb-check {
+    display: flex;
+}
+
+/* Small dot marking a page required by the completion rule, distinct from the seen checkmark
+   (top-right) and the current-page border, so all three can be visible at once. */
+.leafr-thumb.is-required::after {
+    content: "";
+    position: absolute;
+    bottom: 0.3rem;
+    left: 0.3rem;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--leafr-accent);
+}
+
+.leafr-thumb-number {
+    font-size: 0.7rem;
+    color: var(--leafr-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Search tab. */
+.leafr-search-form {
+    display: flex;
+    gap: 0.375rem;
+    align-items: center;
+    padding: 0.75rem;
+    border-bottom: 1px solid var(--leafr-border);
+}
+
+.leafr-search-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 0.375rem 0.5rem;
+    border: 1px solid var(--leafr-border);
+    border-radius: 0.25rem;
+    background: var(--leafr-panel-bg);
+    color: inherit;
+}
+
+.leafr-search-nav {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 0.125rem;
+}
+
+.leafr-search-nav .leafr-iconbtn {
+    min-width: 2rem;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    color: var(--leafr-panel-fg);
+}
+
+.leafr-search-nav .leafr-iconbtn:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.leafr-search-nav .leafr-iconbtn:disabled {
+    opacity: 0.35;
+}
+
+.leafr-search-nav .leafr-iconbtn:focus-visible {
+    outline: 2px solid var(--leafr-accent);
+    outline-offset: 1px;
+}
+
+.leafr-search-status {
+    padding: 0.5rem 0.75rem 0;
+    font-size: 0.8rem;
+    color: var(--leafr-muted);
+}
+
+.leafr-search-results {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.leafr-search-result {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    border-left: 3px solid transparent;
+    background: none;
+    color: inherit;
+    text-align: left;
+    font-size: 0.8rem;
+    line-height: 1.35;
+}
+
+.leafr-search-result:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+.leafr-search-result:focus-visible {
+    outline: 2px solid var(--leafr-accent);
+    outline-offset: -2px;
+}
+
+.leafr-search-result.is-active {
+    border-left-color: var(--leafr-accent);
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.leafr-search-result-page {
+    font-weight: 600;
+    font-size: 0.7rem;
+    color: var(--leafr-muted);
+}
+
+.leafr-search-result-snippet {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
+.leafr-search-result-snippet mark {
+    background: #fef08a;
+    color: #111827;
+    border-radius: 2px;
+    padding: 0 1px;
+}
+
+/* Bookmarks tab. */
+/* Styled as Moodle's own small outline button (btn btn-sm btn-outline-secondary), plus an icon. */
+.leafr-bookmark-print {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.75rem 0.75rem 0.25rem;
+}
+
+.leafr-bookmark-empty {
+    padding: 1rem 0.75rem;
+    font-size: 0.8rem;
+    color: var(--leafr-muted);
+}
+
+.leafr-bookmark-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.leafr-bookmark-item {
+    display: flex;
+    gap: 0.625rem;
+    padding: 0.625rem 0.75rem;
+    border-bottom: 1px solid var(--leafr-border);
+}
+
+.leafr-bookmark-thumb {
+    flex: 0 0 auto;
+    width: 56px;
+}
+
+.leafr-bookmark-thumb canvas {
+    display: block;
+    width: 100%;
+    min-height: 40px;
+    background: rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+.leafr-bookmark-body {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.leafr-bookmark-page {
+    align-self: flex-start;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-align: left;
+}
+
+.leafr-bookmark-page:hover {
+    text-decoration: underline;
+}
+
+.leafr-bookmark-page:focus-visible {
+    outline: 2px solid var(--leafr-accent);
+    outline-offset: 2px;
+}
+
+.leafr-bookmark-note {
+    width: 100%;
+    min-height: 2.25rem;
+    max-height: 160px;
+    padding: 0.25rem 0.375rem;
+    border: 1px solid var(--leafr-border);
+    border-radius: 0.25rem;
+    background: var(--leafr-panel-bg);
+    color: inherit;
+    font: inherit;
+    font-size: 0.75rem;
+    resize: vertical;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+.leafr-bookmark-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+}
+
+.leafr-bookmark-saved {
+    color: var(--leafr-accent);
+    font-weight: 600;
+}
+
+.leafr-bookmark-counter {
+    margin-left: auto;
+    color: var(--leafr-muted);
+}
+
+.leafr-bookmark-counter.is-near-limit {
+    color: #b45309;
+    font-weight: 600;
+}
+
+.leafr-bookmark-remove {
+    align-self: flex-start;
+    margin-left: -0.4rem;
+    padding: 0.15rem 0.4rem;
+    border: 0;
+    border-radius: 0.25rem;
+    background: none;
+    color: var(--leafr-muted);
+    font-size: 0.75rem;
+}
+
+.leafr-bookmark-remove:hover,
+.leafr-bookmark-remove:focus-visible {
+    background: rgba(185, 28, 28, 0.08);
+    color: #b91c1c;
+}
+
+.leafr-bookmark-remove:focus-visible {
+    outline: 2px solid var(--leafr-accent);
+    outline-offset: 1px;
+}
+
+/* Corner flag on a bookmarked page, like a ribbon bookmark in a physical book. */
+.leafr-page.is-bookmarked::before,
+.leafr-scroll-page.is-bookmarked::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 14px;
+    width: 20px;
+    height: 28px;
+    background: #d97706;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
+    z-index: 3;
+    pointer-events: none;
+}
+
+/* Bar above the book with one bookmark button per visible page. Shown only for an actual
+   two-page spread in the flipbook view: a button on the page corner itself used to overlap
+   StPageFlip's click/drag zone for turning pages there, which looked broken. */
+.leafr-page-bookmarks {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 0.5rem;
+    /* Fixed height, reserved by FlipbookView (SPREAD_BAR_HEIGHT) when it sizes a spread. */
+    height: 36px;
+    box-sizing: border-box;
+    padding: 0;
+    background: var(--leafr-stage-bg);
+}
+
+.leafr-page-bookmarks:not([hidden]) + .leafr-view {
+    min-height: calc(100% - 36px);
+}
+
+.leafr-page-bookmark-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    height: 1.75rem;
+    padding: 0 0.7rem;
+    border: 1px solid var(--leafr-border);
+    border-radius: 1rem;
+    background: var(--leafr-panel-bg);
+    color: var(--leafr-panel-fg);
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.leafr-page-bookmark-btn.is-bookmarked {
+    border-color: #d97706;
+    background: #fff7ed;
+    color: #7c2d12;
+    font-weight: 600;
+}
+
+.leafr-page-bookmark-btn::before {
+    content: "";
+    width: 10px;
+    height: 14px;
+    background: currentColor;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
+    opacity: 0.35;
+}
+
+.leafr-page-bookmark-btn.is-bookmarked::before {
+    background: #d97706;
+}
+
+.leafr-page-bookmark-btn.is-bookmarked::before {
+    opacity: 1;
+}
+
+.leafr-page-bookmark-btn:hover,
+.leafr-page-bookmark-btn:focus-visible {
+    border-color: var(--leafr-accent);
+}
+
+.leafr-page-bookmark-btn:focus-visible {
+    outline: 2px solid var(--leafr-accent);
+    outline-offset: 1px;
+}
+
+/* Highlight box for the active search match, shown on the page itself. */
+.leafr-search-highlight {
+    position: absolute;
+    z-index: 2;
+    background: rgba(250, 204, 21, 0.55);
+    outline: 2px solid #f59e0b;
+    border-radius: 2px;
+    pointer-events: none;
+}
+
 /* Toolbar. */
 .leafr-toolbar {
+    position: relative;
     flex: 0 0 auto;
     background: var(--leafr-toolbar-bg);
     color: var(--leafr-toolbar-fg);
 }
 
 .leafr-progress {
+    position: relative;
     height: 3px;
     background: rgba(255, 255, 255, 0.15);
+    cursor: pointer;
+}
+
+.leafr-progress:focus-visible {
+    outline: 2px solid #9fd9d9;
+    outline-offset: 2px;
 }
 
 .leafr-progress-fill {
@@ -286,6 +820,40 @@
     height: 100%;
     background: #5eb8b8;
     transition: width 0.2s ease-out;
+}
+
+.leafr-progress-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0 0.5rem;
+    /* One line is reserved before the summary is filled in, so the toolbar does not grow (and
+       shrink the book's stage) after the book was sized. */
+    min-height: calc(0.75rem * 1.3 + 0.25rem);
+    padding: 0.25rem 0.75rem 0;
+    font-size: 0.75rem;
+    line-height: 1.3;
+}
+
+.leafr-progress-summary {
+    color: var(--leafr-toolbar-fg);
+    opacity: 0.75;
+}
+
+.leafr-progress-summary:empty {
+    display: none;
+}
+
+.leafr-progress-summary-required {
+    font-weight: 600;
+    opacity: 0.95;
+}
+
+.leafr-progress-summary-required:not([hidden])::before {
+    content: "\00B7";
+    margin-right: 0.5rem;
+    font-weight: 400;
+    opacity: 0.6;
 }
 
 .leafr-toolbar-inner {
@@ -322,6 +890,35 @@
     text-decoration: none;
 }
 
+/* Visible label of the main toolbar functions (sidebar, view menu, bookmark), shown alongside the
+   icon from tablet width up; a tooltip (the button's title) and the sr-only fallback elsewhere
+   still identify the button below that width. */
+.leafr-btn-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+.leafr-reader.is-wide .leafr-btn-label {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0 0 0 0.375rem;
+    overflow: visible;
+    clip: auto;
+    font-size: 0.8125rem;
+}
+
+.leafr-reader.is-wide .leafr-toolbar .leafr-iconbtn {
+    padding: 0 0.75rem;
+}
+
 .leafr-zoomlabel {
     min-width: 3.25rem;
     font-size: 0.8125rem;
@@ -356,6 +953,129 @@
     background: rgba(94, 184, 184, 0.3);
 }
 
+/* "View" menu: page layout, zoom and full screen, opened from a single toolbar button. */
+.leafr-viewmenu-wrap {
+    position: relative;
+}
+
+.leafr-viewmenu {
+    position: absolute;
+    bottom: calc(100% + 0.5rem);
+    right: 0;
+    /* Above the toasts (z-index 20), which can sit in the same spot on a small screen. */
+    z-index: 25;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 18rem;
+    max-width: calc(100vw - 1rem);
+    padding: 0.5rem;
+    border: 1px solid var(--leafr-border);
+    border-radius: 0.5rem;
+    background: var(--leafr-panel-bg);
+    color: var(--leafr-panel-fg);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+}
+
+.leafr-viewmenu-label {
+    margin: 0.25rem 0.5rem 0;
+    color: var(--leafr-muted);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.leafr-viewmenu-group {
+    display: flex;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 0.5rem;
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.leafr-menuitem {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.4rem 0.375rem;
+    border: 1px solid transparent;
+    border-radius: 0.375rem;
+    background: none;
+    color: inherit;
+    font-size: 0.8125rem;
+    line-height: 1.25;
+    text-align: center;
+    text-decoration: none;
+}
+
+.leafr-menuitem-check {
+    display: block;
+    text-align: left;
+}
+
+.leafr-menuitem-check:hover {
+    color: inherit;
+    text-decoration: none;
+}
+
+.leafr-menuitem:hover {
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.leafr-menuitem:focus-visible {
+    outline: 2px solid var(--leafr-accent);
+    outline-offset: -2px;
+}
+
+.leafr-menuitem:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.leafr-viewmenu-group .leafr-menuitem[aria-checked="true"] {
+    background: var(--leafr-panel-bg);
+    color: var(--leafr-accent);
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+.leafr-menuitem-check[aria-checked="true"] {
+    color: var(--leafr-accent);
+    font-weight: 600;
+}
+
+.leafr-menuitem-check[aria-checked="true"]::after {
+    content: "\2713";
+    float: right;
+}
+
+/* Download entry of the view menu: only used when the toolbar is too narrow for its own button.
+   It carries Moodle's "btn" class so the theme's content link underline leaves it alone; the
+   rules below undo the parts of that button look that differ from the other menu entries. */
+.leafr-menu-download {
+    display: none;
+}
+
+.leafr-viewmenu .leafr-menu-download {
+    padding: 0.4rem 0.375rem;
+    border: 1px solid transparent;
+    color: inherit;
+    font-size: 0.8125rem;
+    font-weight: normal;
+    text-align: left;
+}
+
+.leafr-viewmenu-zoom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.125rem;
+}
+
+.leafr-viewmenu-zoom .leafr-iconbtn,
+.leafr-viewmenu-zoom .leafr-zoomlabel {
+    color: var(--leafr-panel-fg);
+}
+
 .leafr-pagebox {
     display: inline-flex;
     align-items: center;
@@ -381,11 +1101,14 @@
 .leafr-toast {
     position: absolute;
     left: 50%;
-    bottom: 4.5rem;
+    bottom: 5.25rem;
     z-index: 20;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: max-content;
     max-width: calc(100% - 2rem);
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
@@ -393,6 +1116,48 @@
     color: #fff;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
     transform: translateX(-50%);
+}
+
+.leafr-toast-info {
+    background: #1f2937;
+}
+
+.leafr-toast-action {
+    flex: 0 0 auto;
+    padding: 0.25rem 0.625rem;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 0.25rem;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.leafr-toast-action:hover,
+.leafr-toast-action:focus-visible {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.leafr-toast-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin: -0.25rem -0.5rem -0.25rem 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0.25rem;
+    background: transparent;
+    color: inherit;
+    opacity: 0.8;
+}
+
+.leafr-toast-close:hover,
+.leafr-toast-close:focus-visible {
+    background: rgba(255, 255, 255, 0.15);
+    opacity: 1;
 }
 
 /* Keyboard help. */
@@ -438,25 +1203,74 @@
     margin: 0;
 }
 
-/* Narrow screens: table of contents as overlay, fewer buttons. */
+/* Narrow screens: sidebar as a full-width overlay, fewer buttons. */
 @media (max-width: 767.98px) {
-    .leafr-toc {
+    .leafr-sidebar {
         position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
+        inset: 0;
         z-index: 10;
-        width: 18rem;
+        width: 100%;
+        max-width: 100%;
         box-shadow: 4px 0 16px rgba(0, 0, 0, 0.25);
-    }
-
-    .leafr-hide-narrow {
-        display: none;
     }
 
     .leafr-view {
         padding: 8px;
     }
+}
+
+/* Narrow reader: fewer and smaller toolbar buttons, so every remaining one stays reachable. The
+   width classes are set by the reader itself from its own width, not the screen's: inside Moodle's
+   page margins and drawers the reader is often far narrower than the viewport (a 768px tablet
+   leaves it about 530px), which used to push the toolbar's right-hand buttons out of reach. */
+.leafr-reader.is-compact .leafr-hide-narrow {
+    display: none;
+}
+
+.leafr-reader.is-narrow .leafr-toolbar-inner {
+    gap: 0.25rem;
+    padding: 0.25rem;
+}
+
+.leafr-reader.is-narrow .leafr-toolbar .leafr-iconbtn {
+    min-width: 2.25rem;
+    padding: 0 0.25rem;
+}
+
+.leafr-reader.is-narrow .leafr-pagebox {
+    margin: 0;
+}
+
+.leafr-reader.is-narrow .leafr-pageinput {
+    width: 2.75rem;
+}
+
+.leafr-reader.is-narrow .leafr-pagetotal,
+.leafr-reader.is-narrow .leafr-toolbar-download {
+    display: none;
+}
+
+.leafr-reader.is-narrow .leafr-menu-download {
+    display: block;
+}
+
+/* The menu is anchored to the whole toolbar instead of its button, so it cannot stick out of
+   the reader on the left. */
+.leafr-reader.is-narrow .leafr-viewmenu-wrap {
+    position: static;
+}
+
+.leafr-reader.is-narrow .leafr-viewmenu {
+    right: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+}
+
+/* A reader this narrow always shows one page at a time (FlipbookView's SPREAD_MIN_WIDTH), so
+   the page layout choice would have no visible effect here. */
+.leafr-reader.is-narrow .leafr-spread-label,
+.leafr-reader.is-narrow .leafr-viewmenu [data-region="spread-group"] {
+    display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -466,5 +1280,44 @@
 
     .leafr-progress-fill {
         transition: none;
+    }
+}
+
+/* Printable bookmark list (print.php), a plain page independent of the reader itself. */
+.leafr-print {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding: 1rem 0 2rem;
+}
+
+.leafr-print-actions {
+    margin-bottom: 1.5rem;
+}
+
+.leafr-print-title {
+    margin-bottom: 0.25rem;
+}
+
+.leafr-print-meta {
+    margin-bottom: 1.5rem;
+    color: #6b7280;
+}
+
+.leafr-print-list {
+    padding-left: 1.25rem;
+}
+
+.leafr-print-list li {
+    margin-bottom: 1rem;
+}
+
+.leafr-print-list p {
+    margin: 0.25rem 0 0;
+    white-space: pre-line;
+}
+
+@media print {
+    .leafr-print-actions {
+        display: none;
     }
 }

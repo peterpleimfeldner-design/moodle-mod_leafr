@@ -42,22 +42,33 @@ class backup_leafr_activity_structure_step extends backup_activity_structure_ste
 
         $leafr = new backup_nested_element('leafr', ['id'], [
             'name', 'intro', 'introformat', 'filearea', 'completiontype', 'completionpercent', 'completionpage',
-            'downloadallowed', 'showtoc', 'initialpage', 'totalpages', 'timecreated', 'timemodified',
+            'completionpages', 'downloadallowed', 'showtoc', 'initialpage', 'totalpages', 'manualchapters',
+            'usemanualchapters', 'timecreated', 'timemodified',
         ]);
         $progresses = new backup_nested_element('progresses');
         $progress = new backup_nested_element('progress', ['id'], ['userid', 'seenpages', 'lastpage', 'timemodified']);
+        $bookmarks = new backup_nested_element('bookmarks');
+        $bookmark = new backup_nested_element('bookmark', ['id'], [
+            'userid', 'pageno', 'note', 'timecreated', 'timemodified',
+        ]);
 
         $leafr->add_child($progresses);
         $progresses->add_child($progress);
+        $leafr->add_child($bookmarks);
+        $bookmarks->add_child($bookmark);
 
         $leafr->set_source_table('leafr', ['id' => backup::VAR_ACTIVITYID]);
         if ($userinfo) {
             $progress->set_source_table('leafr_progress', ['leafrid' => backup::VAR_PARENTID]);
+            $bookmark->set_source_table('leafr_bookmarks', ['leafrid' => backup::VAR_PARENTID]);
         }
 
         $progress->annotate_ids('user', 'userid');
+        $bookmark->annotate_ids('user', 'userid');
         $leafr->annotate_files('mod_leafr', 'intro', null);
         $leafr->annotate_files('mod_leafr', 'content', null);
+
+        $this->add_subplugin_structure('leafrtool', $leafr, true);
 
         return $this->prepare_activity_structure($leafr);
     }

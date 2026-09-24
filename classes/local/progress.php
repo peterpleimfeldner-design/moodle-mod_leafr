@@ -38,6 +38,9 @@ class progress {
     /** @var int Completion type: a specific page must be seen. */
     public const COMPLETION_SPECIFICPAGE = 3;
 
+    /** @var int Completion type: specific pages/chapters must all be seen. */
+    public const COMPLETION_SPECIFICRANGE = 4;
+
     /** @var int Upper limit for page numbers accepted from clients. */
     public const MAX_PAGES = 100000;
 
@@ -48,7 +51,9 @@ class progress {
      * @return string
      */
     public static function encode_pages(array $pages): string {
-        $pages = array_values(array_unique(array_filter(array_map('intval', $pages), fn($p) => $p >= 1)));
+        $pages = array_values(array_unique(array_filter(array_map('intval', $pages), function ($p) {
+            return $p >= 1;
+        })));
         sort($pages);
         $ranges = [];
         $count = count($pages);
@@ -137,7 +142,9 @@ class progress {
     public static function record(int $leafrid, int $userid, array $pages, int $currentpage = 0): array {
         global $DB;
 
-        $pages = array_filter(array_map('intval', $pages), fn($p) => $p >= 1 && $p <= self::MAX_PAGES);
+        $pages = array_filter(array_map('intval', $pages), function ($p) {
+            return $p >= 1 && $p <= self::MAX_PAGES;
+        });
         $record = self::get_record($leafrid, $userid);
         $seen = $record ? self::decode_pages($record->seenpages) : [];
         $newpages = array_values(array_diff(array_unique($pages), $seen));
@@ -164,6 +171,21 @@ class progress {
     }
 
     /**
+     * The pages required by the "specific pages/chapters" completion rule, limited to the
+     * document's actual page count.
+     *
+     * @param stdClass $leafr Leafr instance record (needs completionpages and totalpages)
+     * @return int[]
+     */
+    public static function required_pages(stdClass $leafr): array {
+        $total = (int)$leafr->totalpages;
+        $pages = self::decode_pages($leafr->completionpages ?? '');
+        return $total >= 1 ? array_values(array_filter($pages, function ($p) use ($total) {
+            return $p <= $total;
+        })) : $pages;
+    }
+
+    /**
      * Whether a user fulfils the page based completion rule of an activity.
      *
      * @param stdClass $leafr Leafr instance record
@@ -175,7 +197,9 @@ class progress {
         if ($total < 1) {
             return false;
         }
-        $seen = array_filter(self::get_seen_pages((int)$leafr->id, $userid), fn($p) => $p <= $total);
+        $seen = array_filter(self::get_seen_pages((int)$leafr->id, $userid), function ($p) use ($total) {
+            return $p <= $total;
+        });
 
         switch ((int)$leafr->completiontype) {
             case self::COMPLETION_LASTPAGE:
@@ -186,6 +210,9 @@ class progress {
             case self::COMPLETION_SPECIFICPAGE:
                 $page = max(1, min($total, (int)$leafr->completionpage));
                 return in_array($page, $seen, true);
+            case self::COMPLETION_SPECIFICRANGE:
+                $required = self::required_pages($leafr);
+                return !empty($required) && !array_diff($required, $seen);
             default:
                 return false;
         }

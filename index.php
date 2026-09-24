@@ -34,7 +34,9 @@ $PAGE->set_title(format_string($course->shortname) . ': ' . get_string('modulena
 $PAGE->set_heading(format_string($course->fullname));
 $PAGE->navbar->add(get_string('modulenameplural', 'leafr'));
 
-\mod_leafr\event\course_module_instance_list_viewed::create_from_course($course)->trigger();
+\mod_leafr\event\course_module_instance_list_viewed::create([
+    'context' => context_course::instance($course->id),
+])->trigger();
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('modulenameplural', 'leafr'));
@@ -51,7 +53,7 @@ foreach ($leafrs as $leafr) {
     $attributes = $leafr->visible ? [] : ['class' => 'dimmed'];
     $link = html_writer::link(
         new moodle_url('/mod/leafr/view.php', ['id' => $leafr->coursemodule]),
-        format_string($leafr->name, true),
+        format_string($leafr->name, true, ['context' => context_module::instance($leafr->coursemodule)]),
         $attributes
     );
     $table->data[] = [$link, format_module_intro('leafr', $leafr, $leafr->coursemodule)];

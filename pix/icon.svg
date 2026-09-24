@@ -1,10 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none">
-  <!-- Leafr Icon: Open book with page-flip effect -->
-  <rect width="24" height="24" rx="4" fill="#2E7D7D"/>
-  <!-- Book pages -->
-  <path d="M12 7 C10 5 6 5 4 6 L4 18 C6 17 10 17 12 19 C14 17 18 17 20 18 L20 6 C18 5 14 5 12 7Z" fill="white" opacity="0.9"/>
-  <!-- Page fold highlight -->
-  <path d="M12 7 L12 19" stroke="#2E7D7D" stroke-width="0.8" opacity="0.5"/>
-  <!-- Leaf accent top-right -->
-  <path d="M16 4 C17 5 18 7 17 9 C16 7 14 6 16 4Z" fill="white" opacity="0.7"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Leafr logo: an open book whose right page is being turned ("to leaf through" a book). -->
+  <path fill="#0E6A62" d="M24 72C60 60 96 62 124 80V220C96 202 60 200 24 212Z"/>
+  <path fill="#0E6A62" d="M132 80C160 62 196 60 232 72V212C196 200 160 202 132 220Z"/>
+  <path fill="#6FC3B8" d="M132 80C150 52 180 34 214 26C204 70 198 130 200 178C174 182 150 196 132 220Z"/>
 </svg>

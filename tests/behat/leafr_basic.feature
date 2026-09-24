@@ -25,7 +25,12 @@ Feature: Read a PDF document in a Leafr flipbook
     Then I should see "Handbook"
     And ".leafr-toolbar" "css_element" should exist
     And "Download PDF" "link" should exist
-    And "Table of contents" "button" should exist
+    And "Sidebar" "button" should exist
+
+  @javascript @accessibility
+  Scenario: The flipbook meets accessibility standards
+    When I am on the "Handbook" "leafr activity" page logged in as "student1"
+    Then the page should meet accessibility standards
 
   Scenario: The download button is hidden when downloading is not allowed
     Given the following "activities" exist:
@@ -33,7 +38,7 @@ Feature: Read a PDF document in a Leafr flipbook
       | leafr    | C1     | Protected | 0               | 0       |
     When I am on the "Protected" "leafr activity" page logged in as "student1"
     Then "Download PDF" "link" should not exist
-    And "Table of contents" "button" should not exist
+    And "Contents" "button" should not exist
 
   @javascript
   Scenario: The document is rendered and the student can leaf through it
@@ -45,8 +50,76 @@ Feature: Read a PDF document in a Leafr flipbook
     And I set the field "Go to page" to "9"
     And I press the enter key
     And the field "Go to page" matches value "9"
-    And I press "Table of contents"
+    And I press "Sidebar"
+    And I press "Contents"
     And I should see "Chapter 3: Summary"
+    And I should see "of 12 pages read" in the ".leafr-toolbar" "css_element"
+
+  @javascript
+  Scenario: A student searches the document
+    When I am on the "Handbook" "leafr activity" page logged in as "student1"
+    And I press "Sidebar"
+    # Not "I press 'Search'": Moodle's own site navigation already has a "Search" button,
+    # so the sidebar's search tab needs an unambiguous selector.
+    And I click on "[data-tab='search']" "css_element"
+    And I set the field "Search text" to "Chapter 3"
+    And I press the enter key
+    And I wait "2" seconds
+    Then I should see "1 of 4" in the ".leafr-search-status" "css_element"
+    And I should see "Chapter 3" in the ".leafr-search-results" "css_element"
+    And the field "Go to page" matches value "9"
+    And I click on "[data-action='search-next']" "css_element"
+    And the field "Go to page" matches value "10"
+
+  @javascript
+  Scenario: A student bookmarks a page, adds a note and it survives a reload
+    When I am on the "Handbook" "leafr activity" page logged in as "student1"
+    And I press "Next page"
+    And the field "Go to page" matches value "3"
+    And I click on "[data-action='bookmark']" "css_element"
+    And I wait "1" seconds
+    And I press "Sidebar"
+    And I click on "[data-tab='bookmarks']" "css_element"
+    Then I should see "Page 3" in the "[data-panel='bookmarks']" "css_element"
+    And "Print or save as PDF" "link" should exist in the "[data-panel='bookmarks']" "css_element"
+    And I set the field "Note for Page 3" to "Read again"
+    And I wait "1" seconds
+    Then I should see "10 of 500 characters" in the "[data-panel='bookmarks']" "css_element"
+    When I reload the page
+    And I press "Sidebar"
+    And I click on "[data-tab='bookmarks']" "css_element"
+    Then the field "Note for Page 3" matches value "Read again"
+    And I click on "[data-panel='bookmarks'] .leafr-bookmark-remove" "css_element"
+    And I wait "1" seconds
+    And I should see "No bookmarks yet." in the "[data-panel='bookmarks']" "css_element"
+
+  @javascript
+  Scenario: A returning student sees a notice instead of a silent jump
+    Given I am on the "Handbook" "leafr activity" page logged in as "student1"
+    And I press "Next page"
+    And the field "Go to page" matches value "3"
+    And I wait "2" seconds
+    When I reload the page
+    Then I should see "Continue on page 3"
+    And I press "Start from the beginning"
+    And the field "Go to page" matches value "1"
+
+  @javascript
+  Scenario: A student changes the page layout and it is remembered
+    Given I am on the "Handbook" "leafr activity" page logged in as "student1"
+    And I press "View"
+    And I press "Single page"
+    And the "aria-checked" attribute of "[data-spread='single']" "css_element" should contain "true"
+    # The chosen layout is saved to the user preference asynchronously; give it a moment before
+    # reloading, otherwise the reload can race the save and load the old preference.
+    And I wait "1" seconds
+    When I reload the page
+    Then I press "View"
+    And the "aria-checked" attribute of "[data-spread='single']" "css_element" should contain "true"
+    And I press "Simple view"
+    # The page layout buttons stay usable in the simple view (picking one switches back to the book);
+    # only fitting the page to its box has no meaning there.
+    And the "[data-fit='page']" "css_element" should be disabled
 
   @javascript @_file_upload
   Scenario: A teacher creates a flipbook

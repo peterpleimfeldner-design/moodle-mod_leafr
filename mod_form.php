@@ -26,7 +26,9 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot . '/course/moodleform_mod.php');
 
+use mod_leafr\local\chapters;
 use mod_leafr\local\progress;
+use mod_leafr\local\tool_manager;
 
 /**
  * Activity settings form for mod_leafr.
@@ -73,17 +75,56 @@ class mod_leafr_mod_form extends moodleform_mod {
         $mform->setType('initialpage', PARAM_INT);
         $mform->setDefault('initialpage', 1);
 
+        $mform->addElement('header', 'chaptersheader', get_string('chaptersheader', 'leafr'));
+
+        $mform->addElement('advcheckbox', 'usemanualchapters', get_string('usemanualchapters', 'leafr'));
+        $mform->addHelpButton('usemanualchapters', 'usemanualchapters', 'leafr');
+        $mform->setDefault('usemanualchapters', 0);
+
+        // One explanation for the whole list instead of a help icon repeated on every chapter row.
+        $mform->addElement('static', 'chaptersintro', '', get_string('chaptersintro', 'leafr'));
+
+        $existingchapters = chapters::decode($this->current->manualchapters ?? null);
+        // Title and start page share one row per chapter ("Chapter 1: [title] [page]"); the group does
+        // not append its name, so the fields keep their names chaptertitle[n] and chapterpage[n].
+        $titleattributes = ['size' => '40', 'placeholder' => get_string('chaptertitle', 'leafr')];
+        $pageattributes = ['size' => '4', 'placeholder' => get_string('chapterpage', 'leafr'), 'inputmode' => 'numeric'];
+        $chapterfields = [
+            $mform->createElement('text', 'chaptertitle', get_string('chaptertitle', 'leafr'), $titleattributes),
+            $mform->createElement('text', 'chapterpage', get_string('chapterpage', 'leafr'), $pageattributes),
+        ];
+        $repeatarray = [
+            $mform->createElement('group', 'chaptergroup', get_string('chapterno', 'leafr'), $chapterfields, ' ', false),
+        ];
+        $repeatoptions = [
+            'chaptertitle' => ['type' => PARAM_TEXT],
+            'chapterpage' => ['type' => PARAM_INT],
+        ];
+        $this->repeat_elements(
+            $repeatarray,
+            max(1, count($existingchapters)),
+            $repeatoptions,
+            'chapter_repeats',
+            'chapter_add_fields',
+            1,
+            get_string('addchapters', 'leafr'),
+            true,
+            'chapter_delete'
+        );
+
+        tool_manager::extend_settings_form($mform, $this->current);
+
         $this->standard_coursemodule_elements();
         $this->add_action_buttons();
     }
 
     /**
-     * Returns the suffix of the completion elements (Moodle 4.3+ uses it on the default completion page).
+     * Returns the suffix of the completion elements on the default completion page.
      *
      * @return string
      */
     protected function leafr_completion_suffix(): string {
-        return method_exists($this, 'get_suffix') ? $this->get_suffix() : '';
+        return $this->get_suffix();
     }
 
     /**
@@ -99,11 +140,20 @@ class mod_leafr_mod_form extends moodleform_mod {
         file_prepare_draft_area($draftitemid, $contextid, 'mod_leafr', 'content', 0, ['subdirs' => 0, 'maxfiles' => 1]);
         $defaultvalues['pdffile'] = $draftitemid;
 
+        $existingchapters = chapters::decode($defaultvalues['manualchapters'] ?? null);
+        $defaultvalues['chaptertitle'] = array_column($existingchapters, 'title');
+        $defaultvalues['chapterpage'] = array_column($existingchapters, 'page');
+
         $suffix = $this->leafr_completion_suffix();
         $type = (int)($defaultvalues['completiontype' . $suffix] ?? 0);
         $defaultvalues['completionpageseen' . $suffix] = $type > 0 ? 1 : 0;
         if ($type < 1) {
             $defaultvalues['completiontype' . $suffix] = progress::COMPLETION_LASTPAGE;
+        }
+
+        $leafrid = (int)($this->current->instance ?? 0);
+        foreach (tool_manager::get_form_data($leafrid) as $field => $value) {
+            $defaultvalues[$field . $suffix] = $value;
         }
     }
 
@@ -143,6 +193,26 @@ class mod_leafr_mod_form extends moodleform_mod {
                 if ((int)($data['completionpage' . $suffix] ?? 0) < 1) {
                     $errors['completionpage' . $suffix] = get_string('error_invalidpage', 'leafr');
                 }
+            } else if ($type === progress::COMPLETION_SPECIFICRANGE) {
+                $rangestring = trim((string)($data['completionpages' . $suffix] ?? ''));
+                $haschapters = !empty($data['completionchapters' . $suffix]);
+                if ($rangestring === '' && !$haschapters) {
+                    $errors['completionpages' . $suffix] = get_string('error_invalidpagerange', 'leafr');
+                } else if ($rangestring !== '') {
+                    if (!preg_match('/^[0-9,\-\s]+$/', $rangestring) || !progress::decode_pages($rangestring)) {
+                        $errors['completionpages' . $suffix] = get_string('error_invalidpagerange', 'leafr');
+                    }
+                }
+            }
+        }
+
+        if (array_key_exists('chaptertitle', $data)) {
+            foreach ((array)$data['chaptertitle'] as $index => $title) {
+                $page = (int)($data['chapterpage'][$index] ?? 0);
+                if (trim((string)$title) !== '' && $page < 1) {
+                    // Errors of grouped fields are only shown when set on the group itself.
+                    $errors["chaptergroup[$index]"] = get_string('error_invalidpage', 'leafr');
+                }
             }
         }
         return $errors;
@@ -160,6 +230,8 @@ class mod_leafr_mod_form extends moodleform_mod {
         $typeel = 'completiontype' . $suffix;
         $percentel = 'completionpercent' . $suffix;
         $pageel = 'completionpage' . $suffix;
+        $pagesel = 'completionpages' . $suffix;
+        $chaptersel = 'completionchapters' . $suffix;
 
         $mform->addElement(
             'advcheckbox',
@@ -172,6 +244,7 @@ class mod_leafr_mod_form extends moodleform_mod {
             progress::COMPLETION_LASTPAGE => get_string('completion_lastpage', 'leafr'),
             progress::COMPLETION_PERCENT => get_string('completion_percent', 'leafr'),
             progress::COMPLETION_SPECIFICPAGE => get_string('completion_specificpage', 'leafr'),
+            progress::COMPLETION_SPECIFICRANGE => get_string('completion_specificrange', 'leafr'),
         ]);
         $mform->setDefault($typeel, progress::COMPLETION_LASTPAGE);
         $mform->hideIf($typeel, $enabledel, 'notchecked');
@@ -188,17 +261,65 @@ class mod_leafr_mod_form extends moodleform_mod {
         $mform->hideIf($pageel, $enabledel, 'notchecked');
         $mform->hideIf($pageel, $typeel, 'neq', progress::COMPLETION_SPECIFICPAGE);
 
-        return [$enabledel, $typeel, $percentel, $pageel];
+        $mform->addElement('text', $pagesel, get_string('completionpages', 'leafr'), ['size' => '30']);
+        $mform->setType($pagesel, PARAM_RAW_TRIMMED);
+        $mform->addHelpButton($pagesel, 'completionpages', 'leafr');
+        $mform->hideIf($pagesel, $enabledel, 'notchecked');
+        $mform->hideIf($pagesel, $typeel, 'neq', progress::COMPLETION_SPECIFICRANGE);
+
+        $elements = [$enabledel, $typeel, $percentel, $pageel, $pagesel];
+
+        $existingchapters = chapters::decode($this->current->manualchapters ?? null);
+        if ($existingchapters) {
+            $options = [];
+            foreach ($existingchapters as $index => $chapter) {
+                $options[$index] = $chapter['title'] . ' (' . get_string('pagelabel', 'leafr', $chapter['page']) . ')';
+            }
+            $mform->addElement(
+                'select',
+                $chaptersel,
+                get_string('completionchapters', 'leafr'),
+                $options,
+                ['multiple' => 'multiple', 'size' => min(6, count($options))]
+            );
+            $mform->addHelpButton($chaptersel, 'completionchapters', 'leafr');
+            $mform->hideIf($chaptersel, $enabledel, 'notchecked');
+            $mform->hideIf($chaptersel, $typeel, 'neq', progress::COMPLETION_SPECIFICRANGE);
+            $elements[] = $chaptersel;
+        }
+
+        // Rules contributed by installed leafrtool subplugins (e.g. leafrtool_confirm), each its
+        // own independent checkbox alongside the page-based rule above. Only offered in the
+        // activity's own settings: the bulk and default completion forms (which use a suffix) only
+        // save fields of the leafr table, so a subplugin's own settings would silently be lost there.
+        $toolrules = $suffix === '' ? tool_manager::get_completion_rules() : [];
+        foreach ($toolrules as $rulename => $info) {
+            $formname = $rulename . $suffix;
+            $mform->addElement('advcheckbox', $formname, get_string($info['langkey'], $info['component']));
+            $elements[] = $formname;
+            tool_manager::extend_completion_rule($mform, $rulename, $formname, $suffix);
+        }
+
+        return $elements;
     }
 
     /**
-     * Whether the custom completion rule is enabled in the submitted data.
+     * Whether a custom completion rule is enabled in the submitted data.
      *
      * @param array $data Submitted data
      * @return bool
      */
     public function completion_rule_enabled($data) {
-        return !empty($data['completionpageseen' . $this->leafr_completion_suffix()]);
+        $suffix = $this->leafr_completion_suffix();
+        if (!empty($data['completionpageseen' . $suffix])) {
+            return true;
+        }
+        foreach (array_keys(tool_manager::get_completion_rules()) as $rulename) {
+            if (!empty($data[$rulename . $suffix])) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

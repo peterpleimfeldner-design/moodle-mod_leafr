@@ -16,6 +16,8 @@
 
 namespace mod_leafr\local;
 
+use leafrtool_confirm\local\confirm;
+
 /**
  * Tests for the reading progress and the completion rules.
  *
@@ -51,7 +53,9 @@ final class progress_test extends \advanced_testcase {
      */
     public function test_encode_decode(array $pages, string $encoded): void {
         $this->assertSame($encoded, progress::encode_pages($pages));
-        $expected = array_values(array_unique(array_filter($pages, fn($p) => $p >= 1)));
+        $expected = array_values(array_unique(array_filter($pages, function ($p) {
+            return $p >= 1;
+        })));
         sort($expected);
         $this->assertSame($expected, progress::decode_pages($encoded));
     }
@@ -79,14 +83,18 @@ final class progress_test extends \advanced_testcase {
      */
     public static function completion_provider(): array {
         return [
-            'last page seen' => [progress::COMPLETION_LASTPAGE, 0, 0, [10], true],
-            'last page not seen' => [progress::COMPLETION_LASTPAGE, 0, 0, [1, 2, 9], false],
-            'percent reached' => [progress::COMPLETION_PERCENT, 50, 0, [1, 2, 3, 4, 5], true],
-            'percent not reached' => [progress::COMPLETION_PERCENT, 50, 0, [1, 2, 3, 4], false],
-            'specific page seen' => [progress::COMPLETION_SPECIFICPAGE, 0, 4, [4], true],
-            'specific page not seen' => [progress::COMPLETION_SPECIFICPAGE, 0, 4, [5], false],
-            'specific page beyond the end' => [progress::COMPLETION_SPECIFICPAGE, 0, 25, [10], true],
-            'rule disabled' => [progress::COMPLETION_NONE, 0, 0, [1, 10], false],
+            'last page seen' => [progress::COMPLETION_LASTPAGE, 0, 0, '', [10], true],
+            'last page not seen' => [progress::COMPLETION_LASTPAGE, 0, 0, '', [1, 2, 9], false],
+            'percent reached' => [progress::COMPLETION_PERCENT, 50, 0, '', [1, 2, 3, 4, 5], true],
+            'percent not reached' => [progress::COMPLETION_PERCENT, 50, 0, '', [1, 2, 3, 4], false],
+            'specific page seen' => [progress::COMPLETION_SPECIFICPAGE, 0, 4, '', [4], true],
+            'specific page not seen' => [progress::COMPLETION_SPECIFICPAGE, 0, 4, '', [5], false],
+            'specific page beyond the end' => [progress::COMPLETION_SPECIFICPAGE, 0, 25, '', [10], true],
+            'range fully seen' => [progress::COMPLETION_SPECIFICRANGE, 0, 0, '1-3,7', [1, 2, 3, 7, 9], true],
+            'range partially seen' => [progress::COMPLETION_SPECIFICRANGE, 0, 0, '1-3,7', [1, 2, 3], false],
+            'range beyond the end is ignored' => [progress::COMPLETION_SPECIFICRANGE, 0, 0, '1-2,25', [1, 2], true],
+            'range empty is never complete' => [progress::COMPLETION_SPECIFICRANGE, 0, 0, '', [1, 2, 3], false],
+            'rule disabled' => [progress::COMPLETION_NONE, 0, 0, '', [1, 10], false],
         ];
     }
 
@@ -97,20 +105,33 @@ final class progress_test extends \advanced_testcase {
      * @param int $type Completion type
      * @param int $percent Required percentage
      * @param int $page Required page
+     * @param string $pages Required pages (compact ranges) for the range completion type
      * @param array $seen Seen pages
      * @param bool $expected Expected result
      */
-    public function test_is_complete(int $type, int $percent, int $page, array $seen, bool $expected): void {
+    public function test_is_complete(int $type, int $percent, int $page, string $pages, array $seen, bool $expected): void {
         $this->resetAfterTest();
         $leafr = (object)[
             'id' => 3,
             'completiontype' => $type,
             'completionpercent' => $percent,
             'completionpage' => $page,
+            'completionpages' => $pages,
             'totalpages' => 10,
         ];
         progress::record(3, 11, $seen);
         $this->assertSame($expected, progress::is_complete($leafr, 11));
+    }
+
+    /**
+     * required_pages() filters out pages beyond the document's actual length.
+     */
+    public function test_required_pages(): void {
+        $leafr = (object)['completionpages' => '1-3,7,25', 'totalpages' => 10];
+        $this->assertSame([1, 2, 3, 7], progress::required_pages($leafr));
+
+        $leafr->totalpages = 0;
+        $this->assertSame([1, 2, 3, 7, 25], progress::required_pages($leafr));
     }
 
     /**
@@ -151,5 +172,41 @@ final class progress_test extends \advanced_testcase {
         progress::record((int)$leafr->id, (int)$student->id, [12]);
         $this->assertSame(COMPLETION_COMPLETE, $customcompletion->get_state('completionpageseen'));
         $this->assertNotEmpty($customcompletion->get_custom_rule_descriptions()['completionpageseen']);
+    }
+
+    /**
+     * A completion rule contributed by a leafrtool subplugin (leafrtool_confirm) is combined with
+     * the core page-based rule.
+     */
+    public function test_custom_completion_with_subplugin_rule(): void {
+        global $CFG, $DB;
+        require_once($CFG->libdir . '/completionlib.php');
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $this->assertContains('confirmread', \mod_leafr\completion\custom_completion::get_defined_custom_rules());
+
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $leafr = $this->getDataGenerator()->create_module('leafr', [
+            'course' => $course->id,
+            'completion' => COMPLETION_TRACKING_AUTOMATIC,
+            'completionpageseen' => 1,
+            'completiontype' => progress::COMPLETION_LASTPAGE,
+        ]);
+        confirm::save_settings((int)$leafr->id, true, 'Please confirm.');
+
+        $cm = get_fast_modinfo($course)->get_cm($leafr->cmid);
+        $this->assertEqualsCanonicalizing(
+            ['completionpageseen' => 1, 'confirmread' => 1],
+            $cm->customdata['customcompletionrules']
+        );
+
+        $customcompletion = new \mod_leafr\completion\custom_completion($cm, (int)$student->id);
+        $this->assertSame(COMPLETION_INCOMPLETE, $customcompletion->get_state('confirmread'));
+        $this->assertNotEmpty($customcompletion->get_custom_rule_descriptions()['confirmread']);
+
+        confirm::record_confirmation((int)$leafr->id, (int)$student->id);
+        $this->assertSame(COMPLETION_COMPLETE, $customcompletion->get_state('confirmread'));
     }
 }

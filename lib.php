@@ -22,7 +22,10 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use mod_leafr\local\bookmarks;
+use mod_leafr\local\chapters;
 use mod_leafr\local\progress;
+use mod_leafr\local\tool_manager;
 
 /**
  * Returns whether the module supports a feature.
@@ -37,11 +40,12 @@ function leafr_supports($feature) {
         case FEATURE_BACKUP_MOODLE2:
         case FEATURE_COMPLETION_TRACKS_VIEWS:
         case FEATURE_COMPLETION_HAS_RULES:
+        case FEATURE_GROUPS:
+        case FEATURE_GROUPINGS:
+            // Groups only matter for the teachers' overview report, which filters by group.
             return true;
         case FEATURE_GRADE_HAS_GRADE:
         case FEATURE_GRADE_OUTCOMES:
-        case FEATURE_GROUPS:
-        case FEATURE_GROUPINGS:
             return false;
         case FEATURE_MOD_PURPOSE:
             return MOD_PURPOSE_CONTENT;
@@ -62,6 +66,19 @@ function leafr_normalise_settings(stdClass $data): void {
     $data->downloadallowed = empty($data->downloadallowed) ? 0 : 1;
     $data->showtoc = empty($data->showtoc) ? 0 : 1;
     $data->initialpage = max(1, (int)($data->initialpage ?? 1));
+
+    $chapterlist = chapters::from_submitted($data->chaptertitle ?? [], $data->chapterpage ?? []);
+    $data->manualchapters = chapters::encode($chapterlist);
+    $data->usemanualchapters = empty($data->usemanualchapters) ? 0 : 1;
+
+    if ($data->completiontype === progress::COMPLETION_SPECIFICRANGE) {
+        $pages = progress::decode_pages($data->completionpages ?? '');
+        $selected = array_map('intval', $data->completionchapters ?? []);
+        $pages = array_merge($pages, chapters::pages_for_selection($chapterlist, $selected, (int)($data->totalpages ?? 0)));
+        $data->completionpages = progress::encode_pages($pages);
+    } else {
+        $data->completionpages = $data->completionpages ?? '';
+    }
 }
 
 /**
@@ -108,6 +125,7 @@ function leafr_add_instance($data, $mform = null) {
     // The course module id is known at this point, so the file can be saved.
     $DB->set_field('course_modules', 'instance', $data->id, ['id' => $data->coursemodule]);
     leafr_save_pdf($data);
+    tool_manager::save_settings($data, $data->id);
 
     if (!empty($data->completionexpected)) {
         \core_completion\api::update_completion_date_event(
@@ -130,6 +148,7 @@ function leafr_add_instance($data, $mform = null) {
 function leafr_update_instance($data, $mform = null) {
     global $DB;
 
+    $data->totalpages = (int)$DB->get_field('leafr', 'totalpages', ['id' => $data->instance]);
     leafr_normalise_settings($data);
     $data->id = $data->instance;
     $data->timemodified = time();
@@ -139,6 +158,7 @@ function leafr_update_instance($data, $mform = null) {
         $data->totalpages = 0;
     }
     $DB->update_record('leafr', $data);
+    tool_manager::save_settings($data, $data->id);
 
     \core_completion\api::update_completion_date_event(
         $data->coursemodule,
@@ -166,6 +186,8 @@ function leafr_delete_instance($id) {
         \core_completion\api::update_completion_date_event($cm->id, 'leafr', $id, null);
     }
     progress::delete_for_instance($id);
+    bookmarks::delete_for_instance($id);
+    tool_manager::delete_instance($id);
     $DB->delete_records('leafr', ['id' => $id]);
     return true;
 }
@@ -189,8 +211,15 @@ function leafr_get_coursemodule_info($coursemodule) {
     if ($coursemodule->showdescription) {
         $result->content = format_module_intro('leafr', $leafr, $coursemodule->id, false);
     }
-    if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC && $leafr->completiontype > 0) {
-        $result->customdata['customcompletionrules']['completionpageseen'] = (int)$leafr->completiontype;
+    if ($coursemodule->completion == COMPLETION_TRACKING_AUTOMATIC) {
+        if ($leafr->completiontype > 0) {
+            $result->customdata['customcompletionrules']['completionpageseen'] = (int)$leafr->completiontype;
+        }
+        foreach (tool_manager::get_completion_rules() as $rulename => $info) {
+            if (tool_manager::rule_enabled($info['component'], $leafr)) {
+                $result->customdata['customcompletionrules'][$rulename] = 1;
+            }
+        }
     }
     return $result;
 }
@@ -231,6 +260,7 @@ function leafr_pluginfile($course, $cm, $context, $filearea, $args, $forcedownlo
         return false;
     }
     send_stored_file($file, 0, 0, $forcedownload, $options);
+    return true;
 }
 
 /**
@@ -267,6 +297,21 @@ function leafr_view(stdClass $leafr, stdClass $course, $cm, context_module $cont
 }
 
 /**
+ * Lets installed leafrtool subplugins add their own links to the activity's "More" navigation
+ * (e.g. a report or overview page).
+ *
+ * @param settings_navigation $settingsnav The settings navigation object
+ * @param navigation_node $leafrnode The node for this activity
+ */
+function leafr_extend_settings_navigation(settings_navigation $settingsnav, navigation_node $leafrnode): void {
+    $cm = $settingsnav->get_page()->cm;
+    if (!$cm) {
+        return;
+    }
+    tool_manager::extend_navigation($leafrnode, $cm, context_module::instance($cm->id));
+}
+
+/**
  * Adds the reset options to the course reset form.
  *
  * @param MoodleQuickForm $mform Course reset form
@@ -274,6 +319,8 @@ function leafr_view(stdClass $leafr, stdClass $course, $cm, context_module $cont
 function leafr_reset_course_form_definition(&$mform) {
     $mform->addElement('header', 'leafrheader', get_string('modulenameplural', 'leafr'));
     $mform->addElement('advcheckbox', 'reset_leafr_progress', get_string('resetprogress', 'leafr'));
+    $mform->addElement('advcheckbox', 'reset_leafr_bookmarks', get_string('resetbookmarks', 'leafr'));
+    tool_manager::extend_reset_form($mform);
 }
 
 /**
@@ -283,7 +330,10 @@ function leafr_reset_course_form_definition(&$mform) {
  * @return array
  */
 function leafr_reset_course_form_defaults($course) {
-    return ['reset_leafr_progress' => 1];
+    return array_merge(
+        ['reset_leafr_progress' => 1, 'reset_leafr_bookmarks' => 1],
+        tool_manager::get_reset_form_defaults()
+    );
 }
 
 /**
@@ -308,7 +358,19 @@ function leafr_reset_userdata($data) {
             'error' => false,
         ];
     }
-    return $status;
+    if (!empty($data->reset_leafr_bookmarks)) {
+        $DB->delete_records_select(
+            'leafr_bookmarks',
+            'leafrid IN (SELECT id FROM {leafr} WHERE course = :courseid)',
+            ['courseid' => $data->courseid]
+        );
+        $status[] = [
+            'component' => get_string('modulenameplural', 'leafr'),
+            'item' => get_string('resetbookmarks', 'leafr'),
+            'error' => false,
+        ];
+    }
+    return array_merge($status, tool_manager::reset_userdata($data));
 }
 
 /**
@@ -322,6 +384,12 @@ function leafr_user_preferences(): array {
             'type' => PARAM_BOOL,
             'null' => NULL_NOT_ALLOWED,
             'default' => false,
+        ],
+        'mod_leafr_spreadmode' => [
+            'type' => PARAM_ALPHA,
+            'null' => NULL_NOT_ALLOWED,
+            'default' => 'auto',
+            'choices' => ['auto', 'single', 'double'],
         ],
     ];
 }

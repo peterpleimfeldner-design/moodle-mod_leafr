@@ -1,0 +1,97 @@
+includes:
+    # PHPStan resolves EVERY relative path in a config file relative to that file's own
+    # directory (.github/ here), never relative to the working directory the analyser is run
+    # from. That applies to "includes" as well as to the "parameters" below (paths,
+    # excludePaths, and the moodle extension's own rootDirectory) - each therefore needs an
+    # extra "../" to reach the plugin root, which is one level above .github/.
+    - ../vendor/micaherne/phpstan-moodle/extension.neon
+
+parameters:
+    # phpstan-moodle's CoreComponentBridge hardcodes which Moodle core files it require_once's for
+    # class discovery, and never includes lib/testing/generator/data_generator.php - the class every
+    # Moodle plugin's PHPUnit tests use for create_course()/create_module()/create_user() etc. Without
+    # this, every such call was flagged as "Call to an undefined method testing_data_generator::...".
+    scanFiles:
+        - ../../moodle/lib/testing/generator/data_generator.php
+    level: 5
+    paths:
+        - ..
+    excludePaths:
+        - ../vendor/*
+        - ../amd/build/*
+        - ../tool/*/amd/build/*
+        - ../.github/*
+    moodle:
+        rootDirectory: ../../moodle
+        addCommonIncludes: true
+    tmpDir: /tmp/phpstan-cache
+
+    # The get_objectid_mapping() false positive below (a suspected classmap/basename collision
+    # while scanning the full Moodle core plugin tree) did not reproduce against a smaller local
+    # Moodle install with fewer activity modules present, only in the real CI matrix. Since which
+    # errors that particular quirk produces may not be identical on every Moodle branch, an ignore
+    # rule that PHPStan would otherwise reject as "unmatched" on a branch where it does not trigger
+    # must not fail the whole build.
+    reportUnmatchedIgnoredErrors: false
+
+    ignoreErrors:
+        # XMLDB_INDEX_UNIQUE/XMLDB_INDEX_NOTUNIQUE are genuinely booleans in Moodle core
+        # (lib/xmldb/xmldb_constants.php), but the phpstan-moodle stub types add_index()'s
+        # $type parameter as int. This is how every Moodle plugin's upgrade.php calls it.
+        -
+            message: '~Parameter #2 \$type of method xmldb_table::add_index\(\) expects int, true given~'
+            path: ../db/upgrade.php
+
+        # False positive verified against Moodle core (lib/classes/event/course_module_viewed.php
+        # and lib/classes/event/base.php): our override unconditionally returns an array, and the
+        # parent declares no incompatible native return type. The identical pattern in
+        # page_viewed.php (a class name unique to this plugin) is NOT flagged, only this one is -
+        # course_module_viewed.php is also the basename of a same-named event class in dozens of
+        # other Moodle core activity modules, which points to a classmap/basename collision in
+        # phpstan-moodle's Moodle-wide class scanning rather than a real bug here.
+        -
+            message: '#Method mod_leafr\\event\\course_module_viewed::get_objectid_mapping\(\) should return array but return statement is missing#'
+            path: ../classes/event/course_module_viewed.php
+
+        # core_privacy\local\request\writer::with_context() returns the content_writer interface,
+        # which does declare has_any_data()/get_data()/get_user_preferences() (see
+        # privacy/classes/local/request/content_writer.php) - phpstan-moodle's stub does not
+        # appear to resolve this interface's methods. This is the standard, documented way every
+        # Moodle privacy provider test exports/asserts data.
+        -
+            message: '#Call to an undefined method core_privacy\\local\\request\\content_writer::(has_any_data|get_data|get_user_preferences)\(\)#'
+            path: ../tests/privacy/provider_test.php
+
+        # approved_contextlist's constructor only documents @param \int[] $contextids (no native
+        # type); the literal array passed here ([$this->context->id]) is a genuine list of ints.
+        -
+            message: '~Parameter #3 \$contextids of class core_privacy\\local\\request\\approved_contextlist constructor expects array<int>, array<int, int> given~'
+            path: ../tests/privacy/provider_test.php
+
+        # Confirmed false positives from phpstan-moodle's Moodle-wide class scanning: every method of
+        # these 3 classes is reported as missing its return statement although each one returns on
+        # every path. Isolated, the files analyse cleanly; reproduced locally and in CI.
+        -
+            message: '#Method mod_leafr\\local\\bookmarks::(get_for_user|set|delete|cast_record)\(\) should return .+ but return statement is missing#'
+            path: ../classes/local/bookmarks.php
+        -
+            message: '#Call to mod_leafr\\local\\bookmarks::set\(\) on a separate line has no effect#'
+            path: ../tests/local/bookmarks_test.php
+        -
+            message: '#Call to mod_leafr\\local\\bookmarks::set\(\) on a separate line has no effect#'
+            path: ../tests/privacy/provider_test.php
+        -
+            message: '#Method mod_leafr\\local\\tool_manager::\w+\(\) should return .+ but return statement is missing#'
+            path: ../classes/local/tool_manager.php
+        -
+            message: '#Method leafrtool_confirm\\local\\confirm::\w+\(\) should return .+ but return statement is missing#'
+            path: ../tool/confirm/classes/local/confirm.php
+        -
+            message: '#Call to leafrtool_confirm\\local\\confirm::record_confirmation\(\) on a separate line has no effect#'
+            path: ../tests/local/progress_test.php
+        -
+            message: '#Call to leafrtool_confirm\\local\\confirm::record_confirmation\(\) on a separate line has no effect#'
+            path: ../tests/local/tool_manager_test.php
+        -
+            message: '#Call to leafrtool_confirm\\local\\confirm::record_confirmation\(\) on a separate line has no effect#'
+            path: ../tool/confirm/tests/local/confirm_test.php

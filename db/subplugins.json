@@ -1,0 +1,8 @@
+{
+    "subplugintypes": {
+        "leafrtool": "tool"
+    },
+    "plugintypes": {
+        "leafrtool": "mod/leafr/tool"
+    }
+}
