@@ -71,39 +71,6 @@ Eigene Werkzeugleisten-Knöpfe oder Seitenleisten-Reiter (z. B. für Textmarker)
 Muster, sobald ein Werkzeug das braucht – noch nicht generalisiert, da `leafrtool_confirm` das nicht
 benötigt.
 
-## Das Hauptdokument selbst (PDF vs. andere Formate)
-
-```php
-function leafrtool_<name>_get_accepted_file_types(): array
-function leafrtool_<name>_handle_content_saved(int $leafrid, context_module $context): void
-function leafrtool_<name>_get_converted_file(int $leafrid, context_module $context): ?array
-function leafrtool_<name>_get_download_file(int $leafrid, context_module $context, stored_file $default): ?stored_file
-```
-
-Der Kern speichert die hochgeladene Datei immer im eigenen Dateibereich `mod_leafr`/`content`
-(Itemid 0) und akzeptiert dort standardmäßig nur `.pdf`. `get_accepted_file_types()` liefert
-zusätzliche Dateiendungen (z. B. `.docx`), die das Hauptformular zusätzlich erlaubt – siehe
-`leafrtool_office`, das hier nur Endungen zurückgibt, die der auf der Website eingerichtete
-Dokumentkonverter tatsächlich in PDF umwandeln kann (leer, wenn kein Konverter eingerichtet ist –
-dann bleibt es bei „nur PDF“, ganz ohne Sonderfall im Kern).
-
-`handle_content_saved()` wird von `leafr_save_pdf()` aufgerufen, **nur wenn sich die gespeicherte
-Datei geändert hat**. Ein Werkzeug prüft hier selbst, ob es sich zuständig fühlt (z. B. weil die
-Datei kein PDF ist), und kümmert sich um alles Weitere (z. B. eine Hintergrund-Aufgabe zum
-Umwandeln einreihen).
-
-Ist die im Kern gespeicherte Datei kein PDF, ruft `view.php` **vor** dem Laden des Readers
-`get_converted_file()` auf. Gibt ein Werkzeug ein Array zurück (`['status' => 'pending'|'ready'|
-'failed', 'file' => stored_file|null]`), zeigt der Kern je nach Status den Reader (mit der
-zurückgegebenen `file`, die *nicht* im `mod_leafr`-Dateibereich liegen muss – sie wird über ihre
-eigene `component`/`filearea`/`itemid` verlinkt, das Werkzeug liefert sie dann über einen eigenen
-Eintrag in `leafr_pluginfile()` selbst aus, siehe `leafrtool_office` und den dortigen Umbau von
-`lib.php`) oder einen Hinweistext „wird vorbereitet“/„fehlgeschlagen“. Gibt kein installiertes
-Werkzeug ein Ergebnis zurück, zeigt der Kern den generischen „kein PDF hochgeladen“-Hinweis.
-
-`get_download_file()` wird nur aufgerufen, wenn Herunterladen überhaupt erlaubt ist, und lässt ein
-Werkzeug die angebotene Datei ersetzen (z. B. Original statt PDF, je nach eigener Einstellung).
-
 ## Kurs-Zurücksetzen
 
 ```php

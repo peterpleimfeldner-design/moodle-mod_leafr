@@ -56,7 +56,7 @@ class mod_leafr_mod_form extends moodleform_mod {
         $mform->addElement('filemanager', 'pdffile', get_string('pdffile', 'leafr'), null, [
             'subdirs' => 0,
             'maxfiles' => 1,
-            'accepted_types' => array_merge(['.pdf'], tool_manager::get_accepted_file_types()),
+            'accepted_types' => ['.pdf'],
         ]);
         $mform->addHelpButton('pdffile', 'pdffile', 'leafr');
 

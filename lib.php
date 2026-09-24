@@ -99,14 +99,10 @@ function leafr_save_pdf(stdClass $data): bool {
         'mod_leafr',
         'content',
         0,
-        ['subdirs' => 0, 'maxfiles' => 1, 'accepted_types' => array_merge(['.pdf'], tool_manager::get_accepted_file_types())]
+        ['subdirs' => 0, 'maxfiles' => 1, 'accepted_types' => ['.pdf']]
     );
     $after = array_keys($fs->get_area_files($context->id, 'mod_leafr', 'content', 0, 'id', false));
-    $changed = $before != $after;
-    if ($changed) {
-        tool_manager::handle_content_saved((int)$data->id, $context);
-    }
-    return $changed;
+    return $before != $after;
 }
 
 /**
@@ -242,12 +238,7 @@ function leafr_get_coursemodule_info($coursemodule) {
 function leafr_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options = []) {
     global $DB;
 
-    // "content" is the originally uploaded file (PDF, or an Office file leafrtool_office converts).
-    // "convertedpdf" is that converted PDF, written by leafrtool_office's background task; it is
-    // still served from here (not from leafrtool_office's own _pluginfile()) because it is
-    // conceptually still "the document of this activity", not the tool's own private data - see
-    // tool/README.md.
-    if ($context->contextlevel != CONTEXT_MODULE || !in_array($filearea, ['content', 'convertedpdf'], true)) {
+    if ($context->contextlevel != CONTEXT_MODULE || $filearea !== 'content') {
         return false;
     }
     require_course_login($course, true, $cm);
@@ -263,7 +254,7 @@ function leafr_pluginfile($course, $cm, $context, $filearea, $args, $forcedownlo
     $filepath = $args ? '/' . implode('/', $args) . '/' : '/';
 
     $fs = get_file_storage();
-    $file = $fs->get_file($context->id, 'mod_leafr', $filearea, 0, $filepath, $filename);
+    $file = $fs->get_file($context->id, 'mod_leafr', 'content', 0, $filepath, $filename);
     if (!$file || $file->is_directory()) {
         return false;
     }
