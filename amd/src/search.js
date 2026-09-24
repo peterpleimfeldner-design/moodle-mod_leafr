@@ -105,6 +105,54 @@ export default class Search {
         });
         this.prevButton.addEventListener('click', () => this.step(-1));
         this.nextButton.addEventListener('click', () => this.step(1));
+        // Arrow keys move through the result list (from the search field into it and back); Enter or
+        // Space on a result jumps to it like a click (Peter's feedback, issue #6: the arrows only
+        // scrolled the list).
+        this.input.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowDown' && this.matches.length) {
+                event.preventDefault();
+                this.focusResult(Math.max(this.activeIndex, 0));
+            }
+        });
+        this.results.addEventListener('keydown', (event) => this.handleResultKey(event));
+    }
+
+    /**
+     * Keyboard navigation inside the result list.
+     *
+     * @param {KeyboardEvent} event Key event
+     */
+    handleResultKey(event) {
+        const buttons = [...this.results.querySelectorAll('.leafr-search-result')];
+        const index = buttons.indexOf(event.target);
+        if (index < 0) {
+            return;
+        }
+        const targets = {ArrowDown: index + 1, ArrowUp: index - 1, Home: 0, End: buttons.length - 1};
+        if (!(event.key in targets)) {
+            return;
+        }
+        event.preventDefault();
+        event.stopPropagation();
+        const target = targets[event.key];
+        if (target < 0) {
+            this.input.focus();
+        } else {
+            this.focusResult(Math.min(target, buttons.length - 1));
+        }
+    }
+
+    /**
+     * Moves the keyboard focus to one result without jumping to it yet.
+     *
+     * @param {number} index Index of the result
+     */
+    focusResult(index) {
+        const button = this.results.querySelectorAll('.leafr-search-result')[index];
+        if (button) {
+            button.focus();
+            button.scrollIntoView({block: 'nearest'});
+        }
     }
 
     /**

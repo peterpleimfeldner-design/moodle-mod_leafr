@@ -42,6 +42,17 @@ Vollständiges Review aller Seiten im Browser, dokumentiert in `docs/ux-review_2
   Ohne Beschreibung bleibt es dabei, dass Titel und Werkzeugleiste ohne Scrollen sichtbar sind. Mehrere
   übereinander fixierte Leisten (z. B. Moove: Navigationsleiste plus Aktivitäts-Reiter) werden jetzt
   zusammen berücksichtigt, damit keine davon den oberen Rand des Readers verdeckt.
+- **Rückmeldungen aus dem Gesamttest (GitHub-Issues):**
+  - Einzelseiten-Ansicht: Auch beim Zurückblättern gibt es jetzt die Blätter-Animation (#3). StPageFlips
+    eigenes `flipPrev()` greift dort ins Leere; stattdessen wird dieselbe Blättergeste am echten linken
+    Seitenrand gestartet. Die Doppelseite ist unverändert.
+  - „An Seite anpassen“ / „An Breite anpassen“ setzen den Zoom zuerst auf 100 % zurück (#4).
+  - Suche: Mit den Pfeiltasten wandert man durch die Trefferliste (vom Suchfeld aus hinein und zurück),
+    Enter springt zum gewählten Treffer (#6).
+  - Handy/Tablet: Senkrechtes Wischen scrollt eine Seite, die höher als der Bildschirm ist (vorher fing das
+    Blättern jede Berührung ab); eine vergrößerte Seite lässt sich per Finger auch seitlich verschieben (#8).
+  - Lesebestätigung ohne Seitenregel: Das Bestätigungsfeld erscheint jetzt, sobald die letzte Seite
+    erreicht ist; vorher erschien es in diesem Fall nie (#10).
 - Bericht „Übersicht“: ohne Gruppenfilter heißt es jetzt „In diesem Kurs sind noch keine
   Teilnehmer/innen eingeschrieben“ statt „… entsprechen dem aktuellen Filter“; Datenschutzhinweis
   als ruhiger Text statt zweitem blauen Hinweiskasten.

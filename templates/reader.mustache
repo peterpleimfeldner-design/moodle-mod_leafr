@@ -37,6 +37,7 @@
     * simpleview - "1", "0" or "" (no preference)
     * spreadmode - "auto" (default), "single" or "double": the flipbook's preferred spread
     * completed - Whether the page based completion rule is already fulfilled
+    * readingrule - Whether a page based completion rule is active; without one, reaching the last page ends reading
     * requiredpages - Pages required by the completion rule, compact ranges (e.g. "1-5,8"), empty if none
     * manualchapters - Manually defined chapters as a JSON array of {title, page}, "[]" if none
     * usemanualchapters - Whether the manual chapter list should always be used instead of the PDF outline
@@ -60,6 +61,7 @@
         "simpleview": "",
         "spreadmode": "auto",
         "completed": false,
+        "readingrule": false,
         "requiredpages": "",
         "manualchapters": "[]",
         "usemanualchapters": false
@@ -72,6 +74,7 @@
      data-bookmarks="{{bookmarks}}" data-bookmarknotemaxlength="{{bookmarknotemaxlength}}" data-printurl="{{printurl}}"
      data-simpleview="{{simpleview}}" data-spreadmode="{{spreadmode}}"
      data-completed="{{#completed}}1{{/completed}}{{^completed}}0{{/completed}}"
+     data-readingrule="{{#readingrule}}1{{/readingrule}}{{^readingrule}}0{{/readingrule}}"
      data-requiredpages="{{requiredpages}}" data-manualchapters="{{manualchapters}}"
      data-usemanualchapters="{{#usemanualchapters}}1{{/usemanualchapters}}{{^usemanualchapters}}0{{/usemanualchapters}}">
 

@@ -89,6 +89,7 @@ class Reader {
         this.fileurl = root.dataset.fileurl;
         this.page = Math.max(1, parseInt(root.dataset.startpage, 10) || 1);
         this.completed = root.dataset.completed === '1';
+        this.readingRule = root.dataset.readingrule === '1';
         this.stage = root.querySelector('[data-region="stage"]');
         this.viewHost = root.querySelector('[data-region="view"]');
         this.pageInput = root.querySelector('[data-region="page-input"]');
@@ -257,7 +258,10 @@ class Reader {
             this.updateProgressSummary();
             this.showContinueNotice();
             this.showFullscreenTip();
-            if (this.completed) {
+            if (!this.readingRule && this.seenPages.has(this.total) && !this.announced) {
+                // No page based rule: having seen the last page before counts as having read it.
+                this.announceCompletion();
+            } else if (this.completed) {
                 // Already complete when the page loaded (e.g. a returning user): showCompletion()
                 // only fires for a *newly reached* completion, so subplugins listening for
                 // "leafr:reading-complete" (e.g. leafrtool_confirm) still need to hear about it.
@@ -709,6 +713,11 @@ class Reader {
         this.page = page;
         this.visiblePages = visible;
         const last = visible.length ? visible[visible.length - 1] : page;
+        if (!this.readingRule && !this.announced && last >= this.total) {
+            // Without a page based rule, reaching the last page is the end of reading, e.g. to reveal
+            // a read confirmation that is the activity's only completion condition (issue #10).
+            this.announceCompletion();
+        }
         if (document.activeElement !== this.pageInput) {
             this.pageInput.value = page;
         }
@@ -1198,6 +1207,10 @@ class Reader {
      * @param {string} mode New fit mode
      */
     setFitMode(mode) {
+        // Fitting always starts from 100 %: "fit to page/width" is meant to show exactly that, and a
+        // leftover zoom made the page overflow again (Peter's feedback, issue #4). Zooming in again
+        // afterwards works as usual.
+        this.changeZoom(0);
         this.fitMode = mode;
         this.updateViewMenuState();
         if (this.view && this.view.setFitMode) {
@@ -1246,6 +1259,7 @@ class Reader {
      * with more than one reader still works.
      */
     announceCompletion() {
+        this.announced = true;
         document.dispatchEvent(new CustomEvent('leafr:reading-complete', {detail: {cmid: this.cmid}}));
     }
 

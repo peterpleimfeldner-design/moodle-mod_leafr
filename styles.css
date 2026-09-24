@@ -113,6 +113,13 @@
     cursor: grab;
 }
 
+/* StPageFlip only allows vertical touch panning on its book (touch-action: pan-y). While zoomed,
+   the enlarged page must also be movable sideways with a finger. */
+.leafr-zoombox.is-zoomed .stf__parent,
+.leafr-zoombox.is-zoomed .stf__block {
+    touch-action: auto;
+}
+
 .leafr-zoombox.is-panning {
     cursor: grabbing;
 }

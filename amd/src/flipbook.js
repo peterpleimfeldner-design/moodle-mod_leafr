@@ -227,7 +227,11 @@ export default class FlipbookView {
             // Close to StPageFlip's own default (1000ms). A shorter value made the turn feel rushed
             // rather than deliberate.
             flippingTime: 900,
-            mobileScrollSupport: false,
+            // StPageFlip's own default: a vertical swipe scrolls the stage (e.g. a page taller than
+            // the screen in "fit to width" on a phone), only a horizontal swipe turns the page. With
+            // false, every touch that reached the library was swallowed and the page could not be
+            // scrolled on a phone at all (Peter's feedback, issue #8).
+            mobileScrollSupport: true,
             swipeDistance: 60,
             // REVERTED to true (24.09.2026): false stopped the hover-preview "jump", but broke
             // forward page turns from the toolbar AND the keyboard - neither goes anywhere near our
@@ -352,6 +356,8 @@ export default class FlipbookView {
         if (this.pageFlip) {
             if (this.zoom === 1 && !this.layout.single) {
                 this.pageFlip.flipPrev();
+            } else if (this.zoom === 1 && this.flipPrevSinglePage()) {
+                return;
             } else {
                 // Two different reasons land here: while zoomed, turnToPrevPage() is used
                 // everywhere already (see next()/goTo()). In single-page ("portrait") mode,
@@ -361,10 +367,40 @@ export default class FlipbookView {
                 // landing that coordinate outside wherever the gesture is actually recognised
                 // (confirmed directly against the library). turnToPrevPage() targets a page
                 // directly instead of simulating a screen-position drag, and works correctly there
-                // - without the flip animation, the best available trade-off (Peter's feedback,
-                // 24.09.2026).
+                // - without the flip animation. flipPrevSinglePage() above now animates that case;
+                // this stays as the fallback if it cannot start the gesture.
                 this.pageFlip.turnToPrevPage();
             }
+        }
+    }
+
+    /**
+     * Turns back one page with the flip animation in single-page mode, where StPageFlip's own
+     * flipPrev() does nothing (see prev()). The same simulated gesture is started at the visible
+     * page's real left edge instead; StPageFlip only accepts it there with its corner-only rule
+     * lifted for this one call, because in single-page mode the corner it would accept belongs to
+     * the invisible phantom page (Peter's feedback, issue #3).
+     *
+     * @returns {boolean} Whether the animated turn started; false leaves it to the caller
+     */
+    flipPrevSinglePage() {
+        if (this.page <= 1) {
+            return false;
+        }
+        try {
+            const settings = this.pageFlip.getSettings();
+            const rect = this.pageFlip.getRender().getRect();
+            const controller = this.pageFlip.getFlipController();
+            const corneronly = settings.disableFlipByClick;
+            settings.disableFlipByClick = false;
+            try {
+                controller.flip({x: rect.left + rect.pageWidth + 10, y: 1});
+            } finally {
+                settings.disableFlipByClick = corneronly;
+            }
+            return controller.getState() === 'flipping';
+        } catch (error) {
+            return false;
         }
     }
 

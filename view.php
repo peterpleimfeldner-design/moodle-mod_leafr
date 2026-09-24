@@ -73,6 +73,10 @@ if ($file) {
     }
     $simpleview = get_user_preferences('mod_leafr_simpleview', null);
     $spreadmode = get_user_preferences('mod_leafr_spreadmode', 'auto');
+    // Whether a page based reading rule decides when reading is complete; without one, the reader
+    // itself treats reaching the last page as the end of reading (e.g. for a read confirmation alone).
+    $readingrule = $leafr->completiontype > 0
+        && (new completion_info($course))->is_enabled($cm) == COMPLETION_TRACKING_AUTOMATIC;
     $requiredpages = $leafr->completiontype == progress::COMPLETION_SPECIFICRANGE
         ? progress::encode_pages(progress::required_pages($leafr))
         : '';
@@ -117,6 +121,7 @@ if ($file) {
         'simpleview' => $simpleview === null ? '' : (string)(int)$simpleview,
         'spreadmode' => in_array($spreadmode, ['auto', 'single', 'double'], true) ? $spreadmode : 'auto',
         'completed' => $completed,
+        'readingrule' => $readingrule,
         'requiredpages' => $requiredpages,
         'manualchapters' => $manualchapters,
         'usemanualchapters' => !empty($leafr->usemanualchapters),
