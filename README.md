@@ -2,6 +2,19 @@
 
 Leafr is a Moodle activity that shows a PDF document as a book students can leaf through, directly inside the course. No external service, no extra login: the PDF is stored in Moodle and rendered in the browser.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Sidebar with page thumbnails, read/required-page markers](docs/screenshots/sidebar-thumbnails.png) | ![Sidebar with the table of contents](docs/screenshots/sidebar-contents.png) |
+| Sidebar: page thumbnails, with a checkmark for pages already read and a dot for required pages | Sidebar: table of contents, automatic from the PDF or defined by the teacher, required chapters marked |
+| ![Sidebar with full-text search results](docs/screenshots/sidebar-search.png) | ![Sidebar with a bookmark and note](docs/screenshots/sidebar-bookmarks.png) |
+| Sidebar: full-text search with highlighted matches | Sidebar: bookmarks with a personal note |
+| ![View menu with page layout and zoom options](docs/screenshots/view-menu.png) | ![Read confirmation card](docs/screenshots/confirm-card.png) |
+| View menu: page layout, simple view, zoom, full screen | Read confirmation, shown once the required pages have been read |
+| ![Activity settings form with completion conditions](docs/screenshots/settings-form.png) | ![Teacher overview report with group filter](docs/screenshots/overview-report.png) |
+| Activity settings: required pages/chapters combined with the read confirmation | Overview report for teachers, with group filter and CSV export |
+
 ## Features
 
 For students:
