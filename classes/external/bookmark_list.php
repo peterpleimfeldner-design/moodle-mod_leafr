@@ -58,8 +58,12 @@ class bookmark_list extends external_api {
         self::validate_context($context);
         require_capability('mod/leafr:view', $context);
 
-        $bookmarks = array_values(bookmarks::get_for_user((int)$cm->instance, (int)$USER->id));
-        return ['bookmarks' => array_map(fn($b) => ['pageno' => (int)$b->pageno, 'note' => (string)$b->note], $bookmarks)];
+        $records = array_values(bookmarks::get_for_user((int)$cm->instance, (int)$USER->id));
+        $result = [];
+        foreach ($records as $record) {
+            $result[] = ['pageno' => (int)$record->pageno, 'note' => (string)$record->note];
+        }
+        return ['bookmarks' => $result];
     }
 
     /**
