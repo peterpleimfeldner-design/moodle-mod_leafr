@@ -36,6 +36,14 @@ const SPREAD_MIN_WIDTH = 768;
 /** Space around the book in CSS pixels. */
 const PADDING = 16;
 
+/**
+ * Fraction of the page height, measured from the top and bottom, within which a page can be
+ * grabbed to turn it. StPageFlip itself does not confine dragging to the corners - pressing down
+ * anywhere on the page and moving the mouse grabs the nearest corner - so this is enforced in
+ * {@see FlipbookView#blockFlipGesture} before the gesture ever reaches the library.
+ */
+const CORNER_ZONE_RATIO = 0.15;
+
 export default class FlipbookView {
 
     /**
@@ -182,19 +190,20 @@ export default class FlipbookView {
             showCover: false,
             startPage: this.page - 1,
             drawShadow: true,
-            // A higher shadow opacity (StPageFlip's own default is 1) gives the turning page visual
-            // weight, so it reads as a physical sheet of paper instead of a thin, flat overlay.
-            maxShadowOpacity: 0.55,
-            // Close to StPageFlip's own default (1000ms). The previous, shorter value made the turn
-            // feel rushed rather than deliberate (Peter's feedback, 24.09.2026).
+            // A low but non-zero shadow keeps a hint of depth without the harsh, high-contrast
+            // gradient that reads as shiny foil rather than paper (Peter's feedback, 24.09.2026,
+            // confirmed in an isolated test page against the library's own default of 1).
+            maxShadowOpacity: 0.2,
+            // Close to StPageFlip's own default (1000ms). A shorter value made the turn feel rushed
+            // rather than deliberate.
             flippingTime: 900,
             mobileScrollSupport: false,
-            // Requires a more deliberate drag before a swipe registers as a page turn, so a small,
-            // incidental mouse/touch movement no longer immediately grabs the page.
             swipeDistance: 60,
-            showPageCorners: true,
-            // Only the page corners start a flip; the previous "false" let a click/drag anywhere on
-            // the page grab it, which read as the whole page "snapping" onto the cursor.
+            // Showing the corner fold on every mouse move (StPageFlip's own behaviour, regardless of
+            // whether a button is pressed) is what made the book seem to "jump" whenever the cursor
+            // came near it. Turned off here; CORNER_ZONE_RATIO below still lets the page be grabbed
+            // and turned, just without the constant hover preview.
+            showPageCorners: false,
             disableFlipByClick: true,
             clickEventForward: true,
             useMouseEvents: true,
@@ -344,22 +353,44 @@ export default class FlipbookView {
     }
 
     /**
-     * Prevents StPageFlip from starting a page turn while zoomed and starts panning instead.
+     * Prevents StPageFlip from starting a page turn while zoomed (panning starts instead) or when
+     * the gesture starts outside the corner zone (see {@see CORNER_ZONE_RATIO}).
      *
      * @param {Event} event Mouse or touch event
      */
     blockFlipGesture(event) {
-        if (this.zoom === 1) {
+        if (this.zoom !== 1) {
+            event.stopPropagation();
+            if (event.type === 'mousedown' && event.button === 0) {
+                event.preventDefault();
+                this.pan = {x: event.clientX, y: event.clientY, left: this.stage.scrollLeft, top: this.stage.scrollTop};
+                this.zoomBox.classList.add('is-panning');
+                window.addEventListener('mousemove', this.handlePanMove);
+                window.addEventListener('mouseup', this.handlePanEnd);
+            }
             return;
         }
-        event.stopPropagation();
-        if (event.type === 'mousedown' && event.button === 0) {
-            event.preventDefault();
-            this.pan = {x: event.clientX, y: event.clientY, left: this.stage.scrollLeft, top: this.stage.scrollTop};
-            this.zoomBox.classList.add('is-panning');
-            window.addEventListener('mousemove', this.handlePanMove);
-            window.addEventListener('mouseup', this.handlePanEnd);
+        if (!this.isInCornerZone(event)) {
+            // Swallowed here, in the capture phase, before StPageFlip's own listener (bound directly
+            // to the book element) ever sees it.
+            event.stopPropagation();
         }
+    }
+
+    /**
+     * Whether a mouse/touch event started within the top or bottom corner band of the book.
+     *
+     * @param {Event} event Mouse or touch event
+     * @returns {boolean}
+     */
+    isInCornerZone(event) {
+        const point = event.touches && event.touches.length ? event.touches[0] : event;
+        const rect = this.book.getBoundingClientRect();
+        if (!rect.height) {
+            return true;
+        }
+        const relativeY = (point.clientY - rect.top) / rect.height;
+        return relativeY <= CORNER_ZONE_RATIO || relativeY >= (1 - CORNER_ZONE_RATIO);
     }
 
     /**
