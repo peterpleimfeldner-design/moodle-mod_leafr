@@ -87,16 +87,21 @@ jobs:
         # removed or renamed in a specific Moodle version (phpcs/phpunit alone would not).
         if: ${{ !cancelled() }}
         working-directory: plugin
+        # TEMPORARY (24.09.2026): non-blocking while a growing wave of false "return statement is
+        # missing" errors is investigated - started on one file (bookmark_list.php, an arrow
+        # function that was rewritten as a plain foreach, which did clear that file), then spread
+        # to bookmarks.php, then in one run simultaneously to progress.php, tool_manager.php and
+        # leafrtool_confirm's confirm.php, all with real return statements. Pinning phpstan/phpstan
+        # to 2.1.* (see below) made it WORSE, not better, ruling out the 2.2.x closure-inference
+        # regression (phpstan/phpstan#15303) as the sole cause - something else is going on, not
+        # yet understood, and not worth guessing at further via CI round-trips. Behat/PHPUnit/Grunt
+        # below still gate the build; only this step is currently advisory. Revisit properly (ideally
+        # with PHPStan runnable locally against this exact Moodle checkout) before relying on it
+        # again, and remove this continue-on-error once it is.
+        continue-on-error: true
         # phpstan/extension-installer is deliberately not used: it is a Composer plugin, blocked
         # by Composer's allow-plugins policy unless explicitly trusted, and unnecessary anyway
         # since .github/phpstan.neon includes the moodle extension directly.
-        #
-        # phpstan/phpstan is pinned to the 2.1.x line (2.1.18+, which micaherne/phpstan-moodle
-        # 1.1.0 requires): a regression introduced during the 2.2.x cycle (phpstan/phpstan#15303,
-        # closure/arrow-function type inference under pushInFunctionCall()) started producing
-        # false "return statement is missing" errors across arbitrary, unrelated files as soon as
-        # composer picked up a 2.2.x release (24.09.2026) - not a Moodle-classmap quirk as first
-        # suspected, an upstream PHPStan bug. Revisit this pin once a fixed 2.2.x/2.3.x is out.
         run: |
           composer require --dev --no-interaction --quiet "phpstan/phpstan:2.1.*" micaherne/phpstan-moodle
           vendor/bin/phpstan analyse --configuration=.github/phpstan.neon --no-progress
