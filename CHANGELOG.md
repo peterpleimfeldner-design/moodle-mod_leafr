@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.0 (unreleased)
+## 1.2.0 (2026-09-25)
 
 ### New
 - **Sidebar** with four tabs: page thumbnails, contents (PDF outline or manual chapters), bookmarks
