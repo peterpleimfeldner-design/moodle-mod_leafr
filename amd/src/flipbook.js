@@ -182,12 +182,20 @@ export default class FlipbookView {
             showCover: false,
             startPage: this.page - 1,
             drawShadow: true,
-            maxShadowOpacity: 0.35,
-            flippingTime: 700,
+            // A higher shadow opacity (StPageFlip's own default is 1) gives the turning page visual
+            // weight, so it reads as a physical sheet of paper instead of a thin, flat overlay.
+            maxShadowOpacity: 0.55,
+            // Close to StPageFlip's own default (1000ms). The previous, shorter value made the turn
+            // feel rushed rather than deliberate (Peter's feedback, 24.09.2026).
+            flippingTime: 900,
             mobileScrollSupport: false,
-            swipeDistance: 40,
+            // Requires a more deliberate drag before a swipe registers as a page turn, so a small,
+            // incidental mouse/touch movement no longer immediately grabs the page.
+            swipeDistance: 60,
             showPageCorners: true,
-            disableFlipByClick: false,
+            // Only the page corners start a flip; the previous "false" let a click/drag anywhere on
+            // the page grab it, which read as the whole page "snapping" onto the cursor.
+            disableFlipByClick: true,
             clickEventForward: true,
             useMouseEvents: true,
         });
