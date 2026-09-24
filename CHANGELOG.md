@@ -2,6 +2,20 @@
 
 ## 1.2.0 (in Arbeit, Branch `release/1.2.0`)
 
+### Paket H3 – Spanisches Sprachpaket
+- Neue Übersetzung `lang/es/leafr.php` sowie `tool/confirm/lang/es/` und `tool/report/lang/es/`
+  (zusammen rund 160 Strings). Erster Entwurf, sollte vor der Veröffentlichung von einer
+  spanischsprachigen Person gegengelesen werden.
+
+### Paket H2 – Seitenblättern verbessern
+- Blätter-Animation (StPageFlip) neu abgestimmt: längere, ruhigere Animation, mehr Schattentiefe
+  für optisches Gewicht, höhere Auslöseschwelle für Wisch-Gesten, und Umblättern per Klick/Ziehen
+  nur noch über die Seitenecken statt von jeder Stelle der Seite aus.
+
+### Paket H – Textmarker
+- **Zurückgestellt**, nicht umgesetzt. Siehe `ROADMAP.md` für die Begründung; der bereits erstellte
+  Umsetzungsplan bleibt als Referenz erhalten.
+
 ### Paket G – Datensparsamer Bericht für Lehrende (`leafrtool_report`)
 - Neue Seite **„Übersicht“** (eigener Reiter neben „Einstellungen“, sichtbar nur mit der neuen
   Capability `mod/leafr:viewreport`, standardmäßig Lehrende/Trainer/innen und Manager).
