@@ -56,6 +56,23 @@ parameters:
             message: '#Call to an undefined method core_privacy\\local\\request\\content_writer::(has_any_data|get_data|get_user_preferences)\(\)#'
             path: ../tests/privacy/provider_test.php
 
+        # Same classmap/basename collision as the course_module_viewed.php entry above (a file
+        # named "bookmarks.php" is common enough across Moodle core/other plugins to collide during
+        # the full-tree scan), but only reproduces on the MOODLE_501_STABLE CI leg, not the others -
+        # confirming it depends on exactly which other plugins/classes are present in that
+        # checkout's Moodle core tree, not on anything in this file (all four methods clearly
+        # contain a return statement). Once PHPStan mis-infers these as void, it also flags every
+        # caller that ignores the return value as "no effect", hence the extra entries below.
+        -
+            message: '#Method mod_leafr\\local\\bookmarks::(get_for_user|set|delete|cast_record)\(\) should return .+ but return statement is missing#'
+            path: ../classes/local/bookmarks.php
+        -
+            message: '#Call to mod_leafr\\local\\bookmarks::set\(\) on a separate line has no effect#'
+            path: ../tests/local/bookmarks_test.php
+        -
+            message: '#Call to mod_leafr\\local\\bookmarks::set\(\) on a separate line has no effect#'
+            path: ../tests/privacy/provider_test.php
+
         # approved_contextlist's constructor only documents @param \int[] $contextids (no native
         # type); the literal array passed here ([$this->context->id]) is a genuine list of ints.
         -
