@@ -342,7 +342,7 @@ export default class FlipbookView {
      */
     prev() {
         if (this.pageFlip) {
-            // flipPrev() is a no-op in single-page ("portrait") mode: it starts its simulated
+            // StPageFlip's flipPrev() is a no-op in single-page ("portrait") mode: it starts its simulated
             // drag gesture near x=10 of StPageFlip's internal bounds rectangle, which in portrait
             // mode is shifted left by a page-and-a-half to make room for the (here invisible)
             // phantom second page - landing that coordinate outside wherever the gesture is
