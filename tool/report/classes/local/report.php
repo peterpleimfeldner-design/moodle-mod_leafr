@@ -127,7 +127,9 @@ class report {
             ];
         }
 
-        usort($rows, fn($a, $b) => strcoll($a['fullname'], $b['fullname']));
+        usort($rows, function ($a, $b) {
+            return strcoll($a['fullname'], $b['fullname']);
+        });
         return $rows;
     }
 }

@@ -46,7 +46,9 @@ class chapters {
             }
             $chapters[] = ['title' => \core_text::substr($title, 0, self::MAX_TITLE_LENGTH), 'page' => $page];
         }
-        usort($chapters, fn($a, $b) => $a['page'] <=> $b['page']);
+        usort($chapters, function ($a, $b) {
+            return $a['page'] <=> $b['page'];
+        });
         return $chapters;
     }
 
@@ -82,7 +84,9 @@ class chapters {
             }
             $chapters[] = ['title' => (string)$entry['title'], 'page' => $page];
         }
-        usort($chapters, fn($a, $b) => $a['page'] <=> $b['page']);
+        usort($chapters, function ($a, $b) {
+            return $a['page'] <=> $b['page'];
+        });
         return $chapters;
     }
 

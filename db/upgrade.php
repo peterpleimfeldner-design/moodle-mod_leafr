@@ -108,7 +108,9 @@ function xmldb_leafr_upgrade($oldversion) {
 
         // Encodes page numbers as compact ranges (same format as \mod_leafr\local\progress::encode_pages()).
         $encode = function (array $pages): string {
-            $pages = array_values(array_unique(array_filter(array_map('intval', $pages), fn($p) => $p >= 1)));
+            $pages = array_values(array_unique(array_filter(array_map('intval', $pages), function ($p) {
+                return $p >= 1;
+            })));
             sort($pages);
             $ranges = [];
             for ($i = 0, $count = count($pages); $i < $count; $i++) {

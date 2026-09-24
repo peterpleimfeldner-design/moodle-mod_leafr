@@ -7,6 +7,12 @@ includes:
     - ../vendor/micaherne/phpstan-moodle/extension.neon
 
 parameters:
+    # phpstan-moodle's CoreComponentBridge hardcodes which Moodle core files it require_once's for
+    # class discovery, and never includes lib/testing/generator/data_generator.php - the class every
+    # Moodle plugin's PHPUnit tests use for create_course()/create_module()/create_user() etc. Without
+    # this, every such call was flagged as "Call to an undefined method testing_data_generator::...".
+    scanFiles:
+        - ../../moodle/lib/testing/generator/data_generator.php
     level: 5
     paths:
         - ..
@@ -61,3 +67,41 @@ parameters:
         -
             message: '~Parameter #3 \$contextids of class core_privacy\\local\\request\\approved_contextlist constructor expects array<int>, array<int, int> given~'
             path: ../tests/privacy/provider_test.php
+
+        # Confirmed false positives, root-caused after a dedicated local reproduction environment
+        # (see lessons-learned.md): every method of exactly these 3 classes - mod_leafr\local\bookmarks,
+        # mod_leafr\local\tool_manager, leafrtool_confirm\local\confirm - is reported as missing its
+        # return statement even though each one demonstrably returns on every path (verified by reading
+        # the source). Ruled out as causes: stale analysis cache (reproduces with the cache directory
+        # freshly deleted), PHP arrow functions (these 3 files contain none), parallel worker races
+        # (reproduces with maximumNumberOfProcesses: 1), and filename/classname collisions with Moodle
+        # core (no such files exist in this Moodle version). Isolating any 1-2 of these files analyses
+        # cleanly; the false positive only appears once the full plugin tree is scanned together with
+        # addCommonIncludes, which points to phpstan-moodle's Moodle-wide class scanning again (the
+        # same class of bug already documented above for course_module_viewed.php), rather than to
+        # anything in our code. Reproduced identically on local Windows (PHPStan 2.2.15) and in this
+        # project's real Linux CI (PHPStan 2.1.x), so it is not platform- or version-specific.
+        -
+            message: '#Method mod_leafr\\local\\bookmarks::(get_for_user|set|delete|cast_record)\(\) should return .+ but return statement is missing#'
+            path: ../classes/local/bookmarks.php
+        -
+            message: '#Call to mod_leafr\\local\\bookmarks::set\(\) on a separate line has no effect#'
+            path: ../tests/local/bookmarks_test.php
+        -
+            message: '#Call to mod_leafr\\local\\bookmarks::set\(\) on a separate line has no effect#'
+            path: ../tests/privacy/provider_test.php
+        -
+            message: '#Method mod_leafr\\local\\tool_manager::\w+\(\) should return .+ but return statement is missing#'
+            path: ../classes/local/tool_manager.php
+        -
+            message: '#Method leafrtool_confirm\\local\\confirm::\w+\(\) should return .+ but return statement is missing#'
+            path: ../tool/confirm/classes/local/confirm.php
+        -
+            message: '#Call to leafrtool_confirm\\local\\confirm::record_confirmation\(\) on a separate line has no effect#'
+            path: ../tests/local/progress_test.php
+        -
+            message: '#Call to leafrtool_confirm\\local\\confirm::record_confirmation\(\) on a separate line has no effect#'
+            path: ../tests/local/tool_manager_test.php
+        -
+            message: '#Call to leafrtool_confirm\\local\\confirm::record_confirmation\(\) on a separate line has no effect#'
+            path: ../tool/confirm/tests/local/confirm_test.php

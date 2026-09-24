@@ -65,7 +65,9 @@ final class bookmarks_test extends \advanced_testcase {
         bookmarks::set(1, 2, 3, '');
         bookmarks::set(1, 3, 1, 'someone else');
 
-        $pages = array_map(fn($b) => $b->pageno, array_values(bookmarks::get_for_user(1, 2)));
+        $pages = array_map(function ($b) {
+            return $b->pageno;
+        }, array_values(bookmarks::get_for_user(1, 2)));
         $this->assertSame([3, 8], $pages);
     }
 

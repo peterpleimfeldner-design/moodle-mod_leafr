@@ -87,17 +87,19 @@ jobs:
         # removed or renamed in a specific Moodle version (phpcs/phpunit alone would not).
         if: ${{ !cancelled() }}
         working-directory: plugin
-        # TEMPORARY (24.09.2026): non-blocking while a growing wave of false "return statement is
-        # missing" errors is investigated - started on one file (bookmark_list.php, an arrow
-        # function that was rewritten as a plain foreach, which did clear that file), then spread
-        # to bookmarks.php, then in one run simultaneously to progress.php, tool_manager.php and
-        # leafrtool_confirm's confirm.php, all with real return statements. Pinning phpstan/phpstan
-        # to 2.1.* (see below) made it WORSE, not better, ruling out the 2.2.x closure-inference
-        # regression (phpstan/phpstan#15303) as the sole cause - something else is going on, not
-        # yet understood, and not worth guessing at further via CI round-trips. Behat/PHPUnit/Grunt
-        # below still gate the build; only this step is currently advisory. Revisit properly (ideally
-        # with PHPStan runnable locally against this exact Moodle checkout) before relying on it
-        # again, and remove this continue-on-error once it is.
+        # Non-blocking by design, not temporarily: a dedicated local reproduction environment
+        # (composer + a junction to a real Moodle checkout, see lessons-learned.md) root-caused a
+        # class of false "return statement is missing" errors down to phpstan-moodle's Moodle-wide
+        # class scanning itself, not our code - every affected method demonstrably returns on every
+        # path. It is not fixable from our side (ruled out: stale cache, arrow functions, parallel
+        # worker races, filename collisions - see .github/phpstan.neon), and it is not required for
+        # Moodle Marketplace submission (only moodle-plugin-ci's validate/phpcs steps are). The
+        # scanFiles fix below and the documented ignoreErrors entries do clear the errors that are
+        # possible to suppress; this step stays advisory because the underlying tool has, on top of
+        # that, at least once emitted the identical error a second time with no file/line attached,
+        # which PHPStan refuses to let any ignoreErrors rule match at all. Behat/PHPUnit/Grunt below
+        # still gate the build. Worth revisiting if a phpstan-moodle release fixes the scanning
+        # issue, but not worth further CI round-trips chasing it in the meantime.
         continue-on-error: true
         # phpstan/extension-installer is deliberately not used: it is a Composer plugin, blocked
         # by Composer's allow-plugins policy unless explicitly trusted, and unnecessary anyway

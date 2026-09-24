@@ -104,7 +104,9 @@ class page_viewed extends external_api {
         }
 
         $limit = (int)$leafr->totalpages ?: progress::MAX_PAGES;
-        $valid = array_filter($params['pages'], fn($p) => $p >= 1 && $p <= $limit);
+        $valid = array_filter($params['pages'], function ($p) use ($limit) {
+            return $p >= 1 && $p <= $limit;
+        });
         $position = ($params['currentpage'] >= 1 && $params['currentpage'] <= $limit) ? $params['currentpage'] : 0;
         $newpages = progress::record((int)$leafr->id, (int)$USER->id, $valid, $position);
 

@@ -53,7 +53,9 @@ final class progress_test extends \advanced_testcase {
      */
     public function test_encode_decode(array $pages, string $encoded): void {
         $this->assertSame($encoded, progress::encode_pages($pages));
-        $expected = array_values(array_unique(array_filter($pages, fn($p) => $p >= 1)));
+        $expected = array_values(array_unique(array_filter($pages, function ($p) {
+            return $p >= 1;
+        })));
         sort($expected);
         $this->assertSame($expected, progress::decode_pages($encoded));
     }

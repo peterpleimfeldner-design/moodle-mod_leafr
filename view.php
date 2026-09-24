@@ -65,10 +65,11 @@ if ($file) {
         $lastpage = progress::get_last_page((int)$leafr->id, (int)$USER->id);
         $completed = $leafr->completiontype > 0 && progress::is_complete($leafr, (int)$USER->id);
         $seenpages = progress::encode_pages(progress::get_seen_pages((int)$leafr->id, (int)$USER->id));
-        $bookmarks = json_encode(array_map(
-            fn($b) => ['page' => (int)$b->pageno, 'note' => (string)$b->note],
-            array_values(bookmarks::get_for_user((int)$leafr->id, (int)$USER->id))
-        ));
+        $bookmarklist = [];
+        foreach (array_values(bookmarks::get_for_user((int)$leafr->id, (int)$USER->id)) as $bookmark) {
+            $bookmarklist[] = ['page' => (int)$bookmark->pageno, 'note' => (string)$bookmark->note];
+        }
+        $bookmarks = json_encode($bookmarklist);
     }
     $simpleview = get_user_preferences('mod_leafr_simpleview', null);
     $spreadmode = get_user_preferences('mod_leafr_spreadmode', 'auto');

@@ -45,15 +45,20 @@ $PAGE->set_activity_record($leafr);
 // Bookmarks are private and only ever stored for real, logged-in users (see view.php).
 $records = (isloggedin() && !isguestuser()) ? bookmarks::get_for_user((int)$leafr->id, (int)$USER->id) : [];
 
+$bookmarklist = [];
+foreach (array_values($records) as $bookmark) {
+    $bookmarklist[] = [
+        'pagelabel' => get_string('pagelabel', 'leafr', $bookmark->pageno),
+        'note' => $bookmark->note,
+    ];
+}
+
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('mod_leafr/print', [
     'activityname' => format_string($leafr->name, true, ['context' => $context]),
     'username' => fullname($USER),
     'exportdate' => userdate(time(), get_string('strftimedatetime', 'langconfig')),
     'empty' => empty($records),
-    'bookmarks' => array_map(fn($b) => [
-        'pagelabel' => get_string('pagelabel', 'leafr', $b->pageno),
-        'note' => $b->note,
-    ], array_values($records)),
+    'bookmarks' => $bookmarklist,
 ]);
 echo $OUTPUT->footer();
