@@ -242,7 +242,7 @@ class Reader {
                 onCompleted: () => this.showCompletion(),
             });
 
-            this.pageTotal.textContent = this.strings.totalpages.replace('{$a}', this.total);
+            this.pageTotal.textContent = this.strings.totalpages.replaceAll('{$a}', this.total);
             this.pageInput.setAttribute('max', this.total);
             this.progressBar.setAttribute('aria-valuemax', this.total);
             this.root.querySelectorAll('.leafr-toolbar button[disabled], .leafr-pageinput').forEach((el) => {
@@ -682,7 +682,7 @@ class Reader {
         bar.hidden = false;
         visible.forEach((page) => {
             const bookmarked = this.bookmarks.has(page);
-            const label = this.strings.bookmark_page.replace('{$a}', page);
+            const label = this.strings.bookmark_page.replaceAll('{$a}', page);
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'leafr-page-bookmark-btn';
@@ -713,11 +713,6 @@ class Reader {
         this.page = page;
         this.visiblePages = visible;
         const last = visible.length ? visible[visible.length - 1] : page;
-        if (!this.readingRule && !this.announced && last >= this.total) {
-            // Without a page based rule, reaching the last page is the end of reading, e.g. to reveal
-            // a read confirmation that is the activity's only completion condition (issue #10).
-            this.announceCompletion();
-        }
         if (document.activeElement !== this.pageInput) {
             this.pageInput.value = page;
         }
@@ -725,7 +720,7 @@ class Reader {
         this.progressBar.setAttribute('aria-valuenow', page);
         this.progressBar.setAttribute(
             'aria-valuetext',
-            this.strings.pageofpages.replace('{$a->page}', page).replace('{$a->total}', this.total)
+            this.strings.pageofpages.replaceAll('{$a->page}', page).replaceAll('{$a->total}', this.total)
         );
         this.root.querySelector('[data-action="first"]').disabled = page <= 1;
         this.root.querySelector('[data-action="prev"]').disabled = page <= 1;
@@ -744,14 +739,22 @@ class Reader {
         this.syncAllPagesBookmarkUI();
         this.updatePageBookmarkBar(visible);
         this.tracker.record(page, visible);
+        if (!this.readingRule && !this.announced && last >= this.total) {
+            // Without a page based rule, reaching the last page is the end of reading, e.g. to reveal
+            // a read confirmation that is the activity's only completion condition (issue #10). The
+            // seen pages are sent right away, because the server only accepts a confirmation once it
+            // knows the last page was read.
+            this.tracker.flush();
+            this.announceCompletion();
+        }
 
         // Announce the new page to screen readers once the user stops turning pages.
         clearTimeout(this.announceTimer);
         this.announceTimer = setTimeout(() => {
             const text = visible.length > 1 && !this.simpleView
-                ? this.strings.pagesofpages.replace('{$a->first}', visible[0]).replace('{$a->last}', last)
-                : this.strings.pageofpages.replace('{$a->page}', page);
-            this.live.textContent = text.replace('{$a->total}', this.total);
+                ? this.strings.pagesofpages.replaceAll('{$a->first}', visible[0]).replaceAll('{$a->last}', last)
+                : this.strings.pageofpages.replaceAll('{$a->page}', page);
+            this.live.textContent = text.replaceAll('{$a->total}', this.total);
         }, 400);
     }
 
@@ -763,14 +766,14 @@ class Reader {
             return;
         }
         this.progressSummary.textContent = this.strings.progresssummary
-            .replace('{$a->seen}', this.seenPages.size)
-            .replace('{$a->total}', this.total);
+            .replaceAll('{$a->seen}', this.seenPages.size)
+            .replaceAll('{$a->total}', this.total);
 
         if (this.requiredPages.size) {
             const seenRequired = [...this.requiredPages].filter((page) => this.seenPages.has(page)).length;
             this.requiredSummary.textContent = this.strings.requiredsummary
-                .replace('{$a->seen}', seenRequired)
-                .replace('{$a->total}', this.requiredPages.size);
+                .replaceAll('{$a->seen}', seenRequired)
+                .replaceAll('{$a->total}', this.requiredPages.size);
             this.requiredSummary.hidden = false;
         }
     }
@@ -784,7 +787,7 @@ class Reader {
             return;
         }
         this.continueToast.querySelector('[data-region="continue-text"]').textContent =
-            this.strings.continuenotice.replace('{$a}', this.continuePage);
+            this.strings.continuenotice.replaceAll('{$a}', this.continuePage);
         this.continueToast.hidden = false;
         this.continueTimer = setTimeout(() => this.hideContinueNotice(), 8000);
     }
@@ -1092,7 +1095,7 @@ class Reader {
         this.view.setZoom(zoom);
         const percent = Math.round(zoom * 100);
         this.zoomLabel.textContent = percent + '%';
-        this.live.textContent = this.strings.zoomlevel.replace('{$a}', percent);
+        this.live.textContent = this.strings.zoomlevel.replaceAll('{$a}', percent);
         this.root.querySelector('[data-action="zoom-in"]').disabled = index === ZOOM_STEPS.length - 1;
         this.root.querySelector('[data-action="zoom-out"]').disabled = index === 0;
     }

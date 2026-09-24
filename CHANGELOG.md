@@ -16,12 +16,13 @@
   confirm with their own statement that they have read the document.
 - **Overview for teachers** (`leafrtool_report`): per participant only completion, required pages
   read and the confirmation date, with group filter and CSV export. Reading times and individual
-  page views are deliberately not shown or recorded.
+  page views are deliberately not shown.
 - **View menu**: page layout (automatic, single page, double page; remembered per user), simple
   view, zoom, fit to page or width, and full screen.
 - New activity icon, book-like page shadow, and the theme's primary colour as accent colour when it
   has enough contrast.
 - Spanish language pack.
+- Group support: the overview can be filtered by group and respects separate groups.
 - Extension point for subplugins of type `leafrtool` (see `tool/README.md`).
 
 ### Improved
@@ -44,6 +45,9 @@
 - Minimum Moodle version 4.5; tested with Moodle 4.5, 5.0, 5.1 and 5.2.
 
 ### Fixed
+- Hardening: guests cannot store bookmarks or report the page count, bookmarks are limited to
+  the pages of the document, notes are plain text, and a read confirmation is only accepted once
+  reading is finished.
 - The read confirmation now also appears for activities without a page based completion rule
   (after the last page).
 - Several layout issues in the view menu, sidebar and toolbar.

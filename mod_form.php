@@ -289,8 +289,11 @@ class mod_leafr_mod_form extends moodleform_mod {
         }
 
         // Rules contributed by installed leafrtool subplugins (e.g. leafrtool_confirm), each its
-        // own independent checkbox alongside the page-based rule above.
-        foreach (tool_manager::get_completion_rules() as $rulename => $info) {
+        // own independent checkbox alongside the page-based rule above. Only offered in the
+        // activity's own settings: the bulk and default completion forms (which use a suffix) only
+        // save fields of the leafr table, so a subplugin's own settings would silently be lost there.
+        $toolrules = $suffix === '' ? tool_manager::get_completion_rules() : [];
+        foreach ($toolrules as $rulename => $info) {
             $formname = $rulename . $suffix;
             $mform->addElement('advcheckbox', $formname, get_string($info['langkey'], $info['component']));
             $elements[] = $formname;

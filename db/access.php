@@ -61,6 +61,8 @@ $capabilities = [
     ],
 
     'mod/leafr:viewreport' => [
+        // Shows other people's completion and read confirmation data.
+        'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => [

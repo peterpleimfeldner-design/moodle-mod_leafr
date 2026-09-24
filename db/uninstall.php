@@ -30,6 +30,8 @@
 function xmldb_leafr_uninstall() {
     global $DB;
 
-    $DB->delete_records_select('user_preferences', $DB->sql_like('name', ':prefix'), ['prefix' => 'mod_leafr_%']);
+    // The underscores are escaped: in LIKE they would otherwise match any character.
+    $prefix = $DB->sql_like_escape('mod_leafr_') . '%';
+    $DB->delete_records_select('user_preferences', $DB->sql_like('name', ':prefix'), ['prefix' => $prefix]);
     return true;
 }

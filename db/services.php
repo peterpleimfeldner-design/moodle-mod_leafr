@@ -31,7 +31,6 @@ $functions = [
         'type' => 'write',
         'ajax' => true,
         'capabilities' => 'mod/leafr:view',
-        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
     ],
     'mod_leafr_bookmark_set' => [
         'classname' => 'mod_leafr\external\bookmark_set',
@@ -39,7 +38,6 @@ $functions = [
         'type' => 'write',
         'ajax' => true,
         'capabilities' => 'mod/leafr:view',
-        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
     ],
     'mod_leafr_bookmark_delete' => [
         'classname' => 'mod_leafr\external\bookmark_delete',
@@ -47,7 +45,6 @@ $functions = [
         'type' => 'write',
         'ajax' => true,
         'capabilities' => 'mod/leafr:view',
-        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
     ],
     'mod_leafr_bookmark_list' => [
         'classname' => 'mod_leafr\external\bookmark_list',
@@ -55,6 +52,5 @@ $functions = [
         'type' => 'read',
         'ajax' => true,
         'capabilities' => 'mod/leafr:view',
-        'services' => [MOODLE_OFFICIAL_MOBILE_SERVICE],
     ],
 ];

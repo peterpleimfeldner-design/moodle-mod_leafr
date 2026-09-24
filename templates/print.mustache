@@ -42,7 +42,7 @@
 }}
 <div class="leafr-print">
     <div class="leafr-print-actions">
-        <button type="button" class="btn btn-primary" onclick="window.print()">{{#str}}bookmark_print, mod_leafr{{/str}}</button>
+        <button type="button" class="btn btn-primary" data-action="leafr-print">{{#str}}bookmark_print, mod_leafr{{/str}}</button>
     </div>
     <h1 class="leafr-print-title">{{activityname}}</h1>
     <p class="leafr-print-meta">{{username}} &middot; {{exportdate}}</p>
@@ -60,3 +60,10 @@
     </ol>
     {{/empty}}
 </div>
+{{#js}}
+document.querySelectorAll('[data-action="leafr-print"]').forEach(function(button) {
+    button.addEventListener('click', function() {
+        window.print();
+    });
+});
+{{/js}}

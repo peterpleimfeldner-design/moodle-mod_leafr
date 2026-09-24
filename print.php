@@ -55,7 +55,7 @@ foreach (array_values($records) as $bookmark) {
 
 echo $OUTPUT->header();
 echo $OUTPUT->render_from_template('mod_leafr/print', [
-    'activityname' => format_string($leafr->name, true, ['context' => $context]),
+    'activityname' => format_string($leafr->name, true, ['context' => $context, 'escape' => false]),
     'username' => fullname($USER),
     'exportdate' => userdate(time(), get_string('strftimedatetime', 'langconfig')),
     'empty' => empty($records),

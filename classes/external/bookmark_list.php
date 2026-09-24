@@ -58,6 +58,11 @@ class bookmark_list extends external_api {
         self::validate_context($context);
         require_capability('mod/leafr:view', $context);
 
+        // Guests share a single account; they never get bookmarks.
+        if (isguestuser()) {
+            return ['bookmarks' => []];
+        }
+
         $records = array_values(bookmarks::get_for_user((int)$cm->instance, (int)$USER->id));
         $result = [];
         foreach ($records as $record) {
@@ -76,7 +81,7 @@ class bookmark_list extends external_api {
             'bookmarks' => new external_multiple_structure(
                 new external_single_structure([
                     'pageno' => new external_value(PARAM_INT, 'Page number'),
-                    'note' => new external_value(PARAM_RAW, 'Note'),
+                    'note' => new external_value(PARAM_TEXT, 'Note'),
                 ])
             ),
         ]);

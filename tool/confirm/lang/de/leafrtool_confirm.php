@@ -31,6 +31,7 @@ $string['confirm_checkbox'] = 'Ich bestätige die obige Aussage';
 $string['confirm_confirmedat'] = 'Bestätigt am {$a}';
 $string['confirm_done'] = 'Bestätigt.';
 $string['confirmnotrequired'] = 'Für diese Aktivität ist keine Lesebestätigung erforderlich.';
+$string['confirmnotyet'] = 'Bitte lesen Sie das Dokument zu Ende, bevor Sie bestätigen.';
 $string['confirmtext'] = 'Bestätigungstext';
 $string['confirmtext_default'] = 'Ich habe die Inhalte gelesen und verstanden.';
 $string['confirmtext_help'] = 'Die Aussage, die Teilnehmer/innen neben dem Bestätigungskästchen sehen, sobald sie fertig gelesen haben: nach den Pflichtseiten, wenn eine Seitenregel eingestellt ist, sonst nach der letzten Seite.';

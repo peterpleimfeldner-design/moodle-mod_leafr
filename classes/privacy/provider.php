@@ -134,16 +134,21 @@ class provider implements
                 continue;
             }
             $record = progress::get_record($leafrid, $user->id);
-            if ($record) {
+            $userbookmarks = bookmarks::get_for_user($leafrid, $user->id);
+            // The activity itself is described whenever the user has any data in it, including a
+            // user who only set bookmarks without reading progress being stored.
+            if ($record || $userbookmarks) {
                 $data = helper::get_context_data($context, $user);
-                $data->seenpages = $record->seenpages;
-                $data->lastpage = (int)$record->lastpage;
-                $data->timemodified = transform::datetime($record->timemodified);
+                if ($record) {
+                    $data->seenpages = $record->seenpages;
+                    $data->lastpage = (int)$record->lastpage;
+                    $data->timemodified = transform::datetime($record->timemodified);
+                }
                 writer::with_context($context)->export_data([], $data);
                 helper::export_context_files($context, $user);
             }
 
-            foreach (bookmarks::get_for_user($leafrid, $user->id) as $bookmark) {
+            foreach ($userbookmarks as $bookmark) {
                 writer::with_context($context)->export_data(
                     [get_string('privacy:bookmarkssubcontext', 'leafr'), $bookmark->pageno],
                     (object)[

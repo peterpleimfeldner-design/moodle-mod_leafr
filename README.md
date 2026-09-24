@@ -19,14 +19,14 @@ For teachers:
 
 - **Completion** when the last page, a percentage of the pages, a specific page, or specific pages and chapters (e.g. "1-5, 8, 12-20") have been viewed. Required pages are marked for students.
 - **Read confirmation** (optional completion rule): students confirm a statement of your choice after reading.
-- **Overview report**: per participant only completion, required pages read and the confirmation date, with group filter and CSV export. Reading times and individual page views are deliberately not recorded.
+- **Overview report**: per participant only completion, required pages read and the confirmation date, with group filter (respecting separate groups) and CSV export. Reading times and individual page views are deliberately not shown.
 - **Manual chapters** for PDFs without an outline, or instead of the PDF's own outline.
 - Optional **download** of the original PDF (per activity setting and capability `mod/leafr:download`).
 - Backup and restore, duplication, course reset, Privacy API (GDPR), events for page views.
 
 ## Requirements
 
-- Moodle 4.5 or later (tested with 4.5, 5.0, 5.1 and 5.2)
+- Moodle 4.5 to 5.2 (tested with 4.5, 5.0, 5.1 and 5.2)
 - PHP 8.1 or later
 
 ## Installation
@@ -42,7 +42,7 @@ The number of pages is determined by the browser when the document is opened for
 
 ## Privacy
 
-Leafr stores, per user and activity, the pages that were viewed and the last reading position, the bookmarks (page number and note), the time of a read confirmation, and two user preferences (simple view, page layout). All of this can be exported and deleted with the Moodle privacy tools. The browser additionally remembers locally that the one-time full screen tip has been shown. No data is sent to external services.
+Leafr stores, per user and activity, the pages that were viewed and the last reading position, the bookmarks (page number and note), the time of a read confirmation, and two user preferences (simple view, page layout). All of this can be exported and deleted with the Moodle privacy tools. The first view of each page is also written to the standard Moodle log as an event, subject to the site's log retention settings. The browser additionally remembers locally that the one-time full screen tip has been shown. No data is sent to external services.
 
 ## Third-party libraries
 

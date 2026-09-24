@@ -31,6 +31,7 @@ $string['confirm_checkbox'] = 'Confirmo la declaración anterior';
 $string['confirm_confirmedat'] = 'Confirmado el {$a}';
 $string['confirm_done'] = 'Confirmado.';
 $string['confirmnotrequired'] = 'Esta actividad no requiere confirmación de lectura.';
+$string['confirmnotyet'] = 'Termine de leer el documento antes de confirmar.';
 $string['confirmtext'] = 'Texto de confirmación';
 $string['confirmtext_default'] = 'He leído y comprendido el contenido.';
 $string['confirmtext_help'] = 'El texto que ven los estudiantes junto a la casilla de confirmación cuando terminan de leer: después de las páginas obligatorias si hay una regla de páginas; si no, después de la última página.';

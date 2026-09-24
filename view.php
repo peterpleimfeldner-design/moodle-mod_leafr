@@ -103,10 +103,12 @@ if ($file) {
     ], JSON_UNESCAPED_SLASHES) . '});');
 
     $uniqid = html_writer::random_id('leafr-reader-');
+    // Not HTML-escaped here: the template escapes it, and escaping twice would show "&amp;".
+    $plainname = format_string($leafr->name, true, ['context' => $context, 'escape' => false]);
     $templatecontext = [
         'uniqid' => $uniqid,
         'cmid' => $cm->id,
-        'readerlabel' => get_string('readerlabel', 'leafr', format_string($leafr->name, true, ['context' => $context])),
+        'readerlabel' => get_string('readerlabel', 'leafr', $plainname),
         'fileurl' => $fileurl->out(false),
         'downloadurl' => $downloadurl,
         'startpage' => $lastpage ?: max(1, (int)$leafr->initialpage),

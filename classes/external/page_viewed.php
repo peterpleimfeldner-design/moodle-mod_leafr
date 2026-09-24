@@ -84,6 +84,11 @@ class page_viewed extends external_api {
         self::validate_context($context);
         require_capability('mod/leafr:view', $context);
 
+        // Guests and visitors who are not logged in neither store progress nor report the page count.
+        if (isguestuser() || !isloggedin()) {
+            return ['completed' => false];
+        }
+
         $leafr = $DB->get_record('leafr', ['id' => $cm->instance], '*', MUST_EXIST);
 
         // The PDF itself is only available in the browser, so the viewer reports its page count.
@@ -97,10 +102,6 @@ class page_viewed extends external_api {
             $leafr->totalpages = $reported;
             $DB->set_field('leafr', 'totalpages', $reported, ['id' => $leafr->id]);
             $totalchanged = true;
-        }
-
-        if (isguestuser() || !isloggedin()) {
-            return ['completed' => false];
         }
 
         $limit = (int)$leafr->totalpages ?: progress::MAX_PAGES;

@@ -185,7 +185,7 @@ function leafrtool_confirm_render_reader(cm_info $cm, context_module $context, s
 
     return $OUTPUT->render_from_template('leafrtool_confirm/confirm', [
         'cmid' => (int)$cm->id,
-        'text' => format_string($settings->confirmtext, true, ['context' => $context]),
+        'text' => format_string($settings->confirmtext, true, ['context' => $context, 'escape' => false]),
         'confirmed' => $confirmed,
         'donetext' => $donetext,
     ]);

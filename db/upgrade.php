@@ -168,7 +168,7 @@ function xmldb_leafr_upgrade($oldversion) {
     }
 
     if ($oldversion < 2026092400) {
-        // Package D: manually defined chapters and the page/chapter based completion rule.
+        // Manually defined chapters and the page/chapter based completion rule.
         $table = new xmldb_table('leafr');
 
         $field = new xmldb_field('completionpages', XMLDB_TYPE_TEXT, null, null, null, null, null, 'completionpage');

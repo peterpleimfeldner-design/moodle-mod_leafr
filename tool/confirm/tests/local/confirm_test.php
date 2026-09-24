@@ -110,4 +110,39 @@ final class confirm_test extends \advanced_testcase {
         $this->assertTrue(confirm::get_settings(9)->requireconfirm);
         $this->assertFalse(confirm::is_confirmed(9, 31));
     }
+
+    /**
+     * A confirmation needs finished reading: the page rule if there is one, otherwise the last page.
+     */
+    public function test_has_finished_reading(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $user = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_leafr');
+
+        // No page rule: the last page decides, and an unknown page count never counts as finished.
+        $plain = $generator->create_instance(['course' => $course->id]);
+        $this->assertFalse(confirm::has_finished_reading((int)$plain->id, (int)$user->id, true));
+        $DB->set_field('leafr', 'totalpages', 3, ['id' => $plain->id]);
+        \mod_leafr\local\progress::record((int)$plain->id, (int)$user->id, [1, 2]);
+        $this->assertFalse(confirm::has_finished_reading((int)$plain->id, (int)$user->id, true));
+        \mod_leafr\local\progress::record((int)$plain->id, (int)$user->id, [3]);
+        $this->assertTrue(confirm::has_finished_reading((int)$plain->id, (int)$user->id, true));
+
+        // With a page rule and automatic completion, the rule decides.
+        $rule = $generator->create_instance([
+            'course' => $course->id,
+            'completion' => COMPLETION_TRACKING_AUTOMATIC,
+            'completiontype' => \mod_leafr\local\progress::COMPLETION_SPECIFICPAGE,
+            'completionpage' => 2,
+        ]);
+        $DB->set_field('leafr', 'totalpages', 3, ['id' => $rule->id]);
+        \mod_leafr\local\progress::record((int)$rule->id, (int)$user->id, [3]);
+        $this->assertFalse(confirm::has_finished_reading((int)$rule->id, (int)$user->id, true));
+        \mod_leafr\local\progress::record((int)$rule->id, (int)$user->id, [2]);
+        $this->assertTrue(confirm::has_finished_reading((int)$rule->id, (int)$user->id, true));
+    }
 }

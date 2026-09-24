@@ -74,7 +74,7 @@ export default class Thumbnails {
             if (isRequired) {
                 button.classList.add('is-required');
             }
-            let label = this.strings.pagelabel.replace('{$a}', i);
+            let label = this.strings.pagelabel.replaceAll('{$a}', i);
             if (isRequired) {
                 label += ', ' + this.strings.required_badge;
             }

@@ -39,7 +39,7 @@ class bookmark_set extends external_api {
         return new external_function_parameters([
             'cmid' => new external_value(PARAM_INT, 'Course module id'),
             'pageno' => new external_value(PARAM_INT, 'Page number (1-based)'),
-            'note' => new external_value(PARAM_RAW, 'Optional note', VALUE_DEFAULT, ''),
+            'note' => new external_value(PARAM_TEXT, 'Optional note (plain text)', VALUE_DEFAULT, ''),
         ]);
     }
 
@@ -52,7 +52,7 @@ class bookmark_set extends external_api {
      * @return array
      */
     public static function execute(int $cmid, int $pageno, string $note = ''): array {
-        global $USER;
+        global $DB, $USER;
 
         $params = self::validate_parameters(self::execute_parameters(), [
             'cmid' => $cmid,
@@ -65,8 +65,14 @@ class bookmark_set extends external_api {
         self::validate_context($context);
         require_capability('mod/leafr:view', $context);
 
-        if ($params['pageno'] < 1) {
-            throw new \invalid_parameter_exception('pageno must be 1 or higher');
+        // Guests share a single account, so their bookmarks would be visible to every other guest.
+        if (isguestuser()) {
+            throw new \moodle_exception('noguest');
+        }
+        $totalpages = (int)$DB->get_field('leafr', 'totalpages', ['id' => $cm->instance]);
+        $limit = $totalpages ?: \mod_leafr\local\progress::MAX_PAGES;
+        if ($params['pageno'] < 1 || $params['pageno'] > $limit) {
+            throw new \invalid_parameter_exception('pageno must be between 1 and the number of pages');
         }
 
         $record = bookmarks::set((int)$cm->instance, (int)$USER->id, $params['pageno'], $params['note']);
@@ -81,7 +87,7 @@ class bookmark_set extends external_api {
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
             'pageno' => new external_value(PARAM_INT, 'Page number'),
-            'note' => new external_value(PARAM_RAW, 'Stored note, possibly truncated'),
+            'note' => new external_value(PARAM_TEXT, 'Stored note, possibly truncated'),
         ]);
     }
 }

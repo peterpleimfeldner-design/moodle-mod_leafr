@@ -315,7 +315,7 @@ export default class Search {
             button.className = 'leafr-search-result';
             const page = document.createElement('span');
             page.className = 'leafr-search-result-page';
-            page.textContent = this.strings.pagelabel.replace('{$a}', match.page);
+            page.textContent = this.strings.pagelabel.replaceAll('{$a}', match.page);
             const snippet = document.createElement('span');
             snippet.className = 'leafr-search-result-snippet';
             snippet.innerHTML = match.snippet;
@@ -361,8 +361,8 @@ export default class Search {
             }
         });
         this.status.textContent = this.strings.matchofmatches
-            .replace('{$a->index}', this.activeIndex + 1)
-            .replace('{$a->total}', this.matches.length);
+            .replaceAll('{$a->index}', this.activeIndex + 1)
+            .replaceAll('{$a->total}', this.matches.length);
         this.onNavigate(match.page, match.item);
     }
 

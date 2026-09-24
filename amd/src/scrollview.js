@@ -85,7 +85,7 @@ export default class ScrollView {
             pageEl.className = 'leafr-scroll-page';
             pageEl.setAttribute('role', 'group');
             pageEl.dataset.page = i;
-            pageEl.setAttribute('aria-label', this.strings.pagelabel.replace('{$a}', i));
+            pageEl.setAttribute('aria-label', this.strings.pagelabel.replaceAll('{$a}', i));
             pageEl.style.aspectRatio = '1 / ' + this.ratio;
             const canvas = document.createElement('canvas');
             canvas.className = 'leafr-page-canvas';

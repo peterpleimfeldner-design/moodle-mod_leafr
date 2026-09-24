@@ -169,7 +169,7 @@ export default class BookmarkList {
         const pageButton = document.createElement('button');
         pageButton.type = 'button';
         pageButton.className = 'leafr-bookmark-page';
-        pageButton.textContent = this.strings.pagelabel.replace('{$a}', page);
+        pageButton.textContent = this.strings.pagelabel.replaceAll('{$a}', page);
         pageButton.addEventListener('click', () => this.onNavigate(page));
 
         const label = document.createElement('label');
@@ -208,8 +208,8 @@ export default class BookmarkList {
         const updateCounter = () => {
             const used = textarea.value.length;
             counter.textContent = this.strings.bookmark_note_chars
-                .replace('{$a->used}', used)
-                .replace('{$a->max}', this.maxNoteLength);
+                .replaceAll('{$a->used}', used)
+                .replaceAll('{$a->max}', this.maxNoteLength);
             counter.classList.toggle('is-near-limit', used >= this.maxNoteLength * NEAR_LIMIT_RATIO);
         };
         const growNote = () => {

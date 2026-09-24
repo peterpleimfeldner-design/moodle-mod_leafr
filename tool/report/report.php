@@ -38,29 +38,32 @@ require_capability('mod/leafr:viewreport', $context);
 
 $groupmode = groups_get_activity_groupmode($cm);
 $groupid = $groupmode ? groups_get_activity_group($cm, true) : 0;
-$rows = report::get_rows($cm, $leafr, $groupid);
+// In separate groups mode, teachers without access to all groups only see their own groups; with no
+// group of their own, they see nobody.
+$seesall = $groupmode != SEPARATEGROUPS || has_capability('moodle/site:accessallgroups', $context);
+$rows = ($seesall || $groupid) ? report::get_rows($cm, $leafr, $groupid) : [];
 $showpercent = $leafr->completiontype == \mod_leafr\local\progress::COMPLETION_PERCENT;
 $showconfirm = report::confirm_required($leafr);
+$yes = get_string('yes');
+$no = get_string('no');
 
 if ($download === 'csv') {
     $columns = [
         get_string('fullname'),
         get_string('reportcompleted', 'leafrtool_report'),
-        get_string('reportrequiredseen', 'leafrtool_report'),
+        get_string($showpercent ? 'reportrequiredpercent' : 'reportrequiredseen', 'leafrtool_report'),
     ];
     if ($showconfirm) {
         $columns[] = get_string('reportconfirmedat', 'leafrtool_report');
     }
-    $yes = get_string('yes');
-    $no = get_string('no');
-    $csvrows = array_map(function ($row) use ($yes, $no, $showconfirm) {
+    $csvrows = array_map(function ($row) use ($yes, $no, $showconfirm, $showpercent) {
         $out = [
             // Neutralise CSV/formula injection (see report::escape_csv_cell()): a name starting
             // with =, +, -, @ or a tab would otherwise run as a formula when the file is opened in
             // a spreadsheet application.
             report::escape_csv_cell($row['fullname']),
             $row['completed'] ? $yes : $no,
-            $row['requiredseen'] === null ? '-' : ($row['requiredseen'] ? $yes : $no),
+            report::required_cell($row, $showpercent),
         ];
         if ($showconfirm) {
             $out[] = $row['confirmedat'] ? userdate($row['confirmedat']) : $no;
@@ -106,17 +109,12 @@ if (!$rows) {
 
     foreach ($rows as $row) {
         $line = [
-            $row['fullname'],
-            $row['completed'] ? $OUTPUT->pix_icon('i/checkedcircle', get_string('yes')) : get_string('no'),
+            s($row['fullname']),
+            $row['completed'] ? $yes : $no,
+            report::required_cell($row, $showpercent),
         ];
-        if ($showpercent) {
-            $line[] = $row['requiredpercent'] === null ? '-' : $row['requiredpercent'] . ' %';
-        } else {
-            $line[] = $row['requiredseen'] === null ? '-' :
-                ($row['requiredseen'] ? get_string('yes') : get_string('no'));
-        }
         if ($showconfirm) {
-            $line[] = $row['confirmedat'] ? userdate($row['confirmedat']) : get_string('no');
+            $line[] = $row['confirmedat'] ? userdate($row['confirmedat']) : $no;
         }
         $table->data[] = $line;
     }

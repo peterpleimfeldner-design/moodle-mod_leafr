@@ -132,4 +132,18 @@ class report {
         });
         return $rows;
     }
+
+    /**
+     * Text for the "required pages read" column, the same on screen and in the CSV file.
+     *
+     * @param array $row Report row from {@see get_rows()}
+     * @param bool $showpercent Whether the activity uses the percentage rule
+     * @return string
+     */
+    public static function required_cell(array $row, bool $showpercent): string {
+        if ($showpercent) {
+            return $row['requiredpercent'] === null ? '-' : get_string('percents', 'moodle', $row['requiredpercent']);
+        }
+        return $row['requiredseen'] === null ? '-' : get_string($row['requiredseen'] ? 'yes' : 'no');
+    }
 }

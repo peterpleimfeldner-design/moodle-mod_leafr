@@ -16,6 +16,7 @@
 
 namespace leafrtool_confirm\local;
 
+use mod_leafr\local\progress;
 use stdClass;
 
 /**
@@ -77,6 +78,25 @@ class confirm {
     public static function is_confirmed(int $leafrid, int $userid): bool {
         global $DB;
         return $DB->record_exists('leafrtool_confirm_log', ['leafrid' => $leafrid, 'userid' => $userid]);
+    }
+
+    /**
+     * Whether a user has finished reading an activity, which a read confirmation requires: the page
+     * based completion rule is fulfilled or, if the activity has none, the last page has been seen.
+     *
+     * @param int $leafrid Leafr instance id
+     * @param int $userid User id
+     * @param bool $automatic Whether automatic completion tracking is enabled for the activity
+     * @return bool
+     */
+    public static function has_finished_reading(int $leafrid, int $userid, bool $automatic): bool {
+        global $DB;
+        $leafr = $DB->get_record('leafr', ['id' => $leafrid], '*', MUST_EXIST);
+        if ($automatic && (int)$leafr->completiontype > 0) {
+            return progress::is_complete($leafr, $userid);
+        }
+        $total = (int)$leafr->totalpages;
+        return $total > 0 && in_array($total, progress::get_seen_pages($leafrid, $userid), true);
     }
 
     /**

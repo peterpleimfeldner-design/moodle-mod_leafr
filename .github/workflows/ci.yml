@@ -87,19 +87,9 @@ jobs:
         # removed or renamed in a specific Moodle version (phpcs/phpunit alone would not).
         if: ${{ !cancelled() }}
         working-directory: plugin
-        # Non-blocking by design, not temporarily: a dedicated local reproduction environment
-        # (composer + a junction to a real Moodle checkout, see lessons-learned.md) root-caused a
-        # class of false "return statement is missing" errors down to phpstan-moodle's Moodle-wide
-        # class scanning itself, not our code - every affected method demonstrably returns on every
-        # path. It is not fixable from our side (ruled out: stale cache, arrow functions, parallel
-        # worker races, filename collisions - see .github/phpstan.neon), and it is not required for
-        # Moodle Marketplace submission (only moodle-plugin-ci's validate/phpcs steps are). The
-        # scanFiles fix below and the documented ignoreErrors entries do clear the errors that are
-        # possible to suppress; this step stays advisory because the underlying tool has, on top of
-        # that, at least once emitted the identical error a second time with no file/line attached,
-        # which PHPStan refuses to let any ignoreErrors rule match at all. Behat/PHPUnit/Grunt below
-        # still gate the build. Worth revisiting if a phpstan-moodle release fixes the scanning
-        # issue, but not worth further CI round-trips chasing it in the meantime.
+        # Advisory only: phpstan-moodle's Moodle-wide class scanning reports false "return statement
+        # is missing" errors that cannot be suppressed reliably (see .github/phpstan.neon). PHPStan is
+        # not required for the plugin directory; phpcs, PHPUnit, Behat and Grunt still gate the build.
         continue-on-error: true
         # phpstan/extension-installer is deliberately not used: it is a Composer plugin, blocked
         # by Composer's allow-plugins policy unless explicitly trusted, and unnecessary anyway

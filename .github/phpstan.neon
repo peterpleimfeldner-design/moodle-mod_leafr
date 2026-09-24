@@ -68,19 +68,9 @@ parameters:
             message: '~Parameter #3 \$contextids of class core_privacy\\local\\request\\approved_contextlist constructor expects array<int>, array<int, int> given~'
             path: ../tests/privacy/provider_test.php
 
-        # Confirmed false positives, root-caused after a dedicated local reproduction environment
-        # (see lessons-learned.md): every method of exactly these 3 classes - mod_leafr\local\bookmarks,
-        # mod_leafr\local\tool_manager, leafrtool_confirm\local\confirm - is reported as missing its
-        # return statement even though each one demonstrably returns on every path (verified by reading
-        # the source). Ruled out as causes: stale analysis cache (reproduces with the cache directory
-        # freshly deleted), PHP arrow functions (these 3 files contain none), parallel worker races
-        # (reproduces with maximumNumberOfProcesses: 1), and filename/classname collisions with Moodle
-        # core (no such files exist in this Moodle version). Isolating any 1-2 of these files analyses
-        # cleanly; the false positive only appears once the full plugin tree is scanned together with
-        # addCommonIncludes, which points to phpstan-moodle's Moodle-wide class scanning again (the
-        # same class of bug already documented above for course_module_viewed.php), rather than to
-        # anything in our code. Reproduced identically on local Windows (PHPStan 2.2.15) and in this
-        # project's real Linux CI (PHPStan 2.1.x), so it is not platform- or version-specific.
+        # Confirmed false positives from phpstan-moodle's Moodle-wide class scanning: every method of
+        # these 3 classes is reported as missing its return statement although each one returns on
+        # every path. Isolated, the files analyse cleanly; reproduced locally and in CI.
         -
             message: '#Method mod_leafr\\local\\bookmarks::(get_for_user|set|delete|cast_record)\(\) should return .+ but return statement is missing#'
             path: ../classes/local/bookmarks.php

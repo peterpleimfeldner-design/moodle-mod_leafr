@@ -31,6 +31,7 @@ $string['confirm_checkbox'] = 'I confirm the statement above';
 $string['confirm_confirmedat'] = 'Confirmed on {$a}';
 $string['confirm_done'] = 'Confirmed.';
 $string['confirmnotrequired'] = 'This activity does not require a read confirmation.';
+$string['confirmnotyet'] = 'Please finish reading the document before confirming.';
 $string['confirmtext'] = 'Confirmation text';
 $string['confirmtext_default'] = 'I have read and understood the contents.';
 $string['confirmtext_help'] = 'The statement students see next to the confirmation checkbox once they have finished reading: after the required pages if a page rule is set, otherwise after the last page.';

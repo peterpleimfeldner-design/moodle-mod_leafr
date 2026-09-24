@@ -53,7 +53,7 @@ foreach ($leafrs as $leafr) {
     $attributes = $leafr->visible ? [] : ['class' => 'dimmed'];
     $link = html_writer::link(
         new moodle_url('/mod/leafr/view.php', ['id' => $leafr->coursemodule]),
-        format_string($leafr->name, true),
+        format_string($leafr->name, true, ['context' => context_module::instance($leafr->coursemodule)]),
         $attributes
     );
     $table->data[] = [$link, format_module_intro('leafr', $leafr, $leafr->coursemodule)];

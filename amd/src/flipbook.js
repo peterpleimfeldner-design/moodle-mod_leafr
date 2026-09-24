@@ -214,7 +214,7 @@ export default class FlipbookView {
             const canvas = document.createElement('canvas');
             canvas.className = 'leafr-page-canvas';
             canvas.setAttribute('role', 'img');
-            canvas.setAttribute('aria-label', this.strings.pagelabel.replace('{$a}', i));
+            canvas.setAttribute('aria-label', this.strings.pagelabel.replaceAll('{$a}', i));
             pageEl.appendChild(canvas);
             pages.push(pageEl);
             this.canvases.push(canvas);

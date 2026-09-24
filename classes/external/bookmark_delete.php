@@ -59,6 +59,10 @@ class bookmark_delete extends external_api {
         self::validate_context($context);
         require_capability('mod/leafr:view', $context);
 
+        if (isguestuser()) {
+            throw new \moodle_exception('noguest');
+        }
+
         $deleted = bookmarks::delete((int)$cm->instance, (int)$USER->id, $params['pageno']);
         return ['deleted' => $deleted];
     }

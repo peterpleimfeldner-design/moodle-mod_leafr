@@ -130,12 +130,12 @@ final class tool_manager_test extends \advanced_testcase {
         $cm = get_fast_modinfo($course)->get_cm($leafr->cmid);
         $context = \context_module::instance($cm->id);
 
-        $node = new \navigation_node('Leafr: letzte Seite');
+        $node = new \navigation_node('Leafr: last page');
         tool_manager::extend_navigation($node, $cm, $context);
         $this->assertNotNull($node->get('leafrtoolreport'));
 
         $this->setUser($student);
-        $node = new \navigation_node('Leafr: letzte Seite');
+        $node = new \navigation_node('Leafr: last page');
         tool_manager::extend_navigation($node, $cm, $context);
         // Note: navigation_node::get() returns false (not null) when no matching child exists.
         $this->assertFalse($node->get('leafrtoolreport'));
