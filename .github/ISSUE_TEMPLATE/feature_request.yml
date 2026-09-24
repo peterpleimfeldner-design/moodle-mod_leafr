@@ -1,0 +1,40 @@
+name: Feature request
+description: Suggest an idea or improvement for Leafr.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Leafr is developed and maintained in spare time, so not every idea can be built — but concrete, well-explained suggestions are genuinely useful for prioritising.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: What are you trying to do, and where does Leafr currently fall short?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested solution
+      description: How could this work? Mockups, examples from other plugins/tools, or a rough description are all fine.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds you've tried
+      description: Is there a way to achieve something similar today, even if it's clunky?
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked the [existing issues](https://github.com/peterpleimfeldner-design/moodle-mod_leafr/issues) and this isn't a duplicate.
+          required: true

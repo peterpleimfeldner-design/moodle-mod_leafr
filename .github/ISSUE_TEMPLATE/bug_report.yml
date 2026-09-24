@@ -1,0 +1,81 @@
+name: Bug report
+description: Something in Leafr isn't working as expected.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. Leafr is a free, volunteer-maintained plugin, so the more concrete detail you give, the faster this can be fixed.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug. Screenshots or a screen recording help a lot.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen instead?
+    validations:
+      required: false
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: How can this be reproduced, starting from a fresh Leafr activity?
+      placeholder: |
+        1. Add a Leafr activity with a PDF that has ...
+        2. Open it as a student
+        3. Click on ...
+        4. See error
+    validations:
+      required: true
+
+  - type: input
+    id: leafr-version
+    attributes:
+      label: Leafr version
+      description: Found under Site administration > Plugins > Activity modules > Leafr flipbook, or in the plugin ZIP's version number.
+      placeholder: "e.g. 1.2.0"
+    validations:
+      required: true
+
+  - type: input
+    id: moodle-version
+    attributes:
+      label: Moodle version
+      description: Found under Site administration > General > Version, or in the page footer.
+      placeholder: "e.g. Moodle 4.5.3"
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: "e.g. Chrome 129 on Windows, or Safari on iPhone"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error messages or browser console output
+      description: Server error messages, or anything shown in the browser's developer console (F12 > Console).
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked the [existing issues](https://github.com/peterpleimfeldner-design/moodle-mod_leafr/issues) and this isn't a duplicate.
+          required: true
+        - label: I'm using a [supported Moodle version](https://github.com/peterpleimfeldner-design/moodle-mod_leafr#requirements) (4.5 to 5.2).
+          required: true
