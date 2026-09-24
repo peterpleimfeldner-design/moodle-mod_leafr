@@ -342,11 +342,14 @@ export default class FlipbookView {
      */
     prev() {
         if (this.pageFlip) {
-            if (this.zoom === 1) {
-                this.pageFlip.flipPrev();
-            } else {
-                this.pageFlip.turnToPrevPage();
-            }
+            // flipPrev() is a no-op in single-page ("portrait") mode: it starts its simulated
+            // drag gesture near x=10 of StPageFlip's internal bounds rectangle, which in portrait
+            // mode is shifted left by a page-and-a-half to make room for the (here invisible)
+            // phantom second page - landing that coordinate outside wherever the gesture is
+            // actually recognised. turnToPrevPage() targets a page directly rather than simulating
+            // a drag from a screen position, and was confirmed to work correctly in portrait mode
+            // by testing directly against the library (Peter's feedback, 24.09.2026).
+            this.pageFlip.turnToPrevPage();
         }
     }
 

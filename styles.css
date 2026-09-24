@@ -100,6 +100,13 @@
     position: relative;
     flex: 0 0 auto;
     margin: auto;
+    /* In single-page mode, StPageFlip still keeps internal space for a second, invisible page to
+       its left (its portrait-mode bounds rectangle is a page-and-a-half wider than what we size
+       this box to) and draws its hover/flip preview there without being asked to stay inside our
+       narrower box. Clipping it here hides that phantom page's visuals; it does not affect the
+       real page's own flip animation, which stays within this box already (Peter's feedback,
+       24.09.2026). */
+    overflow: hidden;
 }
 
 .leafr-zoombox.is-zoomed {
