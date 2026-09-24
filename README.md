@@ -1,6 +1,21 @@
 # Leafr flipbook (mod_leafr)
 
-Leafr is a Moodle activity that shows a PDF document as a book students can leaf through, directly inside the course. No external service, no extra login: the PDF is stored in Moodle and rendered in the browser.
+Leafr is a Moodle activity that turns a PDF document into a book students can leaf through, directly inside the course — no external service, no extra login. The PDF stays in Moodle, is rendered in the browser, and every reading action (page turned, bookmark set, document read) is tracked the same way as any other Moodle activity.
+
+## What Leafr is for
+
+Moodle already lets you attach a PDF as a plain file. Leafr is for the cases where that is not enough:
+
+- You want to know **who actually read** the document, not just who downloaded it — completion by last page, by a percentage of pages, or by specific required pages and chapters.
+- The PDF is long enough that **navigation** matters: a table of contents, page thumbnails, full-text search and bookmarks with notes, instead of one long scroll or endless Ctrl+F.
+- You need students to **actively confirm** they have read something (a policy, a safety handbook, terms of a placement) rather than infer it from a download timestamp.
+- You want a **teacher overview** of who has completed the reading and who hasn't — without collecting reading times or a log of every page view, which Leafr deliberately leaves out.
+
+If none of that applies and a plain file or a "Resource" activity is enough for your PDF, you don't need Leafr — and that's a fine outcome.
+
+## Why a book, not a scroll
+
+The page-turning book view exists because for longer structured documents (handbooks, manuals, multi-chapter guides), page-by-page navigation with a visible table of contents mirrors how people already read printed material, and it gives you a natural, countable unit ("page 12 of 40") to hang completion tracking on. It is not required, though: a **simple view** (all pages below each other, scrollable, fully accessible to screen readers) is available at any time and is used automatically when the browser requests reduced motion.
 
 ## Screenshots
 
@@ -56,6 +71,26 @@ The number of pages is determined by the browser when the document is opened for
 ## Privacy
 
 Leafr stores, per user and activity, the pages that were viewed and the last reading position, the bookmarks (page number and note), the time of a read confirmation, and two user preferences (simple view, page layout). All of this can be exported and deleted with the Moodle privacy tools. The first view of each page is also written to the standard Moodle log as an event, subject to the site's log retention settings. The browser additionally remembers locally that the one-time full screen tip has been shown. No data is sent to external services.
+
+## FAQ
+
+**Why no Word or PowerPoint support?**
+Leafr renders PDF with [PDF.js](https://github.com/mozilla/pdf.js), which is what gives it page-accurate navigation, text search and a stable page count to base completion tracking on. Word and PowerPoint files don't have a fixed page layout across devices, so there is no reliable "page" to track. If your material is in Word or PowerPoint, export it to PDF first — every common office suite can do this.
+
+**Why isn't there a paid "Pro" version?**
+There isn't one, and none is planned. Leafr is licensed under the GPLv3 (see [LICENSE](LICENSE)); everything in this repository is the whole plugin, with no license key, no feature gate and no hosted component. What you see here is what you get.
+
+**What data does Leafr store, and does anything leave my Moodle site?**
+Only what's listed under [Privacy](#privacy) above, and it stays inside your Moodle installation and database — Leafr does not call out to any external service, analytics tool or API. Everything a student can see about their own data, and everything an admin can export or delete, goes through Moodle's standard Privacy API.
+
+**Can teachers see how long a student spent reading, or which pages they lingered on?**
+No, deliberately not. The overview report shows only whether the activity is complete, which required pages have been read, and the read-confirmation date. Leafr does not build a page-by-page timeline of student behaviour.
+
+**Is there a cloud or hosted version of Leafr?**
+No. Leafr is a normal Moodle plugin that runs entirely on your own Moodle server, under whatever hosting and backup policy that server already has.
+
+**Can I add more than one Leafr activity to a course?**
+Yes — like any Moodle activity, add as many instances as you need, each with its own PDF and its own completion settings.
 
 ## Third-party libraries
 
