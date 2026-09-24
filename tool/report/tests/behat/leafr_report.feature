@@ -30,7 +30,12 @@ Feature: See each student's own reading progress in the overview
     And I press "Next page"
     And I press "Next page"
     And I press "Next page"
-    And I wait "2" seconds
+    # tracker.js batches seen-page updates and only sends them 1500ms after the last page turn
+    # (see amd/src/tracker.js SEND_DELAY) - comfortably under the old, shorter page-turn
+    # animation, but the animation was deliberately slowed down since (Paket H2, 24.09.2026), so
+    # this wait needs enough headroom for flush() to fire AND its AJAX call to complete before
+    # navigating away as a different user, not just for the last page turn's own animation.
+    And I wait "4" seconds
     # Student Two only ever looks at the first two pages, well under the 50% mark.
     When I am on the "Progress" "leafr activity" page logged in as "student2"
     And I wait "2" seconds
