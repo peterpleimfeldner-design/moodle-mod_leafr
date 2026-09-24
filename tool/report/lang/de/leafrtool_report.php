@@ -31,6 +31,6 @@ $string['reportconfirmedat'] = 'Bestätigt am';
 $string['reportdownloadcsv'] = 'Als CSV herunterladen';
 $string['reportnoparticipants'] = 'Keine Teilnehmer/innen entsprechen dem aktuellen Filter.';
 $string['reportnoparticipantsyet'] = 'In diesem Kurs sind noch keine Teilnehmer/innen eingeschrieben.';
-$string['reportprivacynotice'] = 'Diese Übersicht zeigt nur, ob die Aktivität abgeschlossen ist, ob die Pflichtseiten gelesen wurden (bzw. den Prozentsatz), und, falls eingerichtet, das Datum der Lesebestätigung. Nicht erfasst werden Lesezeiten, einzelne Seitenaufrufe, Lesezeichen, Notizen oder Markierungen.';
+$string['reportprivacynotice'] = 'Diese Übersicht zeigt nur, ob die Aktivität abgeschlossen ist, ob die Pflichtseiten gelesen wurden (bzw. zu welchem Prozentsatz) und, falls eingerichtet, das Datum der Lesebestätigung. Nicht erfasst werden Lesezeiten, einzelne Seitenaufrufe, Lesezeichen oder Notizen.';
 $string['reportrequiredpercent'] = 'Pflichtseiten gelesen';
 $string['reportrequiredseen'] = 'Pflichtseiten gelesen';

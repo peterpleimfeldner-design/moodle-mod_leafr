@@ -106,7 +106,7 @@ export default class Search {
         this.prevButton.addEventListener('click', () => this.step(-1));
         this.nextButton.addEventListener('click', () => this.step(1));
         // Arrow keys move through the result list (from the search field into it and back); Enter or
-        // Space on a result jumps to it like a click (Peter's feedback, issue #6: the arrows only
+        // Space on a result jumps to it like a click (feedback from testing, issue #6: the arrows only
         // scrolled the list).
         this.input.addEventListener('keydown', (event) => {
             if (event.key === 'ArrowDown' && this.matches.length) {

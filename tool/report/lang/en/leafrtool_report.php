@@ -31,6 +31,6 @@ $string['reportconfirmedat'] = 'Confirmed on';
 $string['reportdownloadcsv'] = 'Download as CSV';
 $string['reportnoparticipants'] = 'No participants match the current filter.';
 $string['reportnoparticipantsyet'] = 'There are no participants enrolled in this course yet.';
-$string['reportprivacynotice'] = 'This overview only shows whether the activity is complete, whether the required pages have been read (or the percentage), and, if configured, the read confirmation date. It does not record reading times, individual page views, bookmarks, notes or highlights.';
+$string['reportprivacynotice'] = 'This overview only shows whether the activity is complete, whether the required pages have been read (or the percentage read) and, if configured, the date of the read confirmation. It does not record reading times, individual page views, bookmarks or notes.';
 $string['reportrequiredpercent'] = 'Required pages read';
 $string['reportrequiredseen'] = 'Required pages read';

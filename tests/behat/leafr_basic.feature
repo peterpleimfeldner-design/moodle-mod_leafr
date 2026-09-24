@@ -117,7 +117,9 @@ Feature: Read a PDF document in a Leafr flipbook
     Then I press "View"
     And the "aria-checked" attribute of "[data-spread='single']" "css_element" should contain "true"
     And I press "Simple view"
-    And the "[data-spread='single']" "css_element" should be disabled
+    # The page layout buttons stay usable in the simple view (picking one switches back to the book);
+    # only fitting the page to its box has no meaning there.
+    And the "[data-fit='page']" "css_element" should be disabled
 
   @javascript @_file_upload
   Scenario: A teacher creates a flipbook

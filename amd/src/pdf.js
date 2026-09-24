@@ -168,7 +168,7 @@ export const getPageText = async(pdfDoc, pageNum) => {
  * units {@see getPageSize} uses), so a caller can position a highlight over a match without
  * knowing about the current zoom or the page-turning transform of the flipbook view.
  *
- * This does not build a full, selectable text layer (see Paket H for that) - it is only precise
+ * This does not build a full, selectable text layer (that would be a separate text-highlighting feature) - it is only precise
  * enough to place a highlight box over a search match.
  *
  * @param {Object} pdfDoc PDF.js document proxy

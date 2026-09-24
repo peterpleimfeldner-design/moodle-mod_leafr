@@ -287,7 +287,7 @@ class Reader {
      * or sticky bars (some themes stack more than one, e.g. a site navbar plus a second,
      * theme-specific course navigation bar), and ordinary page content in normal flow (the course
      * heading/breadcrumb above the activity) - {@see getFixedTopOffset} only measures the former,
-     * so the reader's own current position is used as well, whichever is larger (Peter's feedback,
+     * so the reader's own current position is used as well, whichever is larger (feedback from testing,
      * 24.09.2026: the page still needed scrolling to see the heading or the toolbar).
      */
     fitHeight() {
@@ -298,7 +298,7 @@ class Reader {
         // With an activity description above the reader (Moodle's ".activity-description"), the reader
         // is sized to the whole window below the fixed bars instead: the page scrolls past the
         // description and the book then fills the screen. Fitting it into the space left below a long
-        // description had left only about ten lines of a page to read (Peter's feedback, GitHub
+        // description had left only about ten lines of a page to read (feedback from testing, GitHub
         // issues #1 and #2).
         const fixedtop = this.getFixedTopOffset();
         const offset = this.hasDescriptionAbove() ? fixedtop : Math.max(fixedtop, this.getPageTop());
@@ -1107,7 +1107,7 @@ class Reader {
     /**
      * Switches to/from the simple view and remembers the choice. Also used by
      * {@see setSpreadMode} so picking a page layout while in the simple view switches straight to
-     * the flipbook instead of requiring the simple view to be turned off first (Peter's feedback,
+     * the flipbook instead of requiring the simple view to be turned off first (feedback from testing,
      * 24.09.2026).
      *
      * @param {boolean} value New simple-view state
@@ -1170,7 +1170,7 @@ class Reader {
      */
     updateViewMenuState() {
         // "Double" is greyed out where a spread cannot be shown anyway (landscape pages, a one-page
-        // document, a narrow stage), instead of silently doing nothing (Peter's feedback, issue #12).
+        // document, a narrow stage), instead of silently doing nothing (feedback from testing, issue #12).
         const nospread = !this.simpleView && this.view && this.view.canSpread && !this.view.canSpread();
         this.viewMenu.querySelectorAll('[data-spread]').forEach((button) => {
             button.setAttribute('aria-checked', button.dataset.spread === this.spreadMode ? 'true' : 'false');
@@ -1215,7 +1215,7 @@ class Reader {
      */
     setFitMode(mode) {
         // Fitting always starts from 100 %: "fit to page/width" is meant to show exactly that, and a
-        // leftover zoom made the page overflow again (Peter's feedback, issue #4). Zooming in again
+        // leftover zoom made the page overflow again (feedback from testing, issue #4). Zooming in again
         // afterwards works as usual.
         this.changeZoom(0);
         this.fitMode = mode;

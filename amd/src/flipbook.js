@@ -56,7 +56,7 @@ const CORNER_ZONE_RATIO = 0.15;
 /**
  * Fraction of the book's width, measured from each outer edge, that turns the page on a plain
  * click/tap (no drag), independently of {@see CORNER_ZONE_RATIO} - covers the full height, not
- * just the corners (Peter's feedback, 24.09.2026: the drag "attraction" should stay limited to the
+ * just the corners (feedback from testing, 24.09.2026: the drag "attraction" should stay limited to the
  * corners, but a click anywhere along the left/right edge should still turn the page).
  */
 const EDGE_CLICK_RATIO = 0.2;
@@ -198,7 +198,7 @@ export default class FlipbookView {
         // and applyZoom() below (which sets the same width) runs too late to matter to that first
         // measurement. Without this, single-page mode still behaved like double-page internally: a
         // phantom, hoverable/clickable second page slot remained where it would have been, showing
-        // its own corner-flip preview and letting a click there flip through it (Peter's feedback,
+        // its own corner-flip preview and letting a click there flip through it (feedback from testing,
         // 24.09.2026).
         this.book.style.width = pageWidth * (single ? 1 : 2) + 'px';
         this.book.style.height = pageHeight + 'px';
@@ -231,7 +231,7 @@ export default class FlipbookView {
             startPage: this.page - 1,
             drawShadow: true,
             // A low but non-zero shadow keeps a hint of depth without the harsh, high-contrast
-            // gradient that reads as shiny foil rather than paper (Peter's feedback, 24.09.2026,
+            // gradient that reads as shiny foil rather than paper (feedback from testing, 24.09.2026,
             // confirmed in an isolated test page against the library's own default of 1).
             maxShadowOpacity: 0.2,
             // Close to StPageFlip's own default (1000ms). A shorter value made the turn feel rushed
@@ -240,7 +240,7 @@ export default class FlipbookView {
             // StPageFlip's own default: a vertical swipe scrolls the stage (e.g. a page taller than
             // the screen in "fit to width" on a phone), only a horizontal swipe turns the page. With
             // false, every touch that reached the library was swallowed and the page could not be
-            // scrolled on a phone at all (Peter's feedback, issue #8).
+            // scrolled on a phone at all (feedback from testing, issue #8).
             mobileScrollSupport: true,
             swipeDistance: 60,
             // REVERTED to true (24.09.2026): false stopped the hover-preview "jump", but broke
@@ -389,7 +389,7 @@ export default class FlipbookView {
      * flipPrev() does nothing (see prev()). The same simulated gesture is started at the visible
      * page's real left edge instead; StPageFlip only accepts it there with its corner-only rule
      * lifted for this one call, because in single-page mode the corner it would accept belongs to
-     * the invisible phantom page (Peter's feedback, issue #3).
+     * the invisible phantom page (feedback from testing, issue #3).
      *
      * @returns {boolean} Whether the animated turn started; false leaves it to the caller
      */

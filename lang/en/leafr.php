@@ -37,7 +37,7 @@ $string['bookmark_remove'] = 'Remove bookmark';
 $string['chapterno'] = 'Chapter {no}';
 $string['chapterpage'] = 'Start page';
 $string['chaptersheader'] = 'Chapters';
-$string['chaptersintro'] = 'One row per chapter: title and start page. Used for the "Contents" tab when the PDF has no outline of its own, or always if "Always use the manual chapter list" above is enabled. Tip: PDFs exported from Word or PowerPoint get an outline automatically if you used heading styles (Word) or "Create Links Using: Headings" (PowerPoint export options) - then this manual list is usually not needed.';
+$string['chaptersintro'] = 'One row per chapter: title and start page. Used for the "Contents" tab when the PDF has no outline of its own, or always if "Always use the manual chapter list" above is enabled. Tip: PDFs exported from Word or PowerPoint usually contain an outline automatically if the headings use heading styles and the option to create bookmarks from headings is enabled when exporting; then this manual list is usually not needed.';
 $string['chaptertitle'] = 'Chapter title';
 $string['close'] = 'Close';
 $string['completion_done'] = 'Well done! You have read enough of this document to complete the activity.';
@@ -46,7 +46,7 @@ $string['completion_percent'] = 'A percentage of all pages must be viewed';
 $string['completion_specificpage'] = 'A specific page must be viewed';
 $string['completion_specificrange'] = 'Specific pages or chapters must be viewed';
 $string['completionchapters'] = 'Or select required chapters';
-$string['completionchapters_help'] = 'Selecting chapters here adds their pages to "Required pages" below once the settings are saved. Only chapters already saved in the "Chapters" section above are listed.';
+$string['completionchapters_help'] = 'Selecting chapters here adds their pages to "Required pages" above once the settings are saved. Only chapters already saved in the "Chapters" section are listed.';
 $string['completiondetail:lastpage'] = 'View the last page';
 $string['completiondetail:page'] = 'View page {$a}';
 $string['completiondetail:percent'] = 'View {$a}% of the pages';
@@ -75,17 +75,17 @@ $string['fit_width'] = 'Fit width';
 $string['fitmode'] = 'Zoom fit';
 $string['fullscreen_enter'] = 'Full screen';
 $string['fullscreen_exit'] = 'Exit full screen';
-$string['fullscreentip'] = 'Tip: full screen gives you more room to read (key F).';
+$string['fullscreentip'] = 'Tip: Full screen gives you more room to read (press F).';
 $string['gotopage'] = 'Go to page';
 $string['help'] = 'Keyboard shortcuts';
 $string['help_bookmark'] = 'Bookmark or remove the bookmark of the current page';
-$string['help_close'] = 'Close dialog, table of contents or full screen';
+$string['help_close'] = 'Close a dialog or the sidebar, or leave full screen';
 $string['help_firstlast'] = 'First or last page';
-$string['help_fullscreen'] = 'Full screen on or off';
+$string['help_fullscreen'] = 'Turn full screen on or off';
 $string['help_help'] = 'Show this help';
-$string['help_intro'] = 'The shortcuts work when the reader has the focus.';
+$string['help_intro'] = 'The shortcuts work once you have clicked into the document.';
 $string['help_nextprev'] = 'Next or previous page';
-$string['help_toc'] = 'Table of contents on or off';
+$string['help_toc'] = 'Show or hide the table of contents';
 $string['help_zoom'] = 'Zoom in or out';
 $string['initialpage'] = 'Start page';
 $string['initialpage_help'] = 'The page shown when a student opens the document for the first time. Afterwards the document opens at the page the student last read.';
@@ -98,11 +98,11 @@ $string['leafrname'] = 'Name';
 $string['loading'] = 'Loading document …';
 $string['matchofmatches'] = '{$a->index} of {$a->total}';
 $string['modulename'] = 'Leafr flipbook';
-$string['modulename_help'] = 'The Leafr flipbook shows a PDF document as a book that students can leaf through directly in the course.
+$string['modulename_help'] = 'The Leafr flipbook shows a PDF document as a book that students leaf through directly in the course, with a realistic page-turning animation.
 
-Students continue reading where they stopped last time. The activity can be completed automatically when the last page, a certain percentage of the pages or a specific page has been viewed.
+Students continue where they stopped last time, can search the text, jump to chapters via the table of contents or the page thumbnails, and set bookmarks with personal notes.
 
-A simple, scrollable view without page-turning animation is available for accessibility.';
+The activity can be completed automatically when the last page, a percentage of the pages, a specific page or selected pages and chapters have been viewed; a read confirmation can be required in addition. A simple, scrollable view without page-turning animation is available for accessibility.';
 $string['modulenameplural'] = 'Leafr flipbooks';
 $string['nextpage'] = 'Next page';
 $string['nonewmodules'] = 'There are no Leafr flipbooks in this course.';
@@ -147,7 +147,7 @@ $string['search_noresults_scan'] = 'This document does not contain searchable te
 $string['search_placeholder'] = 'Search in document';
 $string['search_prev'] = 'Previous match';
 $string['showtoc'] = 'Show table of contents';
-$string['showtoc_help'] = 'Shows the bookmarks (outline) of the PDF as a table of contents. The PDF must contain bookmarks, which most programs can create when exporting to PDF.';
+$string['showtoc_help'] = 'Shows the PDF\'s own outline (the chapter structure stored in the file, often called "bookmarks" in PDF programs) in the "Contents" tab of the sidebar. If the PDF has no outline, the chapters entered in the "Chapters" section are used.';
 $string['sidebar'] = 'Sidebar';
 $string['simpleview'] = 'Simple view';
 $string['spread_auto'] = 'Automatic';

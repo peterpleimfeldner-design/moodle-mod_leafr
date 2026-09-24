@@ -4,17 +4,25 @@ Leafr is a Moodle activity that shows a PDF document as a book students can leaf
 
 ## Features
 
-- **Book view** with page-turning animation (two-page spread on large screens, single pages on phones and for landscape documents).
-- **Simple view** without animation: all pages below each other, scrollable, with the text of each page available to screen readers. It is used automatically when the operating system asks for reduced motion and can be switched on at any time; the choice is remembered.
-- **Continue reading**: the document opens at the page the student read last.
-- **Completion**: the activity can be completed when the last page, a percentage of all pages or a specific page has been viewed.
-- **Table of contents** built from the bookmarks (outline) of the PDF, shown as its own sidebar tab together with page thumbnails.
-- **In-document search**: full-text search across all pages with result navigation and highlighted matches.
-- **Bookmarks**: students can mark any page (in book view, either page of a two-page spread) and add a short note (up to 500 characters, with a live character counter). Bookmarks appear in their own sidebar tab and can be exported as a simple print/PDF page.
-- **Zoom** (50 % to 300 %) with drag-to-pan, **full screen**, page number input and progress bar.
-- **Keyboard shortcuts** while the reader has the focus: arrow keys, Page Up/Down, Home/End, `+`/`-`, `T` (table of contents), `F` (full screen), `B` (bookmark current page), `?` (help).
+For students:
+
+- **Book view** with a realistic page-turning animation: two-page spread on large screens, single pages on phones and for landscape documents, or a fixed layout chosen in the view menu (remembered per user).
+- **Simple view** without animation: all pages below each other, scrollable, with the text of each page available to screen readers. It is used automatically when the operating system asks for reduced motion and can be switched on at any time.
+- **Continue reading**: the document opens at the page read last.
+- **Sidebar** with page thumbnails, contents (the PDF outline or chapters defined by the teacher), bookmarks and full-text search with highlighted matches.
+- **Bookmarks with notes**: bookmark any page and add a personal note (up to 500 characters, saved automatically); print the list or save it as PDF.
+- **Zoom** (50 % to 300 %), fit to page or width, **full screen**, page number input and progress bar.
+- **Keyboard shortcuts** once the document has the focus: arrow keys, Page Up/Down, Home/End, `+`/`-`, `T` (contents), `B` (bookmark), `F` (full screen), `?` (help).
+- Works on phones and tablets: swipe to turn pages, the toolbar adapts to the available width.
+
+For teachers:
+
+- **Completion** when the last page, a percentage of the pages, a specific page, or specific pages and chapters (e.g. "1-5, 8, 12-20") have been viewed. Required pages are marked for students.
+- **Read confirmation** (optional completion rule): students confirm a statement of your choice after reading.
+- **Overview report**: per participant only completion, required pages read and the confirmation date, with group filter and CSV export. Reading times and individual page views are deliberately not recorded.
+- **Manual chapters** for PDFs without an outline, or instead of the PDF's own outline.
 - Optional **download** of the original PDF (per activity setting and capability `mod/leafr:download`).
-- Backup and restore, course reset, Privacy API (GDPR), events for page views.
+- Backup and restore, duplication, course reset, Privacy API (GDPR), events for page views.
 
 ## Requirements
 
@@ -28,13 +36,13 @@ Leafr is a Moodle activity that shows a PDF document as a book students can leaf
 
 ## Usage
 
-Add the activity "Leafr flipbook" to a course, upload a PDF file and save. In the section "Completion conditions" you can require that students view the last page, a percentage of the pages or a specific page.
+Add the activity "Leafr flipbook" to a course, upload a PDF file and save. Optionally define chapters, the start page and whether the PDF may be downloaded. Under "Completion conditions" choose which pages must be viewed and whether a read confirmation is required.
 
 The number of pages is determined by the browser when the document is opened for the first time.
 
 ## Privacy
 
-Leafr stores, per user and activity, the pages that were viewed and the last reading position, the bookmarks (page number and note) a user has set, plus one user preference for the simple view. All data can be exported and deleted with the Moodle privacy tools.
+Leafr stores, per user and activity, the pages that were viewed and the last reading position, the bookmarks (page number and note), the time of a read confirmation, and two user preferences (simple view, page layout). All of this can be exported and deleted with the Moodle privacy tools. The browser additionally remembers locally that the one-time full screen tip has been shown. No data is sent to external services.
 
 ## Third-party libraries
 

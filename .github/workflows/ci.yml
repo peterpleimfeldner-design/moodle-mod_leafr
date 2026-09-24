@@ -142,15 +142,6 @@ jobs:
       - name: Behat features
         id: behat
         if: ${{ !cancelled() }}
-        # TEMPORARY (24.09.2026): non-blocking while investigating a scenario failure
-        # (leafr_report.feature's "Two students" scenario, all Moodle versions) that only shows up
-        # in this CI environment - a report of "33% seen" after three page turns that should reach
-        # ~66%, but not reproducible in an isolated test page against the real StPageFlip library
-        # (three rapid flipNext() calls land exactly where expected there). Looks like the reader's
-        # spread-mode detection picks single- instead of double-page at whatever viewport width
-        # Behat's Chrome profile uses, unrelated to Paket H2's actual changes, but not yet root-
-        # caused. Remove this continue-on-error once it is.
-        continue-on-error: true
         run: moodle-plugin-ci behat --profile chrome
 
       - name: Upload Behat faildump
