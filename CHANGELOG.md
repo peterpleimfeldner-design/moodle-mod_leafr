@@ -51,6 +51,10 @@ Vollständiges Review aller Seiten im Browser, dokumentiert in `docs/ux-review_2
     Enter springt zum gewählten Treffer (#6).
   - Handy/Tablet: Senkrechtes Wischen scrollt eine Seite, die höher als der Bildschirm ist (vorher fing das
     Blättern jede Berührung ab); eine vergrößerte Seite lässt sich per Finger auch seitlich verschieben (#8).
+  - Seiten mit anderem Format als die erste Seite (z. B. Querformat in einem Hochformat-Dokument) werden
+    nicht mehr verzerrt, sondern in ihrem eigenen Seitenverhältnis mittig auf der Seite gezeigt (#13).
+  - „Doppelseite“ im Ansicht-Menü ist ausgegraut, wo keine Doppelseite möglich ist (Querformat, einseitiges
+    Dokument, zu schmaler Reader) (#12).
   - Lesebestätigung ohne Seitenregel: Das Bestätigungsfeld erscheint jetzt, sobald die letzte Seite
     erreicht ist; vorher erschien es in diesem Fall nie (#10).
 - Bericht „Übersicht“: ohne Gruppenfilter heißt es jetzt „In diesem Kurs sind noch keine

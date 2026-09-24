@@ -125,7 +125,7 @@ export default class FlipbookView {
      * two columns squeezed into a phone-sized screen would be unreadable, so the width floor wins
      * even when the person chose "double" on a larger screen before switching devices.
      *
-     * @returns {{single: boolean, pageWidth: number, pageHeight: number}}
+     * @returns {{single: boolean, canSpread: boolean, pageWidth: number, pageHeight: number}}
      */
     computeLayout() {
         const ratio = this.pageSize.width / this.pageSize.height;
@@ -148,7 +148,17 @@ export default class FlipbookView {
                 pageHeight = pageWidth / ratio;
             }
         }
-        return {single, pageWidth: Math.floor(pageWidth), pageHeight: Math.floor(pageHeight)};
+        return {single, canSpread: !tooNarrowForSpread, pageWidth: Math.floor(pageWidth), pageHeight: Math.floor(pageHeight)};
+    }
+
+    /**
+     * Whether a two-page spread is possible at all here: not for landscape pages, a single-page
+     * document or a stage too narrow for two pages.
+     *
+     * @returns {boolean}
+     */
+    canSpread() {
+        return this.layout ? this.layout.canSpread : true;
     }
 
     /**

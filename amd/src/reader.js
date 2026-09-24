@@ -1147,6 +1147,7 @@ class Reader {
      * Opens the view menu.
      */
     openViewMenu() {
+        this.updateViewMenuState();
         this.viewMenu.hidden = false;
         this.viewMenuButton.setAttribute('aria-expanded', 'true');
         // The listener is added on open (not once in bindEvents) so it never fires for the very
@@ -1168,8 +1169,14 @@ class Reader {
      * disables the flipbook-only options (page layout, zoom fit) while the simple view is active.
      */
     updateViewMenuState() {
+        // "Double" is greyed out where a spread cannot be shown anyway (landscape pages, a one-page
+        // document, a narrow stage), instead of silently doing nothing (Peter's feedback, issue #12).
+        const nospread = !this.simpleView && this.view && this.view.canSpread && !this.view.canSpread();
         this.viewMenu.querySelectorAll('[data-spread]').forEach((button) => {
             button.setAttribute('aria-checked', button.dataset.spread === this.spreadMode ? 'true' : 'false');
+            if (button.dataset.spread === 'double') {
+                button.disabled = Boolean(nospread);
+            }
         });
         this.viewMenu.querySelectorAll('[data-fit]').forEach((button) => {
             button.setAttribute('aria-checked', button.dataset.fit === this.fitMode ? 'true' : 'false');

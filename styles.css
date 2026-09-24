@@ -143,6 +143,10 @@
     display: block;
     width: 100%;
     height: 100%;
+    /* All pages share the size of the first page in the book; a page with a different shape (e.g.
+       a landscape page in a portrait document) keeps its own proportions and is centred on white
+       instead of being stretched (Peter's feedback, issue #13). */
+    object-fit: contain;
 }
 
 .leafr-reader .stf__parent {
