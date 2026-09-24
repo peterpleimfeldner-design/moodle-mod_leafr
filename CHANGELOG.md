@@ -22,6 +22,20 @@ Vollständiges Review aller Seiten im Browser, dokumentiert in `docs/ux-review_2
   Knopf mit Symbol; „Lesezeichen entfernen“ als dezenter Knopf; gesetzte Lesezeichen in der Leiste
   über dem Buch deutlich hervorgehoben; Leer-Hinweis erklärt, wie man ein Lesezeichen setzt.
 - „Weiter bei Seite …“-Meldung bricht auf schmalen Bildschirmen nicht mehr Wort für Wort um.
+- **Neues Logo**: aufgeschlagenes Buch, dessen rechte Seite gerade umgeblättert wird („to leaf
+  through“ = durchblättern) – ersetzt das Blatt-Logo, das auf der Kursseite wie ein Wassertropfen
+  wirkte. Farbig (`pix/icon.svg`) und einfarbig (`pix/monologo.svg`, die umblätternde Seite durch
+  eine transparente Fuge abgesetzt, damit es in jeder Theme-Farbe lesbar bleibt).
+- **Kapitel-Formular**: Titel und Startseite eines Kapitels stehen in einer Zeile („Kapitel 1:
+  [Titel] [Seite]“); ein Hinweistext über der Liste ersetzt das Hilfe-Symbol in jeder Zeile.
+- **Dunkelmodus**: Der Reader wird nur noch dunkel, wenn auch die Moodle-Seite dunkel ist (dunkles
+  Theme), nicht mehr allein wegen der Systemeinstellung – ein dunkler Reader in einer weißen
+  Moodle-Seite wirkte wie ein Fremdkörper.
+- **Vollbild-Tipp**: Beim ersten Öffnen (einmal pro Browser) weist ein kurzer Hinweis auf das
+  Vollbild hin, mit Knopf zum direkten Wechseln.
+- Das Buch wird neu berechnet, sobald sein Platz schrumpft (vorher erst ab 8 px Unterschied), und
+  die Fortschrittszeile reserviert ihren Platz von Anfang an – beides verhinderte in manchen Fällen
+  einen kleinen Scrollbalken.
 - Bericht „Übersicht“: ohne Gruppenfilter heißt es jetzt „In diesem Kurs sind noch keine
   Teilnehmer/innen eingeschrieben“ statt „… entsprechen dem aktuellen Filter“; Datenschutzhinweis
   als ruhiger Text statt zweitem blauen Hinweiskasten.
@@ -92,9 +106,7 @@ Vollständiges Review aller Seiten im Browser, dokumentiert in `docs/ux-review_2
 - **Werkzeugleiste neu geordnet**: Seitenleiste links, Navigation mittig, Ansicht-Menü,
   Lesezeichen, Download und Hilfe rechts. Seitenleiste, Ansicht und Lesezeichen zeigen ab
   Tablet-Breite eine sichtbare Beschriftung neben dem Symbol, darunter nur Tooltip.
-- **Neues Logo**: ein Blatt mit umgeknickter Ecke wie eine umgeblätterte Buchseite, farbig
-  (`pix/icon.svg`) und einfarbig (`pix/monologo.svg`, als Aussparung umgesetzt, damit es in jeder
-  Theme-Farbe funktioniert).
+- **Neues Logo** (endgültige Fassung nach dem UX-Review, siehe dort).
 - **Farben**: Primärfarbe wird von der Moodle-Theme-Variable `--bs-primary` übernommen, wenn deren
   Kontrast gegen Weiß WCAG AA (4,5:1) erreicht, sonst bleibt die feste Leafr-Petrol-Farbe
   `#0E6A62`. Gilt nur im hellen Modus; der dunkle Modus (Systemeinstellung) behält seine eigene,

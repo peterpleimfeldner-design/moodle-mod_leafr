@@ -27,16 +27,16 @@
     background: var(--leafr-stage-bg);
 }
 
-@media (prefers-color-scheme: dark) {
-    .leafr-reader {
-        --leafr-accent: #5eb8b8;
-        --leafr-stage-bg: #1b1f24;
-        --leafr-toolbar-bg: #111827;
-        --leafr-panel-bg: #1f2937;
-        --leafr-panel-fg: #f3f4f6;
-        --leafr-border: #374151;
-        --leafr-muted: #9ca3af;
-    }
+/* Dark colours only when the Moodle page around the reader is dark too (set by the reader from
+   the page background): a dark reader inside Moodle's usual white page looked out of place. */
+.leafr-reader.is-dark {
+    --leafr-accent: #5eb8b8;
+    --leafr-stage-bg: #1b1f24;
+    --leafr-toolbar-bg: #111827;
+    --leafr-panel-bg: #1f2937;
+    --leafr-panel-fg: #f3f4f6;
+    --leafr-border: #374151;
+    --leafr-muted: #9ca3af;
 }
 
 .leafr-reader .sr-only {
@@ -816,6 +816,9 @@
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 0 0.5rem;
+    /* One line is reserved before the summary is filled in, so the toolbar does not grow (and
+       shrink the book's stage) after the book was sized. */
+    min-height: calc(0.75rem * 1.3 + 0.25rem);
     padding: 0.25rem 0.75rem 0;
     font-size: 0.75rem;
     line-height: 1.3;
@@ -1123,6 +1126,27 @@
 .leafr-toast-action:hover,
 .leafr-toast-action:focus-visible {
     background: rgba(255, 255, 255, 0.15);
+}
+
+.leafr-toast-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin: -0.25rem -0.5rem -0.25rem 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0.25rem;
+    background: transparent;
+    color: inherit;
+    opacity: 0.8;
+}
+
+.leafr-toast-close:hover,
+.leafr-toast-close:focus-visible {
+    background: rgba(255, 255, 255, 0.15);
+    opacity: 1;
 }
 
 /* Keyboard help. */

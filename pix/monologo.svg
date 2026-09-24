@@ -1,1 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="24" height="24"><path fill="#000" fill-rule="evenodd" clip-rule="evenodd" d="M128 28c50 40 82 96 82 140a82 82 0 0 1-164 0c0-44 32-100 82-140Z M175 92L215 126L169 136Z"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="24" height="24">
+  <!-- Single-colour Leafr logo for Moodle's activity icons: the turning page is separated from the
+       page beneath it by a transparent gap, so the shape stays readable in any tint. -->
+  <defs>
+    <mask id="leafr-turn-gap">
+      <rect width="256" height="256" fill="#fff"/>
+      <path fill="#000" stroke="#000" stroke-width="16" stroke-linejoin="round"
+            d="M132 80C150 52 180 34 214 26C204 70 198 130 200 178C174 182 150 196 132 220Z"/>
+    </mask>
+  </defs>
+  <path fill="#000" d="M24 72C60 60 96 62 124 80V220C96 202 60 200 24 212Z"/>
+  <path fill="#000" mask="url(#leafr-turn-gap)" d="M132 80C160 62 196 60 232 72V212C196 200 160 202 132 220Z"/>
+  <path fill="#000" d="M132 80C150 52 180 34 214 26C204 70 198 130 200 178C174 182 150 196 132 220Z"/>
+</svg>

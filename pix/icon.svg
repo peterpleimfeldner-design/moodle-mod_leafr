@@ -1,7 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
-  <!-- Leafr logo: a leaf whose corner is folded like a turned book page. -->
-  <path fill="#0E6A62" d="M128 28c50 40 82 96 82 140a82 82 0 0 1-164 0c0-44 32-100 82-140Z"/>
-  <path fill="#fff" d="M175 92c26 14 40 34 40 34l-46 10 6-44Z"/>
-  <path fill="none" stroke="#0a4b45" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" d="M175 92c26 14 40 34 40 34l-46 10Z"/>
-  <path stroke="#0a4b45" stroke-width="5" stroke-linecap="round" opacity="0.45" d="M128 60v148"/>
+  <!-- Leafr logo: an open book whose right page is being turned ("to leaf through" a book). -->
+  <path fill="#0E6A62" d="M24 72C60 60 96 62 124 80V220C96 202 60 200 24 212Z"/>
+  <path fill="#0E6A62" d="M132 80C160 62 196 60 232 72V212C196 200 160 202 132 220Z"/>
+  <path fill="#6FC3B8" d="M132 80C150 52 180 34 214 26C204 70 198 130 200 178C174 182 150 196 132 220Z"/>
 </svg>

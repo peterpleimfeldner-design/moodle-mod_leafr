@@ -81,13 +81,23 @@ class mod_leafr_mod_form extends moodleform_mod {
         $mform->addHelpButton('usemanualchapters', 'usemanualchapters', 'leafr');
         $mform->setDefault('usemanualchapters', 0);
 
+        // One explanation for the whole list instead of a help icon repeated on every chapter row.
+        $mform->addElement('static', 'chaptersintro', '', get_string('chaptersintro', 'leafr'));
+
         $existingchapters = chapters::decode($this->current->manualchapters ?? null);
+        // Title and start page share one row per chapter ("Chapter 1: [title] [page]"); the group does
+        // not append its name, so the fields keep their names chaptertitle[n] and chapterpage[n].
+        $chapterfields = [
+            $mform->createElement('text', 'chaptertitle', get_string('chaptertitle', 'leafr'),
+                ['size' => '40', 'placeholder' => get_string('chaptertitle', 'leafr')]),
+            $mform->createElement('text', 'chapterpage', get_string('chapterpage', 'leafr'),
+                ['size' => '4', 'placeholder' => get_string('chapterpage', 'leafr'), 'inputmode' => 'numeric']),
+        ];
         $repeatarray = [
-            $mform->createElement('text', 'chaptertitle', get_string('chaptertitle', 'leafr'), ['size' => '40']),
-            $mform->createElement('text', 'chapterpage', get_string('chapterpage', 'leafr'), ['size' => '5']),
+            $mform->createElement('group', 'chaptergroup', get_string('chapterno', 'leafr'), $chapterfields, ' ', false),
         ];
         $repeatoptions = [
-            'chaptertitle' => ['type' => PARAM_TEXT, 'helpbutton' => ['chaptertitle', 'leafr']],
+            'chaptertitle' => ['type' => PARAM_TEXT],
             'chapterpage' => ['type' => PARAM_INT],
         ];
         $this->repeat_elements(
@@ -200,7 +210,8 @@ class mod_leafr_mod_form extends moodleform_mod {
             foreach ((array)$data['chaptertitle'] as $index => $title) {
                 $page = (int)($data['chapterpage'][$index] ?? 0);
                 if (trim((string)$title) !== '' && $page < 1) {
-                    $errors["chapterpage[$index]"] = get_string('error_invalidpage', 'leafr');
+                    // Errors of grouped fields are only shown when set on the group itself.
+                    $errors["chaptergroup[$index]"] = get_string('error_invalidpage', 'leafr');
                 }
             }
         }

@@ -531,7 +531,11 @@ export default class FlipbookView {
                 return;
             }
             const layout = this.computeLayout();
-            if (layout.single !== this.layout.single || Math.abs(layout.pageHeight - this.layout.pageHeight) > 8 ||
+            // Growing by a few pixels is not worth rebuilding the book, but any shrinking is: the book
+            // would otherwise stick out of the stage and show a scrollbar (e.g. when the toolbar grows
+            // slightly after the book was first built).
+            const shrunk = layout.pageHeight < this.layout.pageHeight || layout.pageWidth < this.layout.pageWidth;
+            if (layout.single !== this.layout.single || shrunk || Math.abs(layout.pageHeight - this.layout.pageHeight) > 8 ||
                     Math.abs(layout.pageWidth - this.layout.pageWidth) > 8) {
                 this.build();
             }

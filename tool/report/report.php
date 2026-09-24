@@ -91,7 +91,7 @@ if ($groupmode) {
 }
 
 if (!$rows) {
-    // "Match the current filter" only makes sense when a group is actually selected.
+    // The wording "match the current filter" only makes sense when a group is actually selected.
     $emptystring = $groupid ? 'reportnoparticipants' : 'reportnoparticipantsyet';
     echo $OUTPUT->notification(get_string($emptystring, 'leafrtool_report'), 'info', false);
 } else {

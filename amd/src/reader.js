@@ -53,6 +53,12 @@ const WIDE_READER = 760;
 const COMPACT_READER = 580;
 const NARROW_READER = 460;
 
+/** Browser storage key remembering that the one-time full screen tip was shown. */
+const FULLSCREEN_TIP_KEY = 'mod_leafr_fullscreentip';
+
+/** How long the full screen tip stays visible, in milliseconds. */
+const FULLSCREEN_TIP_DURATION = 10000;
+
 /** Available zoom factors. */
 const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3];
 
@@ -91,6 +97,7 @@ class Reader {
         this.progressFill = root.querySelector('[data-region="progress-fill"]');
         this.progressSummary = root.querySelector('[data-region="progress-summary"]');
         this.continueToast = root.querySelector('[data-region="continue"]');
+        this.fullscreenTip = root.querySelector('[data-region="fullscreen-tip"]');
         this.live = root.querySelector('[data-region="live"]');
         this.helpDialog = root.querySelector('[data-region="help"]');
         this.sidebarRoot = root.querySelector('[data-region="sidebar"]');
@@ -138,20 +145,53 @@ class Reader {
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         this.simpleView = stored === '' ? reducedMotion : stored === '1';
 
-        Reader.applyThemeAccent(root);
+        Reader.applyPageTheme(root);
     }
 
     /**
-     * Uses the Moodle theme's primary colour (Boost's `--bs-primary`) as the reader's accent
-     * colour instead of the built-in Leafr petrol, but only if it is a plain hex colour with
-     * enough contrast against a white background (WCAG AA, 4.5:1) to stay safe as text.
-     * Left untouched in dark mode: the theme's primary is rarely tuned for a dark background, so
-     * the fixed accent from {@see styles.css} is kept there regardless of the theme.
+     * Relative luminance (WCAG) of an sRGB colour given as 0-255 channel values.
+     *
+     * @param {number[]} rgb Red, green and blue, 0-255
+     * @returns {number} Luminance between 0 (black) and 1 (white)
+     */
+    static luminance(rgb) {
+        const linear = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
+        const [r, g, b] = rgb.map((c) => linear(c / 255));
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+
+    /**
+     * Whether the Moodle page around the reader is dark: the first non-transparent background
+     * found going up from the reader's container decides.
+     *
+     * @param {HTMLElement} root The reader element
+     * @returns {boolean}
+     */
+    static isPageDark(root) {
+        for (let el = root.parentElement; el; el = el.parentElement) {
+            const match = /rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/.exec(
+                getComputedStyle(el).backgroundColor);
+            if (match && (match[4] === undefined || parseFloat(match[4]) > 0.5)) {
+                return Reader.luminance([match[1], match[2], match[3]].map(Number)) < 0.2;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Matches the reader to the Moodle page around it. The reader only turns dark when the page
+     * itself is dark (a dark Moodle theme), not merely because the operating system prefers dark
+     * mode: Moodle's usual themes stay white, and a dark reader inside a white page looked out of
+     * place. In the light case, the theme's primary colour (Boost's `--bs-primary`) replaces the
+     * built-in Leafr petrol as accent colour, but only if it is a plain hex colour with enough
+     * contrast against white (WCAG AA, 4.5:1) to stay safe as text. A dark page keeps the fixed
+     * dark accent from {@see styles.css}: a theme's primary is rarely tuned for dark backgrounds.
      *
      * @param {HTMLElement} root The reader element
      */
-    static applyThemeAccent(root) {
-        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    static applyPageTheme(root) {
+        if (Reader.isPageDark(root)) {
+            root.classList.add('is-dark');
             return;
         }
         const raw = getComputedStyle(document.documentElement).getPropertyValue('--bs-primary').trim();
@@ -160,10 +200,8 @@ class Reader {
             return;
         }
         const hex = match[1].length === 3 ? [...match[1]].map((c) => c + c).join('') : match[1];
-        const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.substring(i, i + 2), 16) / 255);
-        const linear = (c) => (c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4));
-        const luminance = 0.2126 * linear(r) + 0.7152 * linear(g) + 0.0722 * linear(b);
-        const contrastOnWhite = 1.05 / (luminance + 0.05);
+        const rgb = [0, 2, 4].map((i) => parseInt(hex.substring(i, i + 2), 16));
+        const contrastOnWhite = 1.05 / (Reader.luminance(rgb) + 0.05);
         if (contrastOnWhite >= 4.5) {
             root.style.setProperty('--leafr-accent', raw);
         }
@@ -218,6 +256,7 @@ class Reader {
             await this.initToc();
             this.updateProgressSummary();
             this.showContinueNotice();
+            this.showFullscreenTip();
             if (this.completed) {
                 // Already complete when the page loaded (e.g. a returning user): showCompletion()
                 // only fires for a *newly reached* completion, so subplugins listening for
@@ -695,6 +734,39 @@ class Reader {
     }
 
     /**
+     * Shows a one-time tip about full screen mode (once per browser): embedded in a Moodle page,
+     * the reader often has little height left on a laptop screen, and full screen is easy to miss
+     * inside the "View" menu. Skipped when the "continue reading" notice is already showing.
+     */
+    showFullscreenTip() {
+        if (!this.fullscreenTip || !this.root.requestFullscreen || !this.continueToast.hidden ||
+                document.fullscreenElement === this.root) {
+            return;
+        }
+        try {
+            if (window.localStorage.getItem(FULLSCREEN_TIP_KEY)) {
+                return;
+            }
+            window.localStorage.setItem(FULLSCREEN_TIP_KEY, '1');
+        } catch (error) {
+            // Without browser storage the tip would appear on every visit, so it is left out.
+            return;
+        }
+        this.fullscreenTip.hidden = false;
+        this.fullscreenTipTimer = setTimeout(() => this.hideFullscreenTip(), FULLSCREEN_TIP_DURATION);
+    }
+
+    /**
+     * Hides the full screen tip.
+     */
+    hideFullscreenTip() {
+        clearTimeout(this.fullscreenTipTimer);
+        if (this.fullscreenTip) {
+            this.fullscreenTip.hidden = true;
+        }
+    }
+
+    /**
      * Hides the "continue reading" notice.
      */
     hideContinueNotice() {
@@ -743,6 +815,9 @@ class Reader {
         document.addEventListener('fullscreenchange', () => {
             const active = document.fullscreenElement === this.root;
             this.root.classList.toggle('is-fullscreen', active);
+            if (active) {
+                this.hideFullscreenTip();
+            }
             const button = this.root.querySelector('[data-action="fullscreen"]');
             const label = active ? this.strings.fullscreen_exit : this.strings.fullscreen_enter;
             button.setAttribute('aria-checked', active ? 'true' : 'false');
@@ -767,6 +842,11 @@ class Reader {
             'spread-double': () => this.setSpreadMode('double'),
             'fit-page': () => this.setFitMode('page'),
             'fit-width': () => this.setFitMode('width'),
+            'fullscreen-tip': () => {
+                this.hideFullscreenTip();
+                this.toggleFullscreen();
+            },
+            'fullscreen-tip-close': () => this.hideFullscreenTip(),
         };
         if (viewMenuActions[action]) {
             viewMenuActions[action]();

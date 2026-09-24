@@ -34,12 +34,11 @@ $string['bookmark_note_saved'] = 'Guardado';
 $string['bookmark_page'] = 'Marcar la página {$a}';
 $string['bookmark_print'] = 'Imprimir o guardar como PDF';
 $string['bookmark_remove'] = 'Quitar marcador';
+$string['chapterno'] = 'Capítulo {no}';
 $string['chapterpage'] = 'Página de inicio';
 $string['chaptersheader'] = 'Capítulos';
+$string['chaptersintro'] = 'Una fila por capítulo: título y página de inicio. Se usa en la pestaña «Contenido» cuando el PDF no tiene un índice propio, o siempre si más arriba está activado «Usar siempre la lista manual de capítulos». Consejo: los PDF exportados desde Word o PowerPoint obtienen un índice automáticamente si usaste estilos de título (Word) o «Crear vínculos usando: Títulos» (opciones de exportación de PowerPoint); en ese caso, normalmente no hace falta esta lista manual.';
 $string['chaptertitle'] = 'Título del capítulo';
-$string['chaptertitle_help'] = 'Una fila por capítulo: título y página de inicio. Se usa en la pestaña «Contenido» cuando el PDF no tiene un índice propio, o siempre si más abajo está activado «Usar siempre la lista manual de capítulos».
-
-Consejo: los PDF exportados desde Word o PowerPoint obtienen un índice automáticamente si usaste estilos de título (Word) o «Crear vínculos usando: Títulos» (opciones de exportación de PowerPoint); en ese caso, normalmente no hace falta esta lista manual.';
 $string['close'] = 'Cerrar';
 $string['completion_done'] = '¡Muy bien! Has leído suficiente de este documento para completar la actividad.';
 $string['completion_lastpage'] = 'Debe verse la última página';
@@ -76,6 +75,7 @@ $string['fit_width'] = 'Ajustar al ancho';
 $string['fitmode'] = 'Ajuste de zoom';
 $string['fullscreen_enter'] = 'Pantalla completa';
 $string['fullscreen_exit'] = 'Salir de pantalla completa';
+$string['fullscreentip'] = 'Consejo: en pantalla completa tienes más espacio para leer (tecla F).';
 $string['gotopage'] = 'Ir a la página';
 $string['help'] = 'Atajos de teclado';
 $string['help_bookmark'] = 'Marcar o quitar el marcador de la página actual';

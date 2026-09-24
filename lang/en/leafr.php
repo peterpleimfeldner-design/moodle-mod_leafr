@@ -34,12 +34,11 @@ $string['bookmark_note_saved'] = 'Saved';
 $string['bookmark_page'] = 'Bookmark page {$a}';
 $string['bookmark_print'] = 'Print or save as PDF';
 $string['bookmark_remove'] = 'Remove bookmark';
+$string['chapterno'] = 'Chapter {no}';
 $string['chapterpage'] = 'Start page';
 $string['chaptersheader'] = 'Chapters';
+$string['chaptersintro'] = 'One row per chapter: title and start page. Used for the "Contents" tab when the PDF has no outline of its own, or always if "Always use the manual chapter list" above is enabled. Tip: PDFs exported from Word or PowerPoint get an outline automatically if you used heading styles (Word) or "Create Links Using: Headings" (PowerPoint export options) - then this manual list is usually not needed.';
 $string['chaptertitle'] = 'Chapter title';
-$string['chaptertitle_help'] = 'One row per chapter: title and start page. Used for the "Contents" tab when the PDF has no outline of its own, or always if "Always use the manual chapter list" below is enabled.
-
-Tip: PDFs exported from Word or PowerPoint get an outline automatically if you used heading styles (Word) or "Create Links Using: Headings" (PowerPoint export options) - then this manual list is usually not needed.';
 $string['close'] = 'Close';
 $string['completion_done'] = 'Well done! You have read enough of this document to complete the activity.';
 $string['completion_lastpage'] = 'The last page must be viewed';
@@ -76,6 +75,7 @@ $string['fit_width'] = 'Fit width';
 $string['fitmode'] = 'Zoom fit';
 $string['fullscreen_enter'] = 'Full screen';
 $string['fullscreen_exit'] = 'Exit full screen';
+$string['fullscreentip'] = 'Tip: full screen gives you more room to read (key F).';
 $string['gotopage'] = 'Go to page';
 $string['help'] = 'Keyboard shortcuts';
 $string['help_bookmark'] = 'Bookmark or remove the bookmark of the current page';

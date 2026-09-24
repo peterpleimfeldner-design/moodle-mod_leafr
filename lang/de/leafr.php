@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $string['addchapters'] = 'Kapitel hinzufügen';
 $string['bookmark'] = 'Lesezeichen';
-$string['bookmark_empty'] = 'Noch keine Lesezeichen. Setze eines mit „Lesezeichen“ in der Werkzeugleiste oder der Taste B.';
+$string['bookmark_empty'] = 'Noch keine Lesezeichen. Setzen Sie eines mit „Lesezeichen“ in der Werkzeugleiste oder der Taste B.';
 $string['bookmark_note_chars'] = '{$a->used} von {$a->max} Zeichen';
 $string['bookmark_note_label'] = 'Notiz zu';
 $string['bookmark_note_placeholder'] = 'Notiz hinzufügen …';
@@ -34,12 +34,11 @@ $string['bookmark_note_saved'] = 'Gespeichert';
 $string['bookmark_page'] = 'Lesezeichen für Seite {$a}';
 $string['bookmark_print'] = 'Drucken oder als PDF speichern';
 $string['bookmark_remove'] = 'Lesezeichen entfernen';
+$string['chapterno'] = 'Kapitel {no}';
 $string['chapterpage'] = 'Startseite';
 $string['chaptersheader'] = 'Kapitel';
+$string['chaptersintro'] = 'Eine Zeile pro Kapitel: Titel und Startseite. Wird für den Reiter „Inhalt“ verwendet, wenn das PDF kein eigenes Inhaltsverzeichnis hat, oder immer, wenn oben „Immer die manuelle Liste verwenden“ aktiviert ist. Tipp: Aus Word oder PowerPoint exportierte PDFs bekommen automatisch ein Inhaltsverzeichnis, wenn Überschrift-Formatvorlagen (Word) bzw. „Textmarken erstellen mit: Überschriften“ (PowerPoint-Exportoptionen) verwendet wurden – dann ist diese manuelle Liste meist nicht nötig.';
 $string['chaptertitle'] = 'Kapiteltitel';
-$string['chaptertitle_help'] = 'Eine Zeile pro Kapitel: Titel und Startseite. Wird für den Reiter „Inhalt“ verwendet, wenn das PDF kein eigenes Inhaltsverzeichnis hat, oder immer, wenn unten „Immer die manuelle Liste verwenden“ aktiviert ist.
-
-Tipp: Aus Word oder PowerPoint exportierte PDFs bekommen automatisch ein Inhaltsverzeichnis, wenn Überschrift-Formatvorlagen (Word) bzw. „Textmarken erstellen mit: Überschriften“ (PowerPoint-Exportoptionen) verwendet wurden – dann ist diese manuelle Liste meist nicht nötig.';
 $string['close'] = 'Schließen';
 $string['completion_done'] = 'Gut gemacht! Sie haben genug gelesen, um die Aktivität abzuschließen.';
 $string['completion_lastpage'] = 'Die letzte Seite muss angesehen werden';
@@ -76,6 +75,7 @@ $string['fit_width'] = 'An Breite anpassen';
 $string['fitmode'] = 'Zoom-Anpassung';
 $string['fullscreen_enter'] = 'Vollbild';
 $string['fullscreen_exit'] = 'Vollbild beenden';
+$string['fullscreentip'] = 'Tipp: Im Vollbild haben Sie mehr Platz zum Lesen (Taste F).';
 $string['gotopage'] = 'Gehe zu Seite';
 $string['help'] = 'Tastaturkürzel';
 $string['help_bookmark'] = 'Lesezeichen der aktuellen Seite setzen oder entfernen';
