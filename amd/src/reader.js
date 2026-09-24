@@ -227,16 +227,20 @@ class Reader {
     }
 
     /**
-     * Makes the reader as high as the window below the fixed or sticky bars of the theme, so its
-     * own toolbar always stays visible. Some themes stack more than one such bar (e.g. a site
-     * navbar plus a second, theme-specific course navigation bar), so all of them are measured.
+     * Makes the reader as high as the window below whatever sits above it, so its own toolbar
+     * always stays visible without having to scroll the page. Two things can push it down: fixed
+     * or sticky bars (some themes stack more than one, e.g. a site navbar plus a second,
+     * theme-specific course navigation bar), and ordinary page content in normal flow (the course
+     * heading/breadcrumb above the activity) - {@see getFixedTopOffset} only measures the former,
+     * so the reader's own current position is used as well, whichever is larger (Peter's feedback,
+     * 24.09.2026: the page still needed scrolling to see the heading or the toolbar).
      */
     fitHeight() {
         if (document.fullscreenElement === this.root) {
             this.root.style.removeProperty('--leafr-height');
             return;
         }
-        const offset = this.getFixedTopOffset();
+        const offset = Math.max(this.getFixedTopOffset(), this.root.getBoundingClientRect().top);
         this.root.style.setProperty('--leafr-height', Math.max(window.innerHeight - offset - 32, 420) + 'px');
     }
 
@@ -931,8 +935,23 @@ class Reader {
      * Switches between flipbook and simple view and remembers the choice.
      */
     async toggleSimpleView() {
+        await this.setSimpleView(!this.simpleView);
+    }
+
+    /**
+     * Switches to/from the simple view and remembers the choice. Also used by
+     * {@see setSpreadMode} so picking a page layout while in the simple view switches straight to
+     * the flipbook instead of requiring the simple view to be turned off first (Peter's feedback,
+     * 24.09.2026).
+     *
+     * @param {boolean} value New simple-view state
+     */
+    async setSimpleView(value) {
+        if (this.simpleView === value) {
+            return;
+        }
         const pending = new Pending('mod_leafr/reader:toggleview');
-        this.simpleView = !this.simpleView;
+        this.simpleView = value;
         this.setLoading(true);
         try {
             await this.showView();
@@ -985,7 +1004,6 @@ class Reader {
     updateViewMenuState() {
         this.viewMenu.querySelectorAll('[data-spread]').forEach((button) => {
             button.setAttribute('aria-checked', button.dataset.spread === this.spreadMode ? 'true' : 'false');
-            button.disabled = this.simpleView;
         });
         this.viewMenu.querySelectorAll('[data-fit]').forEach((button) => {
             button.setAttribute('aria-checked', button.dataset.fit === this.fitMode ? 'true' : 'false');
@@ -995,12 +1013,16 @@ class Reader {
 
     /**
      * Changes the spread mode of the flipbook view ('auto', 'single' or 'double') and remembers
-     * the choice. Has no effect in the simple view, which is always a single scrollable column.
+     * the choice. Picking one while the simple view is active switches to the flipbook first
+     * (see {@see setSimpleView}), rather than requiring a separate step to leave the simple view.
      *
      * @param {string} mode New spread mode
      */
-    setSpreadMode(mode) {
+    async setSpreadMode(mode) {
         this.spreadMode = mode;
+        if (this.simpleView) {
+            await this.setSimpleView(false);
+        }
         this.updateViewMenuState();
         if (this.view && this.view.setSpreadMode) {
             this.view.setSpreadMode(mode);
