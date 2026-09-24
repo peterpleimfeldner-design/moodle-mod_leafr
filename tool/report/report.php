@@ -84,14 +84,16 @@ $PAGE->set_pagelayout('report');
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('pluginname', 'leafrtool_report'));
-echo html_writer::tag('p', get_string('reportprivacynotice', 'leafrtool_report'), ['class' => 'alert alert-info']);
+echo html_writer::tag('p', get_string('reportprivacynotice', 'leafrtool_report'), ['class' => 'text-muted']);
 
 if ($groupmode) {
     echo groups_print_activity_menu($cm, $PAGE->url, true);
 }
 
 if (!$rows) {
-    echo $OUTPUT->notification(get_string('reportnoparticipants', 'leafrtool_report'), 'info');
+    // "Match the current filter" only makes sense when a group is actually selected.
+    $emptystring = $groupid ? 'reportnoparticipants' : 'reportnoparticipantsyet';
+    echo $OUTPUT->notification(get_string($emptystring, 'leafrtool_report'), 'info', false);
 } else {
     $table = new html_table();
     $head = [get_string('fullname'), get_string('reportcompleted', 'leafrtool_report')];

@@ -144,8 +144,10 @@
              aria-valuenow="{{startpage}}">
             <div class="leafr-progress-fill" data-region="progress-fill"></div>
         </div>
-        <div class="leafr-progress-summary" data-region="progress-summary" aria-hidden="true"></div>
-        <div class="leafr-progress-summary leafr-progress-summary-required" data-region="required-summary" aria-hidden="true" hidden></div>
+        <div class="leafr-progress-meta">
+            <div class="leafr-progress-summary" data-region="progress-summary" aria-hidden="true"></div>
+            <div class="leafr-progress-summary leafr-progress-summary-required" data-region="required-summary" aria-hidden="true" hidden></div>
+        </div>
         <div class="leafr-toolbar-inner">
             <div class="leafr-toolbar-group">
                 <button type="button" class="leafr-iconbtn" data-action="sidebar" aria-expanded="false" title="{{#str}}sidebar, mod_leafr{{/str}}" disabled>
@@ -186,7 +188,7 @@
                         <span class="leafr-btn-label">{{#str}}viewmenu, mod_leafr{{/str}}</span>
                     </button>
                     <div class="leafr-viewmenu" data-region="view-menu" role="menu" aria-label="{{#str}}viewmenu, mod_leafr{{/str}}" hidden>
-                        <div class="leafr-viewmenu-label" id="{{uniqid}}-spreadlabel">{{#str}}spreadmode, mod_leafr{{/str}}</div>
+                        <div class="leafr-viewmenu-label leafr-spread-label" id="{{uniqid}}-spreadlabel">{{#str}}spreadmode, mod_leafr{{/str}}</div>
                         <div class="leafr-viewmenu-group" data-region="spread-group" role="group" aria-labelledby="{{uniqid}}-spreadlabel">
                             <button type="button" class="leafr-menuitem" role="menuitemradio" aria-checked="true" data-action="spread-auto" data-spread="auto" disabled>{{#str}}spread_auto, mod_leafr{{/str}}</button>
                             <button type="button" class="leafr-menuitem" role="menuitemradio" aria-checked="false" data-action="spread-single" data-spread="single" disabled>{{#str}}spread_single, mod_leafr{{/str}}</button>
@@ -212,6 +214,9 @@
                         <button type="button" class="leafr-menuitem leafr-menuitem-check" role="menuitemcheckbox" data-action="fullscreen" aria-checked="false" disabled>
                             <span data-region="fullscreen-label">{{#str}}fullscreen_enter, mod_leafr{{/str}}</span>
                         </button>
+                        {{#downloadurl}}
+                        <a class="btn leafr-menuitem leafr-menuitem-check leafr-menu-download" role="menuitem" href="{{downloadurl}}">{{#str}}download, mod_leafr{{/str}}</a>
+                        {{/downloadurl}}
                     </div>
                 </div>
                 <button type="button" class="leafr-iconbtn" data-action="bookmark" aria-pressed="false" title="{{#str}}bookmark, mod_leafr{{/str}}" disabled>
@@ -219,7 +224,7 @@
                     <span class="leafr-btn-label">{{#str}}bookmark, mod_leafr{{/str}}</span>
                 </button>
                 {{#downloadurl}}
-                <a class="leafr-iconbtn" href="{{downloadurl}}" title="{{#str}}download, mod_leafr{{/str}}">
+                <a class="leafr-iconbtn leafr-toolbar-download" href="{{downloadurl}}" title="{{#str}}download, mod_leafr{{/str}}">
                     <span class="sr-only">{{#str}}download, mod_leafr{{/str}}</span>
                     <svg aria-hidden="true" focusable="false" width="20" height="20" viewBox="0 0 256 256" fill="currentColor"><path d="M224 152v56a16 16 0 0 1-16 16H48a16 16 0 0 1-16-16v-56a8 8 0 0 1 16 0v56h160v-56a8 8 0 0 1 16 0Zm-101.66 5.66a8 8 0 0 0 11.32 0l40-40a8 8 0 0 0-11.32-11.32L136 132.69V40a8 8 0 0 0-16 0v92.69l-26.34-26.35a8 8 0 0 0-11.32 11.32Z"/></svg>
                 </a>

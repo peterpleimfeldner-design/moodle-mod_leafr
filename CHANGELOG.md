@@ -2,6 +2,30 @@
 
 ## 1.2.0 (in Arbeit, Branch `release/1.2.0`)
 
+### UX/UI-Feinschliff (Review vom 24.09.2026)
+Vollständiges Review aller Seiten im Browser, dokumentiert in `docs/ux-review_2026-09/`.
+- **Handy/Tablet:** Die Werkzeugleiste richtet sich jetzt nach der tatsächlichen Breite des Readers
+  statt nach der Bildschirmbreite. Vorher waren auf dem Handy „Ansicht“, „Lesezeichen“ und
+  „Download“ abgeschnitten und nicht erreichbar. Bei schmalem Reader: kleinere Knöpfe, „von N“
+  ausgeblendet, Download im Ansicht-Menü, Seitenlayout-Auswahl (dort wirkungslos) ausgeblendet.
+- Doppelseite: kein innerer Scrollbalken mehr durch die Lesezeichen-Leiste über dem Buch; das Buch
+  rechnet deren Platz ein und behält beim Blättern seine Größe.
+- Fortschritt („16 von 16 Seiten gelesen · 6 von 6 Pflichtseiten gelesen“) in einer Zeile – mehr
+  Platz für das Buch.
+- Ansicht-Menü: breiter, Auswahlgruppen als Segment-Schalter, Häkchen bei „Einfache Ansicht“ und
+  „Vollbild“; „Doppelseite“ ragte vorher über den Rand.
+- Suche: Pfeil für „vorheriger Treffer“ zeigte nach unten (behoben), Hinweis im leeren Zustand,
+  Textauszüge auf drei Zeilen begrenzt; Seitenleiste ändert beim Suchen nicht mehr ihre Breite.
+- Miniaturen: bei Doppelseiten sind beide sichtbaren Seiten markiert; Legende für Pflichtseiten-Punkt
+  und Gelesen-Haken.
+- Lesezeichen: „Gespeichert“-Rückmeldung nach dem automatischen Speichern einer Notiz; Drucken als
+  Knopf mit Symbol; „Lesezeichen entfernen“ als dezenter Knopf; gesetzte Lesezeichen in der Leiste
+  über dem Buch deutlich hervorgehoben; Leer-Hinweis erklärt, wie man ein Lesezeichen setzt.
+- „Weiter bei Seite …“-Meldung bricht auf schmalen Bildschirmen nicht mehr Wort für Wort um.
+- Bericht „Übersicht“: ohne Gruppenfilter heißt es jetzt „In diesem Kurs sind noch keine
+  Teilnehmer/innen eingeschrieben“ statt „… entsprechen dem aktuellen Filter“; Datenschutzhinweis
+  als ruhiger Text statt zweitem blauen Hinweiskasten.
+
 ### Paket H3 – Spanisches Sprachpaket
 - Neue Übersetzung `lang/es/leafr.php` sowie `tool/confirm/lang/es/` und `tool/report/lang/es/`
   (zusammen rund 160 Strings). Erster Entwurf, sollte vor der Veröffentlichung von einer

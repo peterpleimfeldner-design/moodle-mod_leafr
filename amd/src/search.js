@@ -93,6 +93,7 @@ export default class Search {
 
         form.append(label, this.input, nav);
         this.host.append(form, this.status, this.results);
+        this.status.textContent = this.strings.search_hint;
 
         form.addEventListener('submit', (event) => {
             event.preventDefault();
@@ -123,9 +124,23 @@ export default class Search {
         const text = document.createElement('span');
         text.className = 'sr-only';
         text.textContent = label;
-        const arrow = document.createElement('span');
+        // Same line icons as the toolbar's page navigation, pointing up for the previous match.
+        const path = action === 'search-prev'
+            ? 'M213.66 165.66a8 8 0 0 1-11.32 0L128 91.31l-74.34 74.35a8 8 0 0 1-11.32-11.32'
+                + 'l80-80a8 8 0 0 1 11.32 0l80 80a8 8 0 0 1 0 11.32Z'
+            : 'M213.66 101.66l-80 80a8 8 0 0 1-11.32 0l-80-80a8 8 0 0 1 11.32-11.32'
+                + 'L128 164.69l74.34-74.35a8 8 0 0 1 11.32 11.32Z';
+        const ns = 'http://www.w3.org/2000/svg';
+        const arrow = document.createElementNS(ns, 'svg');
         arrow.setAttribute('aria-hidden', 'true');
-        arrow.textContent = action === 'prev' ? '↑' : '↓';
+        arrow.setAttribute('focusable', 'false');
+        arrow.setAttribute('width', '18');
+        arrow.setAttribute('height', '18');
+        arrow.setAttribute('viewBox', '0 0 256 256');
+        arrow.setAttribute('fill', 'currentColor');
+        const arrowPath = document.createElementNS(ns, 'path');
+        arrowPath.setAttribute('d', path);
+        arrow.appendChild(arrowPath);
         button.append(text, arrow);
         return button;
     }
@@ -172,7 +187,7 @@ export default class Search {
         this.activeIndex = -1;
         this.updateNavButtons();
         if (!query) {
-            this.status.textContent = '';
+            this.status.textContent = this.strings.search_hint;
             return;
         }
 

@@ -30,6 +30,7 @@ $string['reportcompleted'] = 'Completada';
 $string['reportconfirmedat'] = 'Confirmado el';
 $string['reportdownloadcsv'] = 'Descargar como CSV';
 $string['reportnoparticipants'] = 'Ningún participante coincide con el filtro actual.';
+$string['reportnoparticipantsyet'] = 'Todavía no hay participantes matriculados en este curso.';
 $string['reportprivacynotice'] = 'Este resumen solo muestra si la actividad está completa, si se han leído las páginas obligatorias (o el porcentaje) y, si está configurado, la fecha de confirmación de lectura. No registra tiempos de lectura, visualizaciones individuales de páginas, marcadores, notas ni resaltados.';
 $string['reportrequiredpercent'] = 'Páginas obligatorias leídas';
 $string['reportrequiredseen'] = 'Páginas obligatorias leídas';

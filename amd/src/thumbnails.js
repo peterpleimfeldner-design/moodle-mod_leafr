@@ -92,6 +92,20 @@ export default class Thumbnails {
             list.appendChild(button);
             this.buttons.push(button);
         }
+        if (this.requiredPages.size) {
+            // Explains the small dot under required pages, which is not self-explanatory on its own.
+            const legend = document.createElement('div');
+            legend.className = 'leafr-thumb-legend';
+            legend.setAttribute('aria-hidden', 'true');
+            const required = document.createElement('span');
+            required.className = 'leafr-thumb-legend-required';
+            required.textContent = this.strings.thumbs_legend_required;
+            const seen = document.createElement('span');
+            seen.className = 'leafr-thumb-legend-seen';
+            seen.textContent = this.strings.thumbs_legend_seen;
+            legend.append(required, seen);
+            this.host.appendChild(legend);
+        }
         this.host.appendChild(list);
 
         this.observer = new IntersectionObserver((entries) => {
@@ -141,14 +155,16 @@ export default class Thumbnails {
     }
 
     /**
-     * Highlights the current page and scrolls it into view.
+     * Highlights the current page (both pages of a two-page spread) and scrolls it into view.
      *
-     * @param {number} pageNum 1-based page number
+     * @param {number} pageNum 1-based page number of the first visible page
+     * @param {number[]} [visible] All visible pages, defaults to just pageNum
      */
-    setCurrentPage(pageNum) {
+    setCurrentPage(pageNum, visible) {
         this.currentPage = pageNum;
+        const current = new Set(visible && visible.length ? visible : [pageNum]);
         this.buttons.forEach((button, index) => {
-            const active = index + 1 === pageNum;
+            const active = current.has(index + 1);
             button.classList.toggle('is-current', active);
             if (active) {
                 button.setAttribute('aria-current', 'true');

@@ -37,6 +37,14 @@ const SPREAD_MIN_WIDTH = 768;
 const PADDING = 16;
 
 /**
+ * Height of the per-page bookmark bar above a two-page spread (`.leafr-page-bookmarks` in
+ * styles.css, keep both in sync). A spread reserves this space up front, so the bar never pushes
+ * the book below the stage's bottom edge (which used to cause an inner scrollbar) and the book
+ * keeps the same size whether or not the bar is currently shown.
+ */
+const SPREAD_BAR_HEIGHT = 36;
+
+/**
  * Fraction of the page height, measured from the top and bottom, within which a page can be
  * dragged to turn it (StPageFlip's own "grab and follow the cursor" behaviour). StPageFlip itself
  * does not confine dragging to the corners - pressing down anywhere on the page and moving the
@@ -122,9 +130,9 @@ export default class FlipbookView {
     computeLayout() {
         const ratio = this.pageSize.width / this.pageSize.height;
         const availableWidth = Math.max(this.stage.clientWidth - 2 * PADDING, 120);
-        const availableHeight = Math.max(this.stage.clientHeight - 2 * PADDING, 160);
         const tooNarrowForSpread = this.stage.clientWidth < SPREAD_MIN_WIDTH || ratio > 1 || this.total === 1;
         const single = this.spreadMode === 'single' || tooNarrowForSpread;
+        const availableHeight = Math.max(this.stage.clientHeight - 2 * PADDING - (single ? 0 : SPREAD_BAR_HEIGHT), 160);
         const columns = single ? 1 : 2;
 
         let pageWidth;

@@ -208,6 +208,8 @@
     display: flex;
     flex-direction: column;
     flex: 0 0 18rem;
+    width: 18rem;
+    min-width: 0;
     max-width: 85%;
     background: var(--leafr-panel-bg);
     color: var(--leafr-panel-fg);
@@ -327,6 +329,42 @@
 }
 
 /* Thumbnails tab. */
+.leafr-thumb-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    padding: 0.5rem 0.75rem 0;
+    color: var(--leafr-muted);
+    font-size: 0.7rem;
+}
+
+.leafr-thumb-legend-required::before,
+.leafr-thumb-legend-seen::before {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0.3rem;
+    vertical-align: -0.1em;
+}
+
+.leafr-thumb-legend-required::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--leafr-accent);
+}
+
+.leafr-thumb-legend-seen::before {
+    content: "\2713";
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 50%;
+    background: var(--leafr-accent);
+    color: #fff;
+    font-size: 0.55rem;
+}
+
 .leafr-thumb-list {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
@@ -438,9 +476,15 @@
 }
 
 .leafr-search-nav .leafr-iconbtn {
+    min-width: 2rem;
     width: 2rem;
     height: 2rem;
+    padding: 0;
     color: var(--leafr-panel-fg);
+}
+
+.leafr-search-nav .leafr-iconbtn:hover {
+    background: rgba(0, 0, 0, 0.06);
 }
 
 .leafr-search-nav .leafr-iconbtn:disabled {
@@ -499,6 +543,13 @@
     color: var(--leafr-muted);
 }
 
+.leafr-search-result-snippet {
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+}
+
 .leafr-search-result-snippet mark {
     background: #fef08a;
     color: #111827;
@@ -507,10 +558,12 @@
 }
 
 /* Bookmarks tab. */
+/* Styled as Moodle's own small outline button (btn btn-sm btn-outline-secondary), plus an icon. */
 .leafr-bookmark-print {
-    display: block;
-    margin: 0.75rem 0.75rem 0;
-    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0.75rem 0.75rem 0.25rem;
 }
 
 .leafr-bookmark-empty {
@@ -589,9 +642,21 @@
     box-sizing: border-box;
 }
 
-.leafr-bookmark-counter {
-    align-self: flex-end;
+.leafr-bookmark-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
     font-size: 0.7rem;
+}
+
+.leafr-bookmark-saved {
+    color: var(--leafr-accent);
+    font-weight: 600;
+}
+
+.leafr-bookmark-counter {
+    margin-left: auto;
     color: var(--leafr-muted);
 }
 
@@ -602,16 +667,24 @@
 
 .leafr-bookmark-remove {
     align-self: flex-start;
-    padding: 0;
+    margin-left: -0.4rem;
+    padding: 0.15rem 0.4rem;
     border: 0;
+    border-radius: 0.25rem;
     background: none;
     color: var(--leafr-muted);
-    font-size: 0.7rem;
-    text-decoration: underline;
+    font-size: 0.75rem;
 }
 
-.leafr-bookmark-remove:hover {
-    color: inherit;
+.leafr-bookmark-remove:hover,
+.leafr-bookmark-remove:focus-visible {
+    background: rgba(185, 28, 28, 0.08);
+    color: #b91c1c;
+}
+
+.leafr-bookmark-remove:focus-visible {
+    outline: 2px solid var(--leafr-accent);
+    outline-offset: 1px;
 }
 
 /* Corner flag on a bookmarked page, like a ribbon bookmark in a physical book. */
@@ -637,33 +710,54 @@
     top: 0;
     z-index: 4;
     display: flex;
+    align-items: flex-end;
     justify-content: center;
     gap: 0.5rem;
-    padding: 0.4rem 0;
+    /* Fixed height, reserved by FlipbookView (SPREAD_BAR_HEIGHT) when it sizes a spread. */
+    height: 36px;
+    box-sizing: border-box;
+    padding: 0;
     background: var(--leafr-stage-bg);
+}
+
+.leafr-page-bookmarks:not([hidden]) + .leafr-view {
+    min-height: calc(100% - 36px);
 }
 
 .leafr-page-bookmark-btn {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    padding: 0.25rem 0.6rem;
+    gap: 0.35rem;
+    height: 1.75rem;
+    padding: 0 0.7rem;
     border: 1px solid var(--leafr-border);
     border-radius: 1rem;
     background: var(--leafr-panel-bg);
     color: var(--leafr-panel-fg);
     font-size: 0.8rem;
-    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
     cursor: pointer;
+}
+
+.leafr-page-bookmark-btn.is-bookmarked {
+    border-color: #d97706;
+    background: #fff7ed;
+    color: #7c2d12;
+    font-weight: 600;
 }
 
 .leafr-page-bookmark-btn::before {
     content: "";
     width: 10px;
     height: 14px;
-    background: #d97706;
+    background: currentColor;
     clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 76%, 0 100%);
     opacity: 0.35;
+}
+
+.leafr-page-bookmark-btn.is-bookmarked::before {
+    background: #d97706;
 }
 
 .leafr-page-bookmark-btn.is-bookmarked::before {
@@ -692,6 +786,7 @@
 
 /* Toolbar. */
 .leafr-toolbar {
+    position: relative;
     flex: 0 0 auto;
     background: var(--leafr-toolbar-bg);
     color: var(--leafr-toolbar-fg);
@@ -716,17 +811,35 @@
     transition: width 0.2s ease-out;
 }
 
-.leafr-progress-summary {
-    padding: 0.125rem 0.75rem 0;
+.leafr-progress-meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0 0.5rem;
+    padding: 0.25rem 0.75rem 0;
     font-size: 0.75rem;
+    line-height: 1.3;
+}
+
+.leafr-progress-summary {
     color: var(--leafr-toolbar-fg);
     opacity: 0.75;
-    text-align: right;
+}
+
+.leafr-progress-summary:empty {
+    display: none;
 }
 
 .leafr-progress-summary-required {
     font-weight: 600;
-    opacity: 0.9;
+    opacity: 0.95;
+}
+
+.leafr-progress-summary-required:not([hidden])::before {
+    content: "\00B7";
+    margin-right: 0.5rem;
+    font-weight: 400;
+    opacity: 0.6;
 }
 
 .leafr-toolbar-inner {
@@ -778,20 +891,18 @@
     border: 0;
 }
 
-@media (min-width: 768px) {
-    .leafr-btn-label {
-        position: static;
-        width: auto;
-        height: auto;
-        margin: 0 0 0 0.375rem;
-        overflow: visible;
-        clip: auto;
-        font-size: 0.8125rem;
-    }
+.leafr-reader.is-wide .leafr-btn-label {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0 0 0 0.375rem;
+    overflow: visible;
+    clip: auto;
+    font-size: 0.8125rem;
+}
 
-    .leafr-iconbtn {
-        padding: 0 0.75rem;
-    }
+.leafr-reader.is-wide .leafr-toolbar .leafr-iconbtn {
+    padding: 0 0.75rem;
 }
 
 .leafr-zoomlabel {
@@ -837,11 +948,12 @@
     position: absolute;
     bottom: calc(100% + 0.5rem);
     right: 0;
-    z-index: 20;
+    /* Above the toasts (z-index 20), which can sit in the same spot on a small screen. */
+    z-index: 25;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    width: 13rem;
+    width: 18rem;
     max-width: calc(100vw - 1rem);
     padding: 0.5rem;
     border: 1px solid var(--leafr-border);
@@ -861,22 +973,34 @@
 
 .leafr-viewmenu-group {
     display: flex;
-    gap: 0.25rem;
+    gap: 2px;
+    padding: 2px;
+    border-radius: 0.5rem;
+    background: rgba(0, 0, 0, 0.06);
 }
 
 .leafr-menuitem {
-    flex: 1 1 auto;
-    padding: 0.4rem 0.5rem;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.4rem 0.375rem;
     border: 1px solid transparent;
     border-radius: 0.375rem;
     background: none;
     color: inherit;
     font-size: 0.8125rem;
+    line-height: 1.25;
     text-align: center;
+    text-decoration: none;
 }
 
 .leafr-menuitem-check {
+    display: block;
     text-align: left;
+}
+
+.leafr-menuitem-check:hover {
+    color: inherit;
+    text-decoration: none;
 }
 
 .leafr-menuitem:hover {
@@ -893,11 +1017,37 @@
     cursor: default;
 }
 
-.leafr-menuitem[aria-checked="true"],
-.leafr-menuitem[aria-pressed="true"] {
-    border-color: var(--leafr-accent);
-    background: rgba(94, 184, 184, 0.15);
+.leafr-viewmenu-group .leafr-menuitem[aria-checked="true"] {
+    background: var(--leafr-panel-bg);
+    color: var(--leafr-accent);
     font-weight: 600;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+.leafr-menuitem-check[aria-checked="true"] {
+    color: var(--leafr-accent);
+    font-weight: 600;
+}
+
+.leafr-menuitem-check[aria-checked="true"]::after {
+    content: "\2713";
+    float: right;
+}
+
+/* Download entry of the view menu: only used when the toolbar is too narrow for its own button.
+   It carries Moodle's "btn" class so the theme's content link underline leaves it alone; the
+   rules below undo the parts of that button look that differ from the other menu entries. */
+.leafr-menu-download {
+    display: none;
+}
+
+.leafr-viewmenu .leafr-menu-download {
+    padding: 0.4rem 0.375rem;
+    border: 1px solid transparent;
+    color: inherit;
+    font-size: 0.8125rem;
+    font-weight: normal;
+    text-align: left;
 }
 
 .leafr-viewmenu-zoom {
@@ -937,11 +1087,14 @@
 .leafr-toast {
     position: absolute;
     left: 50%;
-    bottom: 4.5rem;
+    bottom: 5.25rem;
     z-index: 20;
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: max-content;
     max-width: calc(100% - 2rem);
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
@@ -1026,13 +1179,63 @@
         box-shadow: 4px 0 16px rgba(0, 0, 0, 0.25);
     }
 
-    .leafr-hide-narrow {
-        display: none;
-    }
-
     .leafr-view {
         padding: 8px;
     }
+}
+
+/* Narrow reader: fewer and smaller toolbar buttons, so every remaining one stays reachable. The
+   width classes are set by the reader itself from its own width, not the screen's: inside Moodle's
+   page margins and drawers the reader is often far narrower than the viewport (a 768px tablet
+   leaves it about 530px), which used to push the toolbar's right-hand buttons out of reach. */
+.leafr-reader.is-compact .leafr-hide-narrow {
+    display: none;
+}
+
+.leafr-reader.is-narrow .leafr-toolbar-inner {
+    gap: 0.25rem;
+    padding: 0.25rem;
+}
+
+.leafr-reader.is-narrow .leafr-toolbar .leafr-iconbtn {
+    min-width: 2.25rem;
+    padding: 0 0.25rem;
+}
+
+.leafr-reader.is-narrow .leafr-pagebox {
+    margin: 0;
+}
+
+.leafr-reader.is-narrow .leafr-pageinput {
+    width: 2.75rem;
+}
+
+.leafr-reader.is-narrow .leafr-pagetotal,
+.leafr-reader.is-narrow .leafr-toolbar-download {
+    display: none;
+}
+
+.leafr-reader.is-narrow .leafr-menu-download {
+    display: block;
+}
+
+/* The menu is anchored to the whole toolbar instead of its button, so it cannot stick out of
+   the reader on the left. */
+.leafr-reader.is-narrow .leafr-viewmenu-wrap {
+    position: static;
+}
+
+.leafr-reader.is-narrow .leafr-viewmenu {
+    right: 0.5rem;
+    left: 0.5rem;
+    width: auto;
+}
+
+/* A reader this narrow always shows one page at a time (FlipbookView's SPREAD_MIN_WIDTH), so
+   the page layout choice would have no visible effect here. */
+.leafr-reader.is-narrow .leafr-spread-label,
+.leafr-reader.is-narrow .leafr-viewmenu [data-region="spread-group"] {
+    display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

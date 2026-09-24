@@ -43,6 +43,16 @@ import {getOutline, getPageSize, loadDocument} from 'mod_leafr/pdf';
  */
 const TURN_DURATION = 1100;
 
+/**
+ * Reader widths (CSS pixels) at which the toolbar changes: from WIDE_READER up, the main buttons
+ * show a text label; below COMPACT_READER the first/last page and help buttons are hidden; below
+ * NARROW_READER the buttons shrink, "of N" is hidden and download moves into the view menu. Kept
+ * in sync with the `.is-wide`, `.is-compact` and `.is-narrow` rules in styles.css.
+ */
+const WIDE_READER = 760;
+const COMPACT_READER = 580;
+const NARROW_READER = 460;
+
 /** Available zoom factors. */
 const ZOOM_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 2, 2.5, 3];
 
@@ -56,7 +66,8 @@ const STRING_KEYS = [
     'search_label', 'search_placeholder', 'search_indexing', 'search_noresults',
     'search_noresults_scan', 'search_next', 'search_prev', 'matchofmatches',
     'bookmark_empty', 'bookmark_note_label', 'bookmark_note_placeholder', 'bookmark_remove',
-    'bookmark_page', 'bookmark_note_chars', 'bookmark_print', 'required_badge',
+    'bookmark_page', 'bookmark_note_chars', 'bookmark_note_saved', 'bookmark_print', 'required_badge',
+    'search_hint', 'thumbs_legend_required', 'thumbs_legend_seen',
 ];
 
 class Reader {
@@ -165,6 +176,7 @@ class Reader {
      */
     async init() {
         const pending = new Pending('mod_leafr/reader:init');
+        this.observeWidth();
         this.fitHeight();
         window.addEventListener('resize', () => {
             clearTimeout(this.resizeTimer);
@@ -242,6 +254,23 @@ class Reader {
         }
         const offset = Math.max(this.getFixedTopOffset(), this.root.getBoundingClientRect().top);
         this.root.style.setProperty('--leafr-height', Math.max(window.innerHeight - offset - 32, 420) + 'px');
+    }
+
+    /**
+     * Adapts the toolbar to the reader's own width rather than the screen's: inside Moodle's page
+     * margins and drawers, the reader is often far narrower than the viewport (a 768px tablet
+     * leaves it about 530px), which used to push the toolbar's right-hand buttons out of reach.
+     * Done here instead of with CSS container queries, which Moodle's CSS linter does not accept.
+     */
+    observeWidth() {
+        const apply = () => {
+            const width = this.root.clientWidth;
+            this.root.classList.toggle('is-wide', width >= WIDE_READER);
+            this.root.classList.toggle('is-compact', width < COMPACT_READER);
+            this.root.classList.toggle('is-narrow', width < NARROW_READER);
+        };
+        apply();
+        new ResizeObserver(apply).observe(this.root);
     }
 
     /**
@@ -478,7 +507,7 @@ class Reader {
      *
      * @param {number} page Page number
      * @param {string} note Note
-     * @returns {Promise<void>}
+     * @returns {Promise<boolean>} Whether the note was saved
      */
     async saveBookmarkNote(page, note) {
         try {
@@ -487,8 +516,9 @@ class Reader {
                 args: {cmid: this.cmid, pageno: page, note: note},
             }])[0];
             this.bookmarks.set(page, result.note);
+            return true;
         } catch (error) {
-            return;
+            return false;
         }
     }
 
@@ -610,7 +640,7 @@ class Reader {
             this.toc.setCurrentPage(page);
         }
         if (this.thumbnails) {
-            this.thumbnails.setCurrentPage(page);
+            this.thumbnails.setCurrentPage(page, visible);
             this.thumbnails.markSeen(visible);
         }
         visible.forEach((visiblepage) => this.seenPages.add(visiblepage));

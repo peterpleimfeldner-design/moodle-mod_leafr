@@ -34,6 +34,9 @@ const SAVE_DELAY = 800;
 /** The note field grows with its content up to this height, then scrolls. */
 const MAX_NOTE_HEIGHT = 160;
 
+/** How long the "saved" confirmation stays visible, in milliseconds. */
+const SAVED_VISIBLE = 2500;
+
 /** Show the character counter as "near the limit" from this fraction of the maximum onwards. */
 const NEAR_LIMIT_RATIO = 0.9;
 
@@ -102,11 +105,28 @@ export default class BookmarkList {
 
         if (this.printUrl && this.items.size) {
             const print = document.createElement('a');
-            print.className = 'leafr-bookmark-print';
+            print.className = 'btn btn-sm btn-outline-secondary leafr-bookmark-print';
             print.href = this.printUrl;
             print.target = '_blank';
             print.rel = 'noopener';
-            print.textContent = this.strings.bookmark_print;
+            const ns = 'http://www.w3.org/2000/svg';
+            const icon = document.createElementNS(ns, 'svg');
+            icon.setAttribute('aria-hidden', 'true');
+            icon.setAttribute('focusable', 'false');
+            icon.setAttribute('width', '16');
+            icon.setAttribute('height', '16');
+            icon.setAttribute('viewBox', '0 0 256 256');
+            icon.setAttribute('fill', 'none');
+            icon.setAttribute('stroke', 'currentColor');
+            icon.setAttribute('stroke-width', '16');
+            icon.setAttribute('stroke-linejoin', 'round');
+            const iconPath = document.createElementNS(ns, 'path');
+            // A simple printer: paper tray on top, body, printed sheet at the bottom.
+            iconPath.setAttribute('d', 'M72 80V40h112v40M72 184H40V88h176v96h-32M72 152h112v64H72Z');
+            icon.appendChild(iconPath);
+            const text = document.createElement('span');
+            text.textContent = this.strings.bookmark_print;
+            print.append(icon, text);
             this.host.appendChild(print);
         }
 
@@ -168,6 +188,23 @@ export default class BookmarkList {
         counter.className = 'leafr-bookmark-counter';
         counter.setAttribute('aria-hidden', 'true');
 
+        // Notes are saved automatically; this confirms it, so nobody looks for a "save" button.
+        const saved = document.createElement('span');
+        saved.className = 'leafr-bookmark-saved';
+        saved.setAttribute('role', 'status');
+        let savedTimer = null;
+        const showSaved = () => {
+            saved.textContent = this.strings.bookmark_note_saved;
+            clearTimeout(savedTimer);
+            savedTimer = setTimeout(() => {
+                saved.textContent = '';
+            }, SAVED_VISIBLE);
+        };
+
+        const meta = document.createElement('div');
+        meta.className = 'leafr-bookmark-meta';
+        meta.append(saved, counter);
+
         const updateCounter = () => {
             const used = textarea.value.length;
             counter.textContent = this.strings.bookmark_note_chars
@@ -185,7 +222,15 @@ export default class BookmarkList {
             clearTimeout(this.saveTimers.get(page));
             const value = textarea.value;
             this.items.set(page, value);
-            this.saveTimers.set(page, setTimeout(() => this.onSetNote(page, value), SAVE_DELAY));
+            saved.textContent = '';
+            this.saveTimers.set(page, setTimeout(() => {
+                Promise.resolve(this.onSetNote(page, value)).then((ok) => {
+                    if (ok && textarea.value === value) {
+                        showSaved();
+                    }
+                    return ok;
+                }).catch(() => null);
+            }, SAVE_DELAY));
             updateCounter();
             growNote();
         });
@@ -196,7 +241,7 @@ export default class BookmarkList {
         remove.textContent = this.strings.bookmark_remove;
         remove.addEventListener('click', () => this.onRemove(page));
 
-        body.append(pageButton, label, textarea, counter, remove);
+        body.append(pageButton, label, textarea, meta, remove);
         li.append(thumb, body);
         return li;
     }
