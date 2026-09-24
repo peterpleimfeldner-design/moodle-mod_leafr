@@ -36,6 +36,12 @@ Vollständiges Review aller Seiten im Browser, dokumentiert in `docs/ux-review_2
 - Das Buch wird neu berechnet, sobald sein Platz schrumpft (vorher erst ab 8 px Unterschied), und
   die Fortschrittszeile reserviert ihren Platz von Anfang an – beides verhinderte in manchen Fällen
   einen kleinen Scrollbalken.
+- **Lesebereich mit Aktivitätsbeschreibung** (Rückmeldung aus dem Gesamttest, GitHub-Issues #1 und #2):
+  Steht eine Beschreibung über dem Reader, wird er so hoch wie das ganze Fenster unter den Moodle-Leisten,
+  statt sich in den Rest unter der Beschreibung zu quetschen; die Seite scrollt an der Beschreibung vorbei.
+  Ohne Beschreibung bleibt es dabei, dass Titel und Werkzeugleiste ohne Scrollen sichtbar sind. Mehrere
+  übereinander fixierte Leisten (z. B. Moove: Navigationsleiste plus Aktivitäts-Reiter) werden jetzt
+  zusammen berücksichtigt, damit keine davon den oberen Rand des Readers verdeckt.
 - Bericht „Übersicht“: ohne Gruppenfilter heißt es jetzt „In diesem Kurs sind noch keine
   Teilnehmer/innen eingeschrieben“ statt „… entsprechen dem aktuellen Filter“; Datenschutzhinweis
   als ruhiger Text statt zweitem blauen Hinweiskasten.

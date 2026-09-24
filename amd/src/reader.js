@@ -291,8 +291,43 @@ class Reader {
             this.root.style.removeProperty('--leafr-height');
             return;
         }
-        const offset = Math.max(this.getFixedTopOffset(), this.root.getBoundingClientRect().top);
+        // With an activity description above the reader (Moodle's ".activity-description"), the reader
+        // is sized to the whole window below the fixed bars instead: the page scrolls past the
+        // description and the book then fills the screen. Fitting it into the space left below a long
+        // description had left only about ten lines of a page to read (Peter's feedback, GitHub
+        // issues #1 and #2).
+        const fixedtop = this.getFixedTopOffset();
+        const offset = this.hasDescriptionAbove() ? fixedtop : Math.max(fixedtop, this.getPageTop());
         this.root.style.setProperty('--leafr-height', Math.max(window.innerHeight - offset - 32, 420) + 'px');
+    }
+
+    /**
+     * Distance of the reader from the top of the page, independent of how far the page is currently
+     * scrolled (Moodle's themes scroll either the window or an inner container such as "#page").
+     *
+     * @returns {number} Offset in pixels
+     */
+    getPageTop() {
+        let scrolled = window.scrollY;
+        for (let el = this.root.parentElement; el && el !== document.body; el = el.parentElement) {
+            const overflow = window.getComputedStyle(el).overflowY;
+            if ((overflow === 'auto' || overflow === 'scroll') && el.scrollHeight > el.clientHeight) {
+                scrolled = el.scrollTop;
+                break;
+            }
+        }
+        return this.root.getBoundingClientRect().top + scrolled;
+    }
+
+    /**
+     * Whether a visible activity description is shown above the reader.
+     *
+     * @returns {boolean}
+     */
+    hasDescriptionAbove() {
+        return [...document.querySelectorAll('.activity-description')].some((el) =>
+            // eslint-disable-next-line no-bitwise
+            (el.compareDocumentPosition(this.root) & Node.DOCUMENT_POSITION_FOLLOWING) && el.offsetHeight > 0);
     }
 
     /**
@@ -318,7 +353,7 @@ class Reader {
      * @returns {number} Offset in pixels
      */
     getFixedTopOffset() {
-        let bottom = 0;
+        const bars = [];
         document.body.querySelectorAll('*').forEach((el) => {
             if (this.root.contains(el) || !el.offsetHeight) {
                 return;
@@ -327,11 +362,23 @@ class Reader {
             if (position !== 'fixed' && position !== 'sticky') {
                 return;
             }
+            // Only wide, flat bars count; Moodle's drawers (course index, blocks) are fixed too and start
+            // right below the navbar, but they are narrow and as tall as the window.
             const rect = el.getBoundingClientRect();
-            if (rect.top <= 4 && rect.bottom > bottom) {
-                bottom = rect.bottom;
+            if (rect.width >= window.innerWidth / 2 && rect.height <= window.innerHeight / 3) {
+                bars.push(rect);
             }
         });
+        // Bars can be stacked: a sticky secondary navigation directly below the fixed site navbar
+        // (theme Moove) stays at the top while scrolling too, so each bar that starts where the
+        // previous one ends extends the covered area.
+        bars.sort((a, b) => a.top - b.top);
+        let bottom = 0;
+        for (const rect of bars) {
+            if (rect.top <= bottom + 4 && rect.bottom > bottom) {
+                bottom = rect.bottom;
+            }
+        }
         return Math.max(bottom, 0);
     }
 
