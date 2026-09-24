@@ -143,7 +143,7 @@
 
     <div class="leafr-toolbar" role="toolbar" aria-label="{{#str}}toolbar, mod_leafr{{/str}}">
         <div class="leafr-progress" data-region="progress" role="slider" tabindex="0"
-             aria-label="{{#str}}pageprogress, mod_leafr{{/str}}" aria-valuemin="1" {{#totalpages}}aria-valuemax="{{totalpages}}"{{/totalpages}}
+             aria-label="{{#str}}pageprogress, mod_leafr{{/str}}" aria-valuemin="1" aria-valuemax="{{#totalpages}}{{totalpages}}{{/totalpages}}{{^totalpages}}1{{/totalpages}}"
              aria-valuenow="{{startpage}}">
             <div class="leafr-progress-fill" data-region="progress-fill"></div>
         </div>
