@@ -15,11 +15,6 @@ parameters:
         - ../amd/build/*
         - ../tool/*/amd/build/*
         - ../.github/*
-        # The classmap/basename-collision false positive documented below, for this specific file,
-        # is a "return.missing" error, which PHPStan treats as non-ignorable via ignoreErrors
-        # ("cannot be ignored, use excludePaths instead" - its own error message). All four methods
-        # in this file clearly contain a return statement; verified by reading the file directly.
-        - ../classes/local/bookmarks.php
     moodle:
         rootDirectory: ../../moodle
         addCommonIncludes: true
@@ -59,20 +54,6 @@ parameters:
         # Moodle privacy provider test exports/asserts data.
         -
             message: '#Call to an undefined method core_privacy\\local\\request\\content_writer::(has_any_data|get_data|get_user_preferences)\(\)#'
-            path: ../tests/privacy/provider_test.php
-
-        # Same classmap/basename collision as the course_module_viewed.php entry above (a file
-        # named "bookmarks.php" is common enough across Moodle core/other plugins to collide during
-        # the full-tree scan), but only reproduces on the MOODLE_501_STABLE CI leg, not the others.
-        # The "return statement is missing" errors themselves are excluded via excludePaths above
-        # (PHPStan refuses to ignore that identifier by message). Once PHPStan mis-infers
-        # bookmarks::set()'s return type as void from that, it also flags every caller that ignores
-        # the return value as "no effect" - those two are ordinary ignorable errors.
-        -
-            message: '#Call to mod_leafr\\local\\bookmarks::set\(\) on a separate line has no effect#'
-            path: ../tests/local/bookmarks_test.php
-        -
-            message: '#Call to mod_leafr\\local\\bookmarks::set\(\) on a separate line has no effect#'
             path: ../tests/privacy/provider_test.php
 
         # approved_contextlist's constructor only documents @param \int[] $contextids (no native

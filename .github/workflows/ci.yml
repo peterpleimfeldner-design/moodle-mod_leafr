@@ -90,8 +90,15 @@ jobs:
         # phpstan/extension-installer is deliberately not used: it is a Composer plugin, blocked
         # by Composer's allow-plugins policy unless explicitly trusted, and unnecessary anyway
         # since .github/phpstan.neon includes the moodle extension directly.
+        #
+        # phpstan/phpstan is pinned to the 2.1.x line (2.1.18+, which micaherne/phpstan-moodle
+        # 1.1.0 requires): a regression introduced during the 2.2.x cycle (phpstan/phpstan#15303,
+        # closure/arrow-function type inference under pushInFunctionCall()) started producing
+        # false "return statement is missing" errors across arbitrary, unrelated files as soon as
+        # composer picked up a 2.2.x release (24.09.2026) - not a Moodle-classmap quirk as first
+        # suspected, an upstream PHPStan bug. Revisit this pin once a fixed 2.2.x/2.3.x is out.
         run: |
-          composer require --dev --no-interaction --quiet phpstan/phpstan micaherne/phpstan-moodle
+          composer require --dev --no-interaction --quiet "phpstan/phpstan:2.1.*" micaherne/phpstan-moodle
           vendor/bin/phpstan analyse --configuration=.github/phpstan.neon --no-progress
 
       - name: Validating
