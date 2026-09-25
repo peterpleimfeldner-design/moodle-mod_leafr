@@ -8,7 +8,6 @@ Moodle already lets you attach a PDF as a plain file. Leafr is for the cases whe
 
 - **A book, not a scroll**: real page-turning, chapters, a table of contents and bookmarks with your own notes — read a long document the way you'd read a book, not the way you scroll a file. Bookmarks and notes can be exported as a PDF.
 - **Proof of reading, not just a tick-box**: mark certain pages or chapters as required, and ask for an active read confirmation with a timestamp — for material people actually have to read, like safety briefings and policies.
-- **Everything included, nothing held back**: thumbnails, full-text search, notated bookmarks, a teacher overview report, read confirmation — all part of the one free plugin, no paid tier.
 - **Accessible from the ground up**: a simple, scrollable view that's fully accessible to screen readers sits alongside the book view as an equal alternative.
 - **Privacy by design**: no external service, no analytics tool, full support for Moodle's Privacy API, and deliberately no tracking of reading times or how long someone lingered on a page.
 - **Built for teaching, not just IT**: an overview report per participant, flexible completion rules, manual chapters for PDFs without an outline, and an interface available in German, English and Spanish.
