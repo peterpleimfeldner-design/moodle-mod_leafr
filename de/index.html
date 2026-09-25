@@ -65,7 +65,44 @@
   .btn-primary:hover { background: #0a5951; }
   .btn-secondary { background: transparent; color: var(--text); border-color: var(--border); }
   .btn-secondary:hover { border-color: var(--teal-dark); color: var(--teal-dark); }
-  .hero-shot { max-width: 720px; width: 100%; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 12px 32px rgba(14,106,98,0.12); }
+  .carousel { position: relative; max-width: 720px; margin: 0 auto; }
+  .carousel-viewport {
+    overflow: hidden; border-radius: 12px; border: 1px solid var(--border);
+    box-shadow: 0 12px 32px rgba(14,106,98,0.12); background: var(--card-bg);
+  }
+  .carousel-track { display: flex; transition: transform 0.35s ease; }
+  .carousel-slide { flex: 0 0 100%; margin: 0; }
+  .carousel-slide img { width: 100%; display: block; cursor: zoom-in; }
+  .carousel-slide figcaption { padding: 12px 18px; font-size: 0.88rem; color: var(--text-muted); text-align: left; }
+  .carousel-arrow {
+    position: absolute; top: 38%; transform: translateY(-50%); width: 40px; height: 40px;
+    border-radius: 50%; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);
+    font-size: 1.3rem; line-height: 1; cursor: pointer;
+  }
+  .carousel-arrow:hover { border-color: var(--teal-dark); color: var(--teal-dark); }
+  .carousel-prev { left: -18px; }
+  .carousel-next { right: -18px; }
+  @media (max-width: 760px) {
+    .carousel-prev { left: 6px; } .carousel-next { right: 6px; }
+    .carousel-arrow { background: rgba(255,255,255,0.85); }
+  }
+  .carousel-dots { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+  .carousel-dots button {
+    width: 8px; height: 8px; border-radius: 50%; border: none; padding: 0;
+    background: var(--border); cursor: pointer;
+  }
+  .carousel-dots button.active { background: var(--teal-dark); }
+
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(10,20,19,0.88); z-index: 100;
+    display: flex; align-items: center; justify-content: center; padding: 40px;
+  }
+  .lightbox[hidden] { display: none; }
+  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 8px; }
+  .lightbox-close {
+    position: absolute; top: 18px; right: 24px; background: none; border: none;
+    color: #fff; font-size: 2rem; line-height: 1; cursor: pointer;
+  }
 
   section { padding: 48px 0; }
   section.alt { background: var(--bg-alt); }
@@ -106,6 +143,7 @@
     <nav class="site-nav">
       <a href="#was">Was ist Leafr</a>
       <a href="#funktionen">Funktionen</a>
+      <a href="#screenshots">Screenshots</a>
       <a href="#datenschutz">Datenschutz</a>
       <a href="#faq">FAQ</a>
       <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr">GitHub</a>
@@ -123,7 +161,47 @@
       <a class="btn btn-primary" href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/releases/latest">Neuestes Release herunterladen</a>
       <a class="btn btn-secondary" href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr">Auf GitHub ansehen</a>
     </div>
-    <img class="hero-shot" src="../assets/screenshots/sidebar-thumbnails.png" alt="Leafr-Reader mit Seiten-Miniaturansichten in der Seitenleiste, Häkchen für gelesene Seiten und Punkt für Pflichtseiten">
+    <div class="carousel" id="screenshots">
+      <div class="carousel-viewport">
+        <div class="carousel-track">
+          <figure class="carousel-slide">
+            <img src="../assets/screenshots/sidebar-thumbnails.png" alt="Seiten-Miniaturansichten mit Häkchen für gelesene Seiten und Punkt für Pflichtseiten">
+            <figcaption>Seiten-Miniaturansichten mit Häkchen für gelesene Seiten und Punkt für Pflichtseiten.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="../assets/screenshots/sidebar-contents.png" alt="Seitenleiste mit dem Inhaltsverzeichnis">
+            <figcaption>Inhaltsverzeichnis — automatisch aus der PDF-Gliederung erstellt, oder von der Lehrperson definiert.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="../assets/screenshots/sidebar-search.png" alt="Seitenleiste mit Volltextsuche-Ergebnissen">
+            <figcaption>Volltextsuche mit hervorgehobenen Treffern.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="../assets/screenshots/sidebar-bookmarks.png" alt="Seitenleiste mit einem Lesezeichen und einer Notiz">
+            <figcaption>Lesezeichen mit persönlicher Notiz, ausdruckbar oder als PDF speicherbar.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="../assets/screenshots/view-menu.png" alt="Ansichtsmenü mit Seitenlayout und Zoom-Optionen">
+            <figcaption>Ansichtsmenü: Seitenlayout, einfache Ansicht, Zoom, Vollbild.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="../assets/screenshots/confirm-card.png" alt="Karte zur Lesebestätigung">
+            <figcaption>Lesebestätigung, angezeigt sobald die Pflichtseiten gelesen wurden.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="../assets/screenshots/settings-form.png" alt="Aktivitätseinstellungen mit Abschlussbedingungen">
+            <figcaption>Aktivitätseinstellungen: Pflichtseiten/-kapitel und Lesebestätigung.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="../assets/screenshots/overview-report.png" alt="Überblicksbericht für Lehrende mit Gruppenfilter">
+            <figcaption>Überblicksbericht für Lehrende, mit Gruppenfilter und CSV-Export.</figcaption>
+          </figure>
+        </div>
+      </div>
+      <button class="carousel-arrow carousel-prev" type="button" aria-label="Vorheriger Screenshot">‹</button>
+      <button class="carousel-arrow carousel-next" type="button" aria-label="Nächster Screenshot">›</button>
+      <div class="carousel-dots"></div>
+    </div>
   </section>
 
   <section id="was" class="wrap">
@@ -203,31 +281,31 @@
   <section id="faq" class="alt">
     <div class="wrap">
       <h2>Häufige Fragen</h2>
-      <details class=”faq”>
+      <details class="faq">
         <summary>Warum eine aktive Lesebestätigung statt nur Seitenaufrufe zu zählen?</summary>
-        <p>Bei verpflichtendem Material wie Sicherheitsunterweisungen oder Richtlinien reicht „die Seite war offen” oft nicht als verlässliches Signal. Eine aktive Bestätigung ist ein bewusster Klick, kein abgeleiteter Zeitstempel.</p>
+        <p>Bei verpflichtendem Material wie Sicherheitsunterweisungen oder Richtlinien reicht „die Seite war offen" oft nicht als verlässliches Signal. Eine aktive Bestätigung ist ein bewusster Klick, kein abgeleiteter Zeitstempel.</p>
       </details>
-      <details class=”faq”>
+      <details class="faq">
         <summary>Was zeigt der Überblicksbericht für Lehrende?</summary>
         <p>Abschlussstatus, gelesene Pflichtseiten und das Datum der Lesebestätigung je Teilnehmer:in — mit Gruppenfilter und CSV-Export.</p>
       </details>
-      <details class=”faq”>
-        <summary>Kann ich frei festlegen, welche Seiten oder Kapitel als „gelesen” zählen?</summary>
+      <details class="faq">
+        <summary>Kann ich frei festlegen, welche Seiten oder Kapitel als „gelesen" zählen?</summary>
         <p>Ja, über die Abschlussregeln (letzte Seite, Prozentsatz oder bestimmte Seiten/Kapitel) und manuelle Kapitel für PDFs ohne eigenes Inhaltsverzeichnis.</p>
       </details>
-      <details class=”faq”>
+      <details class="faq">
         <summary>Verlassen Daten meine Moodle-Instanz?</summary>
         <p>Nein. Leafr ruft keinen externen Dienst, kein Analyse-Tool und keine API auf — alles läuft auf deinem eigenen Moodle-Server, unter dessen bestehenden Hosting- und Backup-Regeln.</p>
       </details>
-      <details class=”faq”>
+      <details class="faq">
         <summary>Kann ich Lesezeichen und Notizen exportieren?</summary>
         <p>Ja, als druckbare Seite oder PDF — nützlich, um festzuhalten, was markiert wurde und warum.</p>
       </details>
-      <details class=”faq”>
+      <details class="faq">
         <summary>Welche Sprachen unterstützt Leafr?</summary>
         <p>Deutsch, Englisch und Spanisch für die Oberfläche.</p>
       </details>
-      <details class=”faq”>
+      <details class="faq">
         <summary>Welche Moodle- und PHP-Versionen werden unterstützt?</summary>
         <p>Moodle 4.5 bis 5.2 (getestet mit 4.5, 5.0, 5.1 und 5.2), PHP 8.1 oder neuer.</p>
       </details>
@@ -235,6 +313,11 @@
   </section>
 
 </main>
+
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lightbox-close" type="button" aria-label="Schließen">×</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
 
 <footer class="site">
   <div class="wrap">
@@ -248,5 +331,60 @@
   </div>
 </footer>
 
+<script>
+(function () {
+  var carousel = document.querySelector('.carousel');
+  if (!carousel) return;
+  var track = carousel.querySelector('.carousel-track');
+  var slides = Array.prototype.slice.call(carousel.querySelectorAll('.carousel-slide'));
+  var dotsWrap = carousel.querySelector('.carousel-dots');
+  var prevBtn = carousel.querySelector('.carousel-prev');
+  var nextBtn = carousel.querySelector('.carousel-next');
+  var lightbox = document.getElementById('lightbox');
+  var lightboxImg = document.getElementById('lightbox-img');
+  var closeBtn = lightbox.querySelector('.lightbox-close');
+  var index = 0;
+
+  slides.forEach(function (slide, i) {
+    var dot = document.createElement('button');
+    dot.type = 'button';
+    dot.setAttribute('aria-label', 'Zu Screenshot ' + (i + 1) + ' springen');
+    dot.addEventListener('click', function () { goTo(i); });
+    dotsWrap.appendChild(dot);
+    slide.querySelector('img').addEventListener('click', function () { openLightbox(i); });
+  });
+  var dots = Array.prototype.slice.call(dotsWrap.children);
+
+  function update() {
+    track.style.transform = 'translateX(-' + (index * 100) + '%)';
+    dots.forEach(function (d, i) { d.classList.toggle('active', i === index); });
+  }
+  function goTo(i) { index = (i + slides.length) % slides.length; update(); }
+  prevBtn.addEventListener('click', function () { goTo(index - 1); });
+  nextBtn.addEventListener('click', function () { goTo(index + 1); });
+  update();
+
+  function openLightbox(i) {
+    var img = slides[i].querySelector('img');
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt;
+    lightbox.hidden = false;
+  }
+  function closeLightbox() {
+    lightbox.hidden = true;
+    lightboxImg.src = '';
+  }
+  closeBtn.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', function (e) { if (e.target === lightbox) closeLightbox(); });
+  document.addEventListener('keydown', function (e) {
+    if (!lightbox.hidden) {
+      if (e.key === 'Escape') closeLightbox();
+    } else {
+      if (e.key === 'ArrowLeft') goTo(index - 1);
+      if (e.key === 'ArrowRight') goTo(index + 1);
+    }
+  });
+})();
+</script>
 </body>
 </html>

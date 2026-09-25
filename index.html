@@ -71,7 +71,44 @@
   .btn-primary:hover { background: #0a5951; }
   .btn-secondary { background: transparent; color: var(--text); border-color: var(--border); }
   .btn-secondary:hover { border-color: var(--teal-dark); color: var(--teal-dark); }
-  .hero-shot { max-width: 720px; width: 100%; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 12px 32px rgba(14,106,98,0.12); }
+  .carousel { position: relative; max-width: 720px; margin: 0 auto; }
+  .carousel-viewport {
+    overflow: hidden; border-radius: 12px; border: 1px solid var(--border);
+    box-shadow: 0 12px 32px rgba(14,106,98,0.12); background: var(--card-bg);
+  }
+  .carousel-track { display: flex; transition: transform 0.35s ease; }
+  .carousel-slide { flex: 0 0 100%; margin: 0; }
+  .carousel-slide img { width: 100%; display: block; cursor: zoom-in; }
+  .carousel-slide figcaption { padding: 12px 18px; font-size: 0.88rem; color: var(--text-muted); text-align: left; }
+  .carousel-arrow {
+    position: absolute; top: 38%; transform: translateY(-50%); width: 40px; height: 40px;
+    border-radius: 50%; border: 1px solid var(--border); background: var(--card-bg); color: var(--text);
+    font-size: 1.3rem; line-height: 1; cursor: pointer;
+  }
+  .carousel-arrow:hover { border-color: var(--teal-dark); color: var(--teal-dark); }
+  .carousel-prev { left: -18px; }
+  .carousel-next { right: -18px; }
+  @media (max-width: 760px) {
+    .carousel-prev { left: 6px; } .carousel-next { right: 6px; }
+    .carousel-arrow { background: rgba(255,255,255,0.85); }
+  }
+  .carousel-dots { display: flex; justify-content: center; gap: 8px; margin-top: 14px; }
+  .carousel-dots button {
+    width: 8px; height: 8px; border-radius: 50%; border: none; padding: 0;
+    background: var(--border); cursor: pointer;
+  }
+  .carousel-dots button.active { background: var(--teal-dark); }
+
+  .lightbox {
+    position: fixed; inset: 0; background: rgba(10,20,19,0.88); z-index: 100;
+    display: flex; align-items: center; justify-content: center; padding: 40px;
+  }
+  .lightbox[hidden] { display: none; }
+  .lightbox img { max-width: 100%; max-height: 100%; border-radius: 8px; }
+  .lightbox-close {
+    position: absolute; top: 18px; right: 24px; background: none; border: none;
+    color: #fff; font-size: 2rem; line-height: 1; cursor: pointer;
+  }
 
   section { padding: 48px 0; }
   section.alt { background: var(--bg-alt); }
@@ -89,11 +126,6 @@
   .card p { margin: 0; color: var(--text-muted); font-size: 0.95rem; }
 
   .who-box { border-left: 3px solid var(--teal-light); padding: 4px 0 4px 20px; margin: 28px 0; color: var(--text-muted); }
-
-  .shots-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 24px; }
-  .shot { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
-  .shot img { width: 100%; display: block; }
-  .shot figcaption { padding: 12px 16px; font-size: 0.88rem; color: var(--text-muted); margin: 0; }
 
   .privacy-box {
     background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px;
@@ -143,7 +175,47 @@
       <a class="btn btn-primary" href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/releases/latest">Download latest release</a>
       <a class="btn btn-secondary" href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr">View on GitHub</a>
     </div>
-    <img class="hero-shot" src="assets/screenshots/sidebar-thumbnails.png" alt="Leafr reader showing the page thumbnail sidebar with a checkmark for read pages and a dot for required pages">
+    <div class="carousel" id="screenshots">
+      <div class="carousel-viewport">
+        <div class="carousel-track">
+          <figure class="carousel-slide">
+            <img src="assets/screenshots/sidebar-thumbnails.png" alt="Page thumbnails, with a checkmark for read pages and a dot for required pages">
+            <figcaption>Page thumbnails, with a checkmark for read pages and a dot for required pages.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="assets/screenshots/sidebar-contents.png" alt="Sidebar with the table of contents">
+            <figcaption>Table of contents — automatic from the PDF outline, or defined by the teacher.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="assets/screenshots/sidebar-search.png" alt="Sidebar with full-text search results">
+            <figcaption>Full-text search with highlighted matches.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="assets/screenshots/sidebar-bookmarks.png" alt="Sidebar with a bookmark and a personal note">
+            <figcaption>Bookmarks with a personal note, printable or saved as PDF.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="assets/screenshots/view-menu.png" alt="View menu with page layout and zoom options">
+            <figcaption>View menu: page layout, simple view, zoom, full screen.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="assets/screenshots/confirm-card.png" alt="Read confirmation card">
+            <figcaption>Read confirmation, shown once the required pages have been read.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="assets/screenshots/settings-form.png" alt="Activity settings form with completion conditions">
+            <figcaption>Activity settings: required pages/chapters and the read confirmation.</figcaption>
+          </figure>
+          <figure class="carousel-slide">
+            <img src="assets/screenshots/overview-report.png" alt="Teacher overview report with group filter">
+            <figcaption>Overview report for teachers, with group filter and CSV export.</figcaption>
+          </figure>
+        </div>
+      </div>
+      <button class="carousel-arrow carousel-prev" type="button" aria-label="Previous screenshot">‹</button>
+      <button class="carousel-arrow carousel-next" type="button" aria-label="Next screenshot">›</button>
+      <div class="carousel-dots"></div>
+    </div>
   </section>
 
   <section id="what" class="wrap">
@@ -197,41 +269,6 @@
           </p>
         </div>
       </div>
-    </div>
-  </section>
-
-  <section id="screenshots" class="wrap">
-    <h2>Screenshots</h2>
-    <p class="section-lead">The reader, the teacher-facing settings, and the overview report.</p>
-    <div class="shots-grid">
-      <figure class="shot">
-        <img src="assets/screenshots/sidebar-contents.png" alt="Sidebar with the table of contents">
-        <figcaption>Table of contents — automatic from the PDF outline, or defined by the teacher.</figcaption>
-      </figure>
-      <figure class="shot">
-        <img src="assets/screenshots/sidebar-search.png" alt="Sidebar with full-text search results">
-        <figcaption>Full-text search with highlighted matches.</figcaption>
-      </figure>
-      <figure class="shot">
-        <img src="assets/screenshots/sidebar-bookmarks.png" alt="Sidebar with a bookmark and a personal note">
-        <figcaption>Bookmarks with a personal note, printable or saved as PDF.</figcaption>
-      </figure>
-      <figure class="shot">
-        <img src="assets/screenshots/view-menu.png" alt="View menu with page layout and zoom options">
-        <figcaption>View menu: page layout, simple view, zoom, full screen.</figcaption>
-      </figure>
-      <figure class="shot">
-        <img src="assets/screenshots/confirm-card.png" alt="Read confirmation card">
-        <figcaption>Read confirmation, shown once the required pages have been read.</figcaption>
-      </figure>
-      <figure class="shot">
-        <img src="assets/screenshots/settings-form.png" alt="Activity settings form with completion conditions">
-        <figcaption>Activity settings: required pages/chapters and the read confirmation.</figcaption>
-      </figure>
-      <figure class="shot">
-        <img src="assets/screenshots/overview-report.png" alt="Teacher overview report with group filter">
-        <figcaption>Overview report for teachers, with group filter and CSV export.</figcaption>
-      </figure>
     </div>
   </section>
 
@@ -290,6 +327,11 @@
 
 </main>
 
+<div class="lightbox" id="lightbox" hidden>
+  <button class="lightbox-close" type="button" aria-label="Close">×</button>
+  <img id="lightbox-img" src="" alt="">
+</div>
+
 <footer class="site">
   <div class="wrap">
     <div class="foot-links">
@@ -302,5 +344,60 @@
   </div>
 </footer>
 
+<script>
+(function () {
+  var carousel = document.querySelector('.carousel');
+  if (!carousel) return;
+  var track = carousel.querySelector('.carousel-track');
+  var slides = Array.prototype.slice.call(carousel.querySelectorAll('.carousel-slide'));
+  var dotsWrap = carousel.querySelector('.carousel-dots');
+  var prevBtn = carousel.querySelector('.carousel-prev');
+  var nextBtn = carousel.querySelector('.carousel-next');
+  var lightbox = document.getElementById('lightbox');
+  var lightboxImg = document.getElementById('lightbox-img');
+  var closeBtn = lightbox.querySelector('.lightbox-close');
+  var index = 0;
+
+  slides.forEach(function (slide, i) {
+    var dot = document.createElement('button');
+    dot.type = 'button';
+    dot.setAttribute('aria-label', 'Go to screenshot ' + (i + 1));
+    dot.addEventListener('click', function () { goTo(i); });
+    dotsWrap.appendChild(dot);
+    slide.querySelector('img').addEventListener('click', function () { openLightbox(i); });
+  });
+  var dots = Array.prototype.slice.call(dotsWrap.children);
+
+  function update() {
+    track.style.transform = 'translateX(-' + (index * 100) + '%)';
+    dots.forEach(function (d, i) { d.classList.toggle('active', i === index); });
+  }
+  function goTo(i) { index = (i + slides.length) % slides.length; update(); }
+  prevBtn.addEventListener('click', function () { goTo(index - 1); });
+  nextBtn.addEventListener('click', function () { goTo(index + 1); });
+  update();
+
+  function openLightbox(i) {
+    var img = slides[i].querySelector('img');
+    lightboxImg.src = img.src;
+    lightboxImg.alt = img.alt;
+    lightbox.hidden = false;
+  }
+  function closeLightbox() {
+    lightbox.hidden = true;
+    lightboxImg.src = '';
+  }
+  closeBtn.addEventListener('click', closeLightbox);
+  lightbox.addEventListener('click', function (e) { if (e.target === lightbox) closeLightbox(); });
+  document.addEventListener('keydown', function (e) {
+    if (!lightbox.hidden) {
+      if (e.key === 'Escape') closeLightbox();
+    } else {
+      if (e.key === 'ArrowLeft') goTo(index - 1);
+      if (e.key === 'ArrowRight') goTo(index + 1);
+    }
+  });
+})();
+</script>
 </body>
 </html>
