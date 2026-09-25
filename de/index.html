@@ -69,8 +69,9 @@
   .carousel-viewport {
     overflow: hidden; border-radius: 12px; border: 1px solid var(--border);
     box-shadow: 0 12px 32px rgba(14,106,98,0.12); background: var(--card-bg);
+    transition: height 0.35s ease;
   }
-  .carousel-track { display: flex; transition: transform 0.35s ease; }
+  .carousel-track { display: flex; align-items: flex-start; transition: transform 0.35s ease; }
   .carousel-slide { flex: 0 0 100%; margin: 0; }
   .carousel-slide img { width: 100%; display: block; cursor: zoom-in; }
   .carousel-slide figcaption { padding: 12px 18px; font-size: 0.88rem; color: var(--text-muted); text-align: left; }
@@ -355,9 +356,19 @@
   });
   var dots = Array.prototype.slice.call(dotsWrap.children);
 
+  var viewport = carousel.querySelector('.carousel-viewport');
+  function setHeight() {
+    viewport.style.height = slides[index].offsetHeight + 'px';
+  }
+  slides.forEach(function (slide) {
+    var img = slide.querySelector('img');
+    if (img.complete) { setHeight(); } else { img.addEventListener('load', setHeight); }
+  });
+
   function update() {
     track.style.transform = 'translateX(-' + (index * 100) + '%)';
     dots.forEach(function (d, i) { d.classList.toggle('active', i === index); });
+    setHeight();
   }
   function goTo(i) { index = (i + slides.length) % slides.length; update(); }
   prevBtn.addEventListener('click', function () { goTo(index - 1); });
