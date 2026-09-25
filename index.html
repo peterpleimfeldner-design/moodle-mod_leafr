@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Leafr — a page-turning PDF reader for Moodle</title>
-<meta name="description" content="Leafr is a free, open-source Moodle activity that turns a PDF into a book students can leaf through, with real completion tracking and no external services.">
+<title>Leafr — a PDF that reads like a book, not a download</title>
+<meta name="description" content="Leafr is a free, open-source Moodle activity that turns a PDF into a book students can page through, with chapters, bookmarks and search — plus an optional read confirmation for material people actually have to read.">
 <link rel="icon" type="image/svg+xml" href="assets/icon.svg">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Leafr — a page-turning PDF reader for Moodle">
-<meta property="og:description" content="Free, open-source Moodle activity: a PDF becomes a book students can leaf through, with real completion tracking and no external services.">
+<meta property="og:title" content="Leafr — a PDF that reads like a book, not a download">
+<meta property="og:description" content="Free, open-source Moodle activity: a PDF becomes a book students can page through, with chapters, bookmarks and search — plus an optional read confirmation for material people actually have to read.">
 <meta property="og:url" content="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/">
 <meta property="og:image" content="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/assets/social-preview.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -137,8 +137,8 @@
 <main id="top">
 
   <section class="hero wrap">
-    <h1>A page-turning PDF reader for Moodle — with completion tracking that actually means something.</h1>
-    <p class="lead">Leafr turns a PDF into a book students can leaf through inside your course. No external service, no extra login, no data leaving your Moodle site.</p>
+    <h1>A PDF that reads like a book, not a download.</h1>
+    <p class="lead">Leafr turns any PDF in your Moodle course into a book students can page through — with chapters, a table of contents, bookmarks and notes they can export, and a real place to pick up where they left off.</p>
     <div class="cta-row">
       <a class="btn btn-primary" href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/releases/latest">Download latest release</a>
       <a class="btn btn-secondary" href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr">View on GitHub</a>
@@ -151,20 +151,28 @@
     <p class="section-lead">Moodle already lets you attach a PDF as a plain file. Leafr is for the cases where that isn't enough.</p>
     <div class="grid-cards">
       <div class="card">
-        <h3>Know who actually read it</h3>
-        <p>Completion by last page, by a percentage of pages, or by specific required pages and chapters — not just who downloaded the file.</p>
+        <h3>A book, not a scroll</h3>
+        <p>Real page-turning, chapters, a table of contents and bookmarks with your own notes — read a long document the way you'd read a book. Bookmarks and notes can be exported as a PDF.</p>
       </div>
       <div class="card">
-        <h3>Navigate long documents</h3>
-        <p>A table of contents, page thumbnails, full-text search and bookmarks with notes, instead of one long scroll.</p>
+        <h3>Proof of reading, not just a tick-box</h3>
+        <p>Mark certain pages or chapters as required, and ask for an active read confirmation with a timestamp — for material people actually have to read, like safety briefings and policies.</p>
       </div>
       <div class="card">
-        <h3>Ask for an active confirmation</h3>
-        <p>An optional read-confirmation step for policies, safety handbooks or terms — a deliberate click, not an inferred timestamp.</p>
+        <h3>Everything included, nothing held back</h3>
+        <p>Thumbnails, full-text search, notated bookmarks, a teacher overview report, read confirmation — all part of the one free plugin. No paid tier, no feature gate.</p>
       </div>
       <div class="card">
-        <h3>See progress, not surveillance</h3>
-        <p>A teacher overview of completion and required pages read — without reading times or a log of every page view.</p>
+        <h3>Accessible from the ground up</h3>
+        <p>A simple, scrollable view that's fully accessible to screen readers sits alongside the book view as an equal alternative, not an afterthought.</p>
+      </div>
+      <div class="card">
+        <h3>Privacy by design, not an afterthought</h3>
+        <p>No external service, no analytics tool, full support for Moodle's Privacy API — and deliberately no tracking of reading times or how long someone lingered on a page.</p>
+      </div>
+      <div class="card">
+        <h3>Built for teaching, not just IT</h3>
+        <p>An overview report per participant, flexible completion rules, manual chapters for PDFs without an outline, and an interface available in German, English and Spanish.</p>
       </div>
     </div>
     <p class="who-box">If none of that applies and a plain file or a "Resource" activity is enough for your PDF, you don't need Leafr — and that's a fine outcome.</p>
@@ -255,24 +263,28 @@
   <section id="faq" class="wrap">
     <h2>FAQ</h2>
     <details class="faq">
-      <summary>Why no Word or PowerPoint support?</summary>
-      <p>Leafr renders PDF with PDF.js, which is what gives it page-accurate navigation, text search and a stable page count to base completion tracking on. Word and PowerPoint files don't have a fixed page layout across devices, so there is no reliable "page" to track. Export your material to PDF first — every common office suite can do this.</p>
+      <summary>Why an active read confirmation instead of just counting page views?</summary>
+      <p>For mandatory material like safety briefings or policies, "the page was open" often isn't a reliable enough signal that something was actually read. An active confirmation is a deliberate click, not an inferred timestamp.</p>
     </details>
     <details class="faq">
-      <summary>Why isn't there a paid "Pro" version?</summary>
-      <p>There isn't one, and none is planned. Leafr is licensed under the GPLv3; everything in the repository is the whole plugin, with no license key, no feature gate and no hosted component.</p>
+      <summary>What does the teacher overview report show?</summary>
+      <p>Completion status, which required pages have been read, and the read-confirmation date for each participant — with a group filter and CSV export.</p>
     </details>
     <details class="faq">
-      <summary>What data does Leafr store, and does anything leave my Moodle site?</summary>
-      <p>Only what's listed under "Built with data minimalism in mind" above, and it stays inside your Moodle installation and database. Leafr does not call out to any external service, analytics tool or API.</p>
+      <summary>Can I choose exactly which pages or chapters count as "read"?</summary>
+      <p>Yes, through the completion rules (last page, a percentage, or specific pages/chapters) and manual chapters for PDFs without their own outline.</p>
     </details>
     <details class="faq">
-      <summary>Can teachers see how long a student spent reading, or which pages they lingered on?</summary>
-      <p>No, deliberately not. The overview report shows only whether the activity is complete, which required pages have been read, and the read-confirmation date.</p>
+      <summary>Does any data leave my Moodle instance?</summary>
+      <p>No. Leafr doesn't call out to any external service, analytics tool or API — everything runs on your own Moodle server, under whatever hosting and backup policy it already has.</p>
     </details>
     <details class="faq">
-      <summary>Is there a cloud or hosted version of Leafr?</summary>
-      <p>No. Leafr is a normal Moodle plugin that runs entirely on your own Moodle server, under whatever hosting and backup policy that server already has.</p>
+      <summary>Can I export bookmarks and notes?</summary>
+      <p>Yes, as a printable page or PDF — useful for keeping a record of what was marked and why.</p>
+    </details>
+    <details class="faq">
+      <summary>Which languages does Leafr support?</summary>
+      <p>German, English and Spanish for the interface.</p>
     </details>
     <details class="faq">
       <summary>Which Moodle and PHP versions are supported?</summary>
@@ -290,7 +302,7 @@
       <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/issues">Report an issue</a>
       <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/blob/main/LICENSE">GPLv3 license</a>
     </div>
-    <p>Leafr is free and open-source software, © 2026 Peter Pleimfeldner.</p>
+    <p>Leafr is free and open-source software (GPLv3), with no paid tier — © 2026 Peter Pleimfeldner.</p>
   </div>
 </footer>
 
