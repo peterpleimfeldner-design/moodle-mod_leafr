@@ -6,10 +6,12 @@ Leafr is a Moodle activity that turns a PDF document into a book students can le
 
 Moodle already lets you attach a PDF as a plain file. Leafr is for the cases where that is not enough:
 
-- You want to know **who actually read** the document, not just who downloaded it — completion by last page, by a percentage of pages, or by specific required pages and chapters.
-- The PDF is long enough that **navigation** matters: a table of contents, page thumbnails, full-text search and bookmarks with notes, instead of one long scroll or endless Ctrl+F.
-- You need students to **actively confirm** they have read something (a policy, a safety handbook, terms of a placement) rather than infer it from a download timestamp.
-- You want a **teacher overview** of who has completed the reading and who hasn't — without collecting reading times or a log of every page view, which Leafr deliberately leaves out.
+- **A book, not a scroll**: real page-turning, chapters, a table of contents and bookmarks with your own notes — read a long document the way you'd read a book, not the way you scroll a file. Bookmarks and notes can be exported as a PDF.
+- **Proof of reading, not just a tick-box**: mark certain pages or chapters as required, and ask for an active read confirmation with a timestamp — for material people actually have to read, like safety briefings and policies.
+- **Everything included, nothing held back**: thumbnails, full-text search, notated bookmarks, a teacher overview report, read confirmation — all part of the one free plugin, no paid tier.
+- **Accessible from the ground up**: a simple, scrollable view that's fully accessible to screen readers sits alongside the book view as an equal alternative.
+- **Privacy by design**: no external service, no analytics tool, full support for Moodle's Privacy API, and deliberately no tracking of reading times or how long someone lingered on a page.
+- **Built for teaching, not just IT**: an overview report per participant, flexible completion rules, manual chapters for PDFs without an outline, and an interface available in German, English and Spanish.
 
 If none of that applies and a plain file or a "Resource" activity is enough for your PDF, you don't need Leafr — and that's a fine outcome.
 
@@ -74,23 +76,26 @@ Leafr stores, per user and activity, the pages that were viewed and the last rea
 
 ## FAQ
 
-**Why no Word or PowerPoint support?**
-Leafr renders PDF with [PDF.js](https://github.com/mozilla/pdf.js), which is what gives it page-accurate navigation, text search and a stable page count to base completion tracking on. Word and PowerPoint files don't have a fixed page layout across devices, so there is no reliable "page" to track. If your material is in Word or PowerPoint, export it to PDF first — every common office suite can do this.
+**Why an active read confirmation instead of just counting page views?**
+For mandatory material like safety briefings or policies, "the page was open" often isn't a reliable enough signal that something was actually read. An active confirmation is a deliberate click, not an inferred timestamp.
 
-**Why isn't there a paid "Pro" version?**
-There isn't one, and none is planned. Leafr is licensed under the GPLv3 (see [LICENSE](LICENSE)); everything in this repository is the whole plugin, with no license key, no feature gate and no hosted component. What you see here is what you get.
+**What does the teacher overview report show?**
+Completion status, which required pages have been read, and the read-confirmation date for each participant — with a group filter (respecting separate groups) and CSV export.
 
-**What data does Leafr store, and does anything leave my Moodle site?**
-Only what's listed under [Privacy](#privacy) above, and it stays inside your Moodle installation and database — Leafr does not call out to any external service, analytics tool or API. Everything a student can see about their own data, and everything an admin can export or delete, goes through Moodle's standard Privacy API.
+**Can I choose exactly which pages or chapters count as "read"?**
+Yes, through the completion rules (last page, a percentage, or specific pages/chapters) and manual chapters for PDFs without their own outline.
 
-**Can teachers see how long a student spent reading, or which pages they lingered on?**
-No, deliberately not. The overview report shows only whether the activity is complete, which required pages have been read, and the read-confirmation date. Leafr does not build a page-by-page timeline of student behaviour.
+**Does any data leave my Moodle instance?**
+No. Leafr does not call out to any external service, analytics tool or API — everything stays inside your Moodle installation and database, and can be exported or deleted through Moodle's standard Privacy API. See [Privacy](#privacy) above.
 
-**Is there a cloud or hosted version of Leafr?**
-No. Leafr is a normal Moodle plugin that runs entirely on your own Moodle server, under whatever hosting and backup policy that server already has.
+**Can I export bookmarks and notes?**
+Yes, as a printable page or PDF — useful for keeping a record of what was marked and why.
 
-**Can I add more than one Leafr activity to a course?**
-Yes — like any Moodle activity, add as many instances as you need, each with its own PDF and its own completion settings.
+**Which languages does Leafr support?**
+German, English and Spanish for the interface.
+
+**Which Moodle and PHP versions are supported?**
+Moodle 4.5 to 5.2 (tested with 4.5, 5.0, 5.1 and 5.2), PHP 8.1 or later.
 
 ## Third-party libraries
 
@@ -114,7 +119,7 @@ Please use the [issue tracker](https://github.com/peterpleimfeldner-design/moodl
 
 ## License
 
-2026 Peter Pleimfeldner
+2026 Peter Pleimfeldner. Leafr is free and open-source software, licensed under the GPLv3 — everything in this repository is the whole plugin, with no paid tier and no feature held back.
 
 This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
