@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.2.1 (2026-10-21)
+
+Packaging fix, no change to the plugin's behaviour.
+
+### Fixed
+- The plugin package now contains the `LICENSE` file (GNU GPL v3); it was missing from the 1.2.0
+  package.
+
+### Changed
+- README rewritten, with screenshots.
+
 ## 1.2.0 (2026-09-25)
 
 ### New

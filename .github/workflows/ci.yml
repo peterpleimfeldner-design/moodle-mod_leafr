@@ -7,6 +7,24 @@ on:
   pull_request:
 
 jobs:
+  package:
+    # Builds the plugin ZIP with git archive (exactly like a release) and checks the finished ZIP:
+    # LICENSE, required files, thirdpartylibs.xml locations, nothing internal. On HEAD there is
+    # no release tag, so the version/maturity check is skipped; run the script on the tag
+    # before every upload (see .github/scripts/build-release-zip.sh).
+    name: Package check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          # Full history and tags, so the script can resolve any ref it is given.
+          fetch-depth: 0
+
+      - name: Build and check the plugin ZIP
+        run: bash .github/scripts/build-release-zip.sh HEAD "$RUNNER_TEMP/mod_leafr_ci.zip"
+
   test:
     runs-on: ubuntu-latest
 
