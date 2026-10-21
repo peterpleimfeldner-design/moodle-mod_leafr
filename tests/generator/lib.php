@@ -24,7 +24,8 @@
  */
 class mod_leafr_generator extends testing_module_generator {
     /**
-     * Creates a Leafr activity. Unless a draft area is given, the sample PDF from tests/fixtures is added.
+     * Creates a Leafr activity. Unless a draft area is given, a PDF from tests/fixtures is added: the
+     * file named in 'pdffixture' (e.g. "images.pdf"), sample.pdf by default.
      *
      * @param array|stdClass|null $record Instance data, requires 'course'
      * @param array|null $options Course module options
@@ -48,6 +49,8 @@ class mod_leafr_generator extends testing_module_generator {
             }
         }
 
+        $fixture = clean_param($record->pdffixture ?? 'sample.pdf', PARAM_FILE);
+        unset($record->pdffixture);
         if (!isset($record->pdffile)) {
             if (empty($USER->id) || isguestuser()) {
                 throw new coding_exception('The leafr generator requires a current user to add the PDF file.');
@@ -59,8 +62,8 @@ class mod_leafr_generator extends testing_module_generator {
                 'filearea' => 'draft',
                 'itemid' => $record->pdffile,
                 'filepath' => '/',
-                'filename' => 'sample.pdf',
-            ], $CFG->dirroot . '/mod/leafr/tests/fixtures/sample.pdf');
+                'filename' => $fixture,
+            ], $CFG->dirroot . '/mod/leafr/tests/fixtures/' . $fixture);
         }
 
         return parent::create_instance($record, $options);

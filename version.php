@@ -25,8 +25,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'mod_leafr';
-$plugin->version   = 2026102100;
+$plugin->version   = 2026102200;
 $plugin->requires  = 2024100700; // Moodle 4.5 (LTS).
 $plugin->supported = [405, 502];
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '1.2.1';
+$plugin->release   = '1.3.0';

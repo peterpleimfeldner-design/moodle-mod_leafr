@@ -11,10 +11,11 @@ jobs:
     # Builds the plugin ZIP with git archive (exactly like a release) and checks the finished ZIP:
     # LICENSE, required files, thirdpartylibs.xml locations, nothing internal. On HEAD there is
     # no release tag, so the version/maturity check is skipped; run the script on the tag
-    # before every upload (see .github/scripts/build-release-zip.sh).
+    # before every upload (see .github/scripts/build-release-zip.sh). Also checks the bundled
+    # PDF.js: consistent versions and checksums, and unchanged text extraction from the test PDFs.
     name: Package check
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -24,6 +25,21 @@ jobs:
 
       - name: Build and check the plugin ZIP
         run: bash .github/scripts/build-release-zip.sh HEAD "$RUNNER_TEMP/mod_leafr_ci.zip"
+
+      - name: Check the bundled PDF.js (versions, checksums, no old module name)
+        if: ${{ !cancelled() }}
+        run: bash .github/scripts/check-pdfjs.sh
+
+      - name: Set up Node.js for the PDF.js reference check
+        if: ${{ !cancelled() }}
+        uses: actions/setup-node@v4
+        with:
+          # PDF.js 6.4 supports Node.js 22 and later.
+          node-version: '22'
+
+      - name: Compare PDF.js text, outline and page sizes with the stored reference
+        if: ${{ !cancelled() }}
+        run: bash .github/scripts/check-pdfjs-reference.sh
 
   test:
     runs-on: ubuntu-latest

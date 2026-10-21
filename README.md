@@ -57,6 +57,7 @@ For teachers:
 
 - Moodle 4.5 to 5.2 (tested with 4.5, 5.0, 5.1 and 5.2)
 - PHP 8.1 or later
+- For students and teachers, a browser supported by PDF.js 6.4: Chrome or Edge 125 or later, Firefox ESR or later, Safari 18 or later (iOS/iPadOS 18). Browsers that lack features PDF.js needs (for example Safari before 17.4, Chrome before 119, Firefox before 122) show a message instead of the document, with the download button if downloading is allowed.
 
 ## Installation
 
@@ -96,14 +97,20 @@ German, English and Spanish for the interface.
 **Which Moodle and PHP versions are supported?**
 Moodle 4.5 to 5.2 (tested with 4.5, 5.0, 5.1 and 5.2), PHP 8.1 or later.
 
+**Which browsers are supported?**
+Chrome or Edge 125 or later, Firefox ESR or later, Safari 18 or later (iOS/iPadOS 18) – the browsers supported by the bundled PDF.js. Older iPads that cannot be updated to iPadOS 18 are not supported. Browsers that lack features PDF.js needs show a message instead of the document.
+
 ## Third-party libraries
 
 | Library | Version | License |
 |---|---|---|
-| [PDF.js](https://github.com/mozilla/pdf.js) | 3.11.174 | Apache 2.0 |
+| [PDF.js](https://github.com/mozilla/pdf.js) (legacy build) | 6.4.299 | Apache 2.0 |
+| JBIG2 decoder (PDFium), shipped with PDF.js | 6.4.299 | BSD 3-Clause |
+| OpenJPEG decoder, shipped with PDF.js | 6.4.299 | BSD 2-Clause |
+| qcms colour management, shipped with PDF.js | 6.4.299 | MIT |
 | [StPageFlip](https://github.com/Nodlik/StPageFlip) | 2.0.7 | MIT |
 
-PDF.js runs with `isEvalSupported: false`, which prevents code execution from PDF files (CVE-2024-4367).
+`vendor/pdfjs` contains the unmodified files of the npm package `pdfjs-dist`, with `.mjs` renamed to `.js` (source, checksums and update script: `vendor/pdfjs/readme_moodle.txt`). PDF.js 6.4 no longer has the `eval`-based code path behind CVE-2024-4367; Leafr still sets `isEvalSupported: false`. PDF.js loads its WebAssembly decoders from `vendor/pdfjs/wasm` only when a document needs them (for example for JBIG2 or JPEG 2000 images).
 
 ## Development
 

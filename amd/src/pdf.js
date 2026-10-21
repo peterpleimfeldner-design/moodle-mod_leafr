@@ -21,8 +21,15 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import * as pdfjsLib from 'pdfjs-dist/build/pdf';
 import Config from 'core/config';
+
+/**
+ * Version of the bundled PDF.js build in vendor/pdfjs (must match thirdpartylibs.xml).
+ *
+ * It is also appended to the library and worker URLs, so that browsers never combine a cached
+ * library of one version with the worker of another one (PDF.js refuses such a mix).
+ */
+export const PDFJS_VERSION = '6.4.299';
 
 /** Largest canvas edge in device pixels, keeps memory use of a single page bounded. */
 const MAX_CANVAS_EDGE = 4096;
@@ -33,7 +40,105 @@ const renderTasks = new WeakMap();
 /** @type {Map<number, Object>} Size of page 1-based n at scale 1. */
 const pageSizes = new Map();
 
-let workerConfigured = false;
+/** @type {Promise<Object>|null} The loaded PDF.js library. */
+let libraryPromise = null;
+
+/** @type {Object|null} The loaded PDF.js library, set once libraryPromise has resolved. */
+let pdfjsLib = null;
+
+/**
+ * Returns the URL of a file in the PDF.js vendor directory.
+ *
+ * @param {string} path Path relative to vendor/pdfjs
+ * @returns {string}
+ */
+const vendorUrl = (path) => Config.wwwroot + '/mod/leafr/vendor/pdfjs/' + path;
+
+/**
+ * Creates an error that tells the reader which message to show.
+ *
+ * @param {string} message Technical message (not shown to the user)
+ * @param {string} reason "browser" if the browser is too old for PDF.js, "library" if PDF.js could not be loaded
+ * @returns {Error}
+ */
+const loadError = (message, reason) => {
+    const error = new Error(message);
+    error.leafrReason = reason;
+    return error;
+};
+
+/**
+ * Checks whether the browser has the features the bundled PDF.js build needs.
+ *
+ * The legacy build of PDF.js 6.4 is compiled for Chrome 125, Firefox ESR and Safari 18 (ENV_TARGETS
+ * in its gulpfile.mjs) and only brings polyfills for features those browsers lack. It runs as a
+ * JavaScript module and its worker calls Promise.withResolvers(), structuredClone() and
+ * ArrayBuffer.prototype.transferToFixedLength() without a polyfill. A browser without them cannot
+ * display documents (the newest of them: Chrome 119, Firefox 122, Safari 17.4). Browsers that pass
+ * this check but are older than the official targets are not supported by Mozilla either.
+ *
+ * @returns {boolean}
+ */
+export const isBrowserSupported = () => typeof window.HTMLScriptElement === 'function' &&
+    'noModule' in window.HTMLScriptElement.prototype &&
+    typeof Promise.withResolvers === 'function' &&
+    typeof window.structuredClone === 'function' &&
+    typeof ArrayBuffer.prototype.transferToFixedLength === 'function';
+
+/**
+ * Loads the PDF.js library once.
+ *
+ * Since version 4 PDF.js is only published as a JavaScript module, which RequireJS cannot load
+ * (and Moodle's build turns import() into a RequireJS call). The unmodified library file is
+ * therefore added as a module script; it publishes its API as globalThis.pdfjsLib. The files
+ * are shipped with a .js extension, because every web server sends the JavaScript MIME type for
+ * .js, which browsers require for module scripts and module workers (.mjs is often unknown).
+ *
+ * The promise is rejected with an error whose leafrReason is "browser" when the browser is too old
+ * and "library" when the file could not be fetched.
+ *
+ * @returns {Promise<Object>} The PDF.js library
+ */
+export const loadLibrary = () => {
+    if (!isBrowserSupported()) {
+        return Promise.reject(loadError('This browser lacks features PDF.js ' + PDFJS_VERSION + ' needs', 'browser'));
+    }
+    if (!libraryPromise) {
+        libraryPromise = new Promise((resolve, reject) => {
+            const loaded = () => window.pdfjsLib && window.pdfjsLib.version === PDFJS_VERSION;
+            const finish = () => {
+                if (!loaded()) {
+                    // The file was fetched, but running it did not define the library: the browser
+                    // could not execute it (a syntax or API it does not know).
+                    reject(loadError('PDF.js ' + PDFJS_VERSION + ' could not be run in this browser', 'browser'));
+                    return;
+                }
+                pdfjsLib = window.pdfjsLib;
+                pdfjsLib.GlobalWorkerOptions.workerSrc = vendorUrl('pdf.worker.min.js?v=' + PDFJS_VERSION);
+                resolve(pdfjsLib);
+            };
+            if (loaded()) {
+                finish();
+                return;
+            }
+            const script = document.createElement('script');
+            script.type = 'module';
+            script.src = vendorUrl('pdf.min.js?v=' + PDFJS_VERSION);
+            script.addEventListener('load', finish);
+            script.addEventListener('error', () => {
+                // Remove the failed script, so that a retry adds a new one.
+                script.remove();
+                reject(loadError('PDF.js could not be loaded from ' + script.src, 'library'));
+            });
+            document.head.appendChild(script);
+        });
+        // Allow a later retry if loading failed (for example after a network error).
+        libraryPromise.catch(() => {
+            libraryPromise = null;
+        });
+    }
+    return libraryPromise;
+};
 
 /**
  * Loads a PDF document.
@@ -41,17 +146,18 @@ let workerConfigured = false;
  * @param {string} url URL of the PDF file
  * @returns {Promise<Object>} PDF.js document proxy
  */
-export const loadDocument = (url) => {
-    if (!workerConfigured) {
-        pdfjsLib.GlobalWorkerOptions.workerSrc = Config.wwwroot + '/mod/leafr/vendor/pdfjs/pdf.worker.min.js';
-        workerConfigured = true;
-    }
+export const loadDocument = async(url) => {
+    const lib = await loadLibrary();
     pageSizes.clear();
-    return pdfjsLib.getDocument({
+    return lib.getDocument({
         url: url,
-        // Never evaluate code from the PDF (mitigates CVE-2024-4367 in PDF.js < 4.2.67).
+        // Never evaluate code from the PDF. PDF.js 5.7 and later no longer contain any code path that
+        // uses eval (the option was removed with it); it is kept so that the intent stays explicit.
         isEvalSupported: false,
         enableXfa: false,
+        // Decoders for JBIG2 and JPEG 2000 images and for ICC colour profiles (WebAssembly, with a
+        // JavaScript fallback). Without them such images would stay empty.
+        wasmUrl: vendorUrl('wasm/'),
     }).promise;
 };
 

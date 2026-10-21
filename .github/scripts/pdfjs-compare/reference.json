@@ -1,0 +1,377 @@
+{
+ "version": "3.11.174",
+ "documents": {
+  "sample.pdf": {
+   "numPages": 12,
+   "pages": [
+    {
+     "width": 595,
+     "height": 842,
+     "text": "Page 1 \nChapter 1: Introduction \nLeafr test document",
+     "boxes": [
+      [
+       "Page 1",
+       72,
+       106,
+       114.08,
+       36
+      ],
+      [
+       "Chapter 1: Introduction",
+       72,
+       176,
+       162.75,
+       16
+      ],
+      [
+       "Leafr test document",
+       72,
+       210,
+       106.06,
+       12
+      ]
+     ]
+    },
+    {
+     "width": 595,
+     "height": 842,
+     "text": "Page 2 \nChapter 1: Introduction \nLeafr test document",
+     "boxes": [
+      [
+       "Page 2",
+       72,
+       106,
+       114.08,
+       36
+      ],
+      [
+       "Chapter 1: Introduction",
+       72,
+       176,
+       162.75,
+       16
+      ],
+      [
+       "Leafr test document",
+       72,
+       210,
+       106.06,
+       12
+      ]
+     ]
+    },
+    {
+     "width": 595,
+     "height": 842,
+     "text": "Page 3 \nChapter 1: Introduction \nLeafr test document",
+     "boxes": [
+      [
+       "Page 3",
+       72,
+       106,
+       114.08,
+       36
+      ],
+      [
+       "Chapter 1: Introduction",
+       72,
+       176,
+       162.75,
+       16
+      ],
+      [
+       "Leafr test document",
+       72,
+       210,
+       106.06,
+       12
+      ]
+     ]
+    },
+    {
+     "width": 595,
+     "height": 842,
+     "text": "Page 4 \nChapter 1: Introduction \nLeafr test document",
+     "boxes": [
+      [
+       "Page 4",
+       72,
+       106,
+       114.08,
+       36
+      ],
+      [
+       "Chapter 1: Introduction",
+       72,
+       176,
+       162.75,
+       16
+      ],
+      [
+       "Leafr test document",
+       72,
+       210,
+       106.06,
+       12
+      ]
+     ]
+    },
+    {
+     "width": 595,
+     "height": 842,
+     "text": "Page 5 \nChapter 2: Main part \nLeafr test document",
+     "boxes": [
+      [
+       "Page 5",
+       72,
+       106,
+       114.08,
+       36
+      ],
+      [
+       "Chapter 2: Main part",
+       72,
+       176,
+       145.84,
+       16
+      ],
+      [
+       "Leafr test document",
+       72,
+       210,
+       106.06,
+       12
+      ]
+     ]
+    },
+    {
+     "width": 595,
+     "height": 842,
+     "text": "Page 6 \nChapter 2: Main part \nLeafr test document",
+     "boxes": [
+      [
+       "Page 6",
+       72,
+       106,
+       114.08,
+       36
+      ],
+      [
+       "Chapter 2: Main part",
+       72,
+       176,
+       145.84,
+       16
+      ],
+      [
+       "Leafr test document",
+       72,
+       210,
+       106.06,
+       12
+      ]
+     ]
+    },
+    {
+     "width": 595,
+     "height": 842,
+     "text": "Page 7 \nChapter 2: Main part \nLeafr test document",
+     "boxes": [
+      [
+       "Page 7",
+       72,
+       106,
+       114.08,
+       36
+      ],
+      [
+       "Chapter 2: Main part",
+       72,
+       176,
+       145.84,
+       16
+      ],
+      [
+       "Leafr test document",
+       72,
+       210,
+       106.06,
+       12
+      ]
+     ]
+    },
+    {
+     "width": 595,
+     "height": 842,
+     "text": "Page 8 \nChapter 2: Main part \nLeafr test document",
+     "boxes": [
+      [
+       "Page 8",
+       72,
+       106,
+       114.08,
+       36
+      ],
+      [
+       "Chapter 2: Main part",
+       72,
+       176,
+       145.84,
+       16
+      ],
+      [
+       "Leafr test document",
+       72,
+       210,
+       106.06,
+       12
+      ]
+     ]
+    },
+    {
+     "width": 595,
+     "height": 842,
+     "text": "Page 9 \nChapter 3: Summary \nLeafr test document",
+     "boxes": [
+      [
+       "Page 9",
+       72,
+       106,
+       114.08,
+       36
+      ],
+      [
+       "Chapter 3: Summary",
+       72,
+       176,
+       147.6,
+       16
+      ],
+      [
+       "Leafr test document",
+       72,
+       210,
+       106.06,
+       12
+      ]
+     ]
+    },
+    {
+     "width": 595,
+     "height": 842,
+     "text": "Page 10 \nChapter 3: Summary \nLeafr test document",
+     "boxes": [
+      [
+       "Page 10",
+       72,
+       106,
+       134.1,
+       36
+      ],
+      [
+       "Chapter 3: Summary",
+       72,
+       176,
+       147.6,
+       16
+      ],
+      [
+       "Leafr test document",
+       72,
+       210,
+       106.06,
+       12
+      ]
+     ]
+    },
+    {
+     "width": 595,
+     "height": 842,
+     "text": "Page 11 \nChapter 3: Summary \nLeafr test document",
+     "boxes": [
+      [
+       "Page 11",
+       72,
+       106,
+       134.1,
+       36
+      ],
+      [
+       "Chapter 3: Summary",
+       72,
+       176,
+       147.6,
+       16
+      ],
+      [
+       "Leafr test document",
+       72,
+       210,
+       106.06,
+       12
+      ]
+     ]
+    },
+    {
+     "width": 595,
+     "height": 842,
+     "text": "Page 12 \nChapter 3: Summary \nLeafr test document",
+     "boxes": [
+      [
+       "Page 12",
+       72,
+       106,
+       134.1,
+       36
+      ],
+      [
+       "Chapter 3: Summary",
+       72,
+       176,
+       147.6,
+       16
+      ],
+      [
+       "Leafr test document",
+       72,
+       210,
+       106.06,
+       12
+      ]
+     ]
+    }
+   ],
+   "outline": [
+    {
+     "title": "Chapter 1: Introduction",
+     "page": 1,
+     "children": []
+    },
+    {
+     "title": "Chapter 2: Main part",
+     "page": 5,
+     "children": []
+    },
+    {
+     "title": "Chapter 3: Summary",
+     "page": 9,
+     "children": []
+    }
+   ],
+   "ms": 165
+  },
+  "images.pdf": {
+   "numPages": 1,
+   "pages": [
+    {
+     "width": 560,
+     "height": 300,
+     "text": "",
+     "boxes": []
+    }
+   ],
+   "outline": [],
+   "ms": 2
+  }
+ }
+}

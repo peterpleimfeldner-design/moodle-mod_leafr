@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.3.0 (2026-10-22)
+
+### Changed
+- PDF.js updated from 3.11.174 to 6.4.299 (legacy build), a version that still receives fixes
+  (reported in the plugin directory review). The library files are the unmodified files of the npm
+  package `pdfjs-dist`; only `.mjs` is renamed to `.js`, so that every web server sends them with a
+  JavaScript MIME type.
+- **Browser requirements**: the reader now needs a browser supported by PDF.js 6.4: Chrome or Edge
+  125 or later, Firefox ESR or later, Safari 18 or later (iOS/iPadOS 18). Previously Safari 15.4
+  and Chrome 92 were enough.
+
+### New
+- A browser that lacks features PDF.js needs (for example Safari before 17.4, Chrome before 119,
+  Firefox before 122) now gets a clear message instead of an empty book, with the download button
+  if downloading is allowed. A separate message explains when the PDF library itself
+  could not be loaded.
+
+### Improved
+- Better rendering: CMYK function-based shadings are now drawn (3.11 showed a flat colour), and
+  JBIG2 and JPEG 2000 images are decoded by PDF.js' WebAssembly decoders, shipped in
+  `vendor/pdfjs/wasm` and only loaded when a document needs them.
+- New automatic tests: Behat renders pages in every view, checks JPEG 2000 and JBIG2 images and the
+  message for old browsers; the CI checks the bundled PDF.js (versions, checksums) and compares its
+  text extraction with a stored reference.
+
 ## 1.2.1 (2026-10-21)
 
 Packaging fix, no change to the plugin's behaviour.

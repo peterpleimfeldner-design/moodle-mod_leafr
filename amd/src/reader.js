@@ -268,7 +268,7 @@ class Reader {
                 this.announceCompletion();
             }
         } catch (error) {
-            this.showError();
+            this.showError(error && error.leafrReason);
         }
         pending.resolve();
     }
@@ -1301,10 +1301,21 @@ class Reader {
 
     /**
      * Shows the error message.
+     *
+     * @param {string} [reason] "browser" (browser too old for the PDF library), "library" (library could
+     *     not be loaded); anything else means the document itself could not be loaded
      */
-    showError() {
+    showError(reason) {
+        const kind = ['browser', 'library'].includes(reason) ? reason : 'document';
+        const region = this.root.querySelector('[data-region="error"]');
+        region.querySelectorAll('[data-error]').forEach((message) => {
+            message.hidden = message.dataset.error !== kind;
+        });
+        // Reloading does not help a browser that is too old; the download link (if allowed) stays.
+        region.querySelector('[data-action="reload"]').hidden = kind === 'browser';
+        region.dataset.reason = kind;
         this.setLoading(false);
-        this.root.querySelector('[data-region="error"]').hidden = false;
+        region.hidden = false;
         this.viewHost.hidden = true;
     }
 

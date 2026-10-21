@@ -128,7 +128,9 @@
                 <span>{{#str}}loading, mod_leafr{{/str}}</span>
             </div>
             <div class="leafr-error" data-region="error" role="alert" hidden>
-                <p class="leafr-error-message">{{#str}}errordocument, mod_leafr{{/str}}</p>
+                <p class="leafr-error-message" data-error="document">{{#str}}errordocument, mod_leafr{{/str}}</p>
+                <p class="leafr-error-message" data-error="library" hidden>{{#str}}error_library, mod_leafr{{/str}}</p>
+                <p class="leafr-error-message" data-error="browser" hidden>{{#str}}error_browser, mod_leafr{{/str}}</p>
                 <div class="leafr-error-actions">
                     <button type="button" class="btn btn-primary" data-action="reload">{{#str}}reload, mod_leafr{{/str}}</button>
                     {{#downloadurl}}
