@@ -95,10 +95,9 @@ if ($file) {
         )->out(false);
     }
 
-    // The PDF.js and StPageFlip builds are loaded as AMD modules from the vendor directory.
-    // PDF.js registers itself with the fixed name "pdfjs-dist/build/pdf".
+    // The StPageFlip build is loaded as an AMD module from the vendor directory. PDF.js is a
+    // JavaScript module and is loaded by mod_leafr/pdf itself.
     $PAGE->requires->js_amd_inline('require.config({paths: ' . json_encode([
-        'pdfjs-dist/build/pdf' => (new moodle_url('/mod/leafr/vendor/pdfjs/pdf.min'))->out(false),
         'mod_leafr/vendor-stpageflip' => (new moodle_url('/mod/leafr/vendor/stpageflip/StPageFlip.browser'))->out(false),
     ], JSON_UNESCAPED_SLASHES) . '});');
 

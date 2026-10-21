@@ -4,12 +4,48 @@
     <location>vendor/pdfjs</location>
     <name>PDF.js</name>
     <description>Renders PDF documents in the browser.</description>
-    <version>3.11.174</version>
+    <version>6.4.299</version>
     <license>Apache-2.0</license>
     <licenseversion>2.0</licenseversion>
     <repository>https://github.com/mozilla/pdf.js</repository>
     <copyrights>
       <copyright>Mozilla Foundation</copyright>
+    </copyrights>
+  </library>
+  <library>
+    <location>vendor/pdfjs/wasm/jbig2.wasm</location>
+    <name>PDFium JBIG2 decoder (WebAssembly build shipped with PDF.js)</name>
+    <description>Decodes JBIG2 images; jbig2_nowasm_fallback.js is the JavaScript build of the same code.</description>
+    <version>6.4.299</version>
+    <license>BSD-3-Clause</license>
+    <repository>https://github.com/mozilla/pdf.js</repository>
+    <copyrights>
+      <copyright>The PDFium Authors</copyright>
+      <copyright>Mozilla Foundation</copyright>
+    </copyrights>
+  </library>
+  <library>
+    <location>vendor/pdfjs/wasm/openjpeg.wasm</location>
+    <name>OpenJPEG decoder (WebAssembly build shipped with PDF.js)</name>
+    <description>Decodes JPEG 2000 images; openjpeg_nowasm_fallback.js is the JavaScript build of the same code.</description>
+    <version>6.4.299</version>
+    <license>BSD-2-Clause</license>
+    <repository>https://github.com/mozilla/pdf.js</repository>
+    <copyrights>
+      <copyright>Universite catholique de Louvain (UCL) and other OpenJPEG contributors</copyright>
+      <copyright>Mozilla Foundation</copyright>
+    </copyrights>
+  </library>
+  <library>
+    <location>vendor/pdfjs/wasm/qcms_bg.wasm</location>
+    <name>qcms colour management (WebAssembly build shipped with PDF.js)</name>
+    <description>Applies ICC colour profiles.</description>
+    <version>6.4.299</version>
+    <license>MIT</license>
+    <repository>https://github.com/mozilla/pdf.js</repository>
+    <copyrights>
+      <copyright>Mozilla Corporation</copyright>
+      <copyright>Marti Maria</copyright>
     </copyrights>
   </library>
   <library>
