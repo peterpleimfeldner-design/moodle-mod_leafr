@@ -31,6 +31,12 @@ else
     [ "$listed" = "$present" ] || { echo "ERROR: files in vendor/pdfjs differ from readme_moodle.txt"; fail=1; }
 fi
 
+# The built AMD module must be rebuilt after a version change (Grunt checks this only on one CI leg).
+if ! grep -q "\"$jsversion\"" amd/build/pdf.min.js; then
+    echo "ERROR: amd/build/pdf.min.js does not contain version $jsversion - rebuild the AMD modules"
+    fail=1
+fi
+
 # The amd build must not reference the old RequireJS module name of PDF.js 3.
 if grep -rq "pdfjs-dist/build/pdf" amd/src amd/build view.php; then
     echo "ERROR: old PDF.js module name still referenced"
