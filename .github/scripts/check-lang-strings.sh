@@ -16,7 +16,7 @@
 # along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Fails if a language string used in PHP, JavaScript or Mustache is missing in a component's
-# lang/en file, or if its English and German language files do not define the same keys. Checks
+# lang/en file, or if its English, German and Spanish language files do not define the same keys. Checks
 # mod_leafr itself plus every installed leafrtool_* subplugin under tool/.
 #
 # @package   mod_leafr
@@ -78,11 +78,17 @@ check_component() {
         fi
     done
 
-    if ! diff <(keys "$en") <(keys "$de") > /dev/null; then
-        echo "The keys of $en and $de differ:"
-        diff <(keys "$en") <(keys "$de") || true
-        status=1
-    fi
+    local other
+    for other in "$de" "${de/\/de\//\/es\/}"; do
+        if [ ! -f "$other" ]; then
+            echo "Missing language file $other"
+            status=1
+        elif ! diff <(keys "$en") <(keys "$other") > /dev/null; then
+            echo "The keys of $en and $other differ:"
+            diff <(keys "$en") <(keys "$other") || true
+            status=1
+        fi
+    done
 
     echo "$(basename "$dir"): $(wc -w <<< "$used") used strings checked against $en"
 }
@@ -94,6 +100,6 @@ for tooldir in tool/*/; do
 done
 
 if [ "$status" -eq 0 ]; then
-    echo "All checked strings are defined, en and de define the same keys."
+    echo "All checked strings are defined, en, de and es define the same keys."
 fi
 exit $status

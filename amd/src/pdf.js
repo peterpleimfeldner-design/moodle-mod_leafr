@@ -55,6 +55,37 @@ let pdfjsLib = null;
 const vendorUrl = (path) => Config.wwwroot + '/mod/leafr/vendor/pdfjs/' + path;
 
 /**
+ * Creates an error that tells the reader which message to show.
+ *
+ * @param {string} message Technical message (not shown to the user)
+ * @param {string} reason "browser" if the browser is too old for PDF.js, "library" if PDF.js could not be loaded
+ * @returns {Error}
+ */
+const loadError = (message, reason) => {
+    const error = new Error(message);
+    error.leafrReason = reason;
+    return error;
+};
+
+/**
+ * Checks whether the browser has the features the bundled PDF.js build needs.
+ *
+ * The legacy build of PDF.js 6.4 is compiled for Chrome 125, Firefox ESR and Safari 18 (ENV_TARGETS
+ * in its gulpfile.mjs) and only brings polyfills for features those browsers lack. It runs as a
+ * JavaScript module and its worker calls Promise.withResolvers(), structuredClone() and
+ * ArrayBuffer.prototype.transferToFixedLength() without a polyfill. A browser without them cannot
+ * display documents (the newest of them: Chrome 119, Firefox 122, Safari 17.4). Browsers that pass
+ * this check but are older than the official targets are not supported by Mozilla either.
+ *
+ * @returns {boolean}
+ */
+export const isBrowserSupported = () => typeof window.HTMLScriptElement === 'function' &&
+    'noModule' in window.HTMLScriptElement.prototype &&
+    typeof Promise.withResolvers === 'function' &&
+    typeof window.structuredClone === 'function' &&
+    typeof ArrayBuffer.prototype.transferToFixedLength === 'function';
+
+/**
  * Loads the PDF.js library once.
  *
  * Since version 4 PDF.js is only published as a JavaScript module, which RequireJS cannot load
@@ -63,15 +94,23 @@ const vendorUrl = (path) => Config.wwwroot + '/mod/leafr/vendor/pdfjs/' + path;
  * are shipped with a .js extension, because every web server sends the JavaScript MIME type for
  * .js, which browsers require for module scripts and module workers (.mjs is often unknown).
  *
+ * The promise is rejected with an error whose leafrReason is "browser" when the browser is too old
+ * and "library" when the file could not be fetched.
+ *
  * @returns {Promise<Object>} The PDF.js library
  */
 export const loadLibrary = () => {
+    if (!isBrowserSupported()) {
+        return Promise.reject(loadError('This browser lacks features PDF.js ' + PDFJS_VERSION + ' needs', 'browser'));
+    }
     if (!libraryPromise) {
         libraryPromise = new Promise((resolve, reject) => {
             const loaded = () => window.pdfjsLib && window.pdfjsLib.version === PDFJS_VERSION;
             const finish = () => {
                 if (!loaded()) {
-                    reject(new Error('PDF.js ' + PDFJS_VERSION + ' could not be loaded'));
+                    // The file was fetched, but running it did not define the library: the browser
+                    // could not execute it (a syntax or API it does not know).
+                    reject(loadError('PDF.js ' + PDFJS_VERSION + ' could not be run in this browser', 'browser'));
                     return;
                 }
                 pdfjsLib = window.pdfjsLib;
@@ -86,7 +125,11 @@ export const loadLibrary = () => {
             script.type = 'module';
             script.src = vendorUrl('pdf.min.js?v=' + PDFJS_VERSION);
             script.addEventListener('load', finish);
-            script.addEventListener('error', () => reject(new Error('PDF.js could not be loaded from ' + script.src)));
+            script.addEventListener('error', () => {
+                // Remove the failed script, so that a retry adds a new one.
+                script.remove();
+                reject(loadError('PDF.js could not be loaded from ' + script.src, 'library'));
+            });
             document.head.appendChild(script);
         });
         // Allow a later retry if loading failed (for example after a network error).
