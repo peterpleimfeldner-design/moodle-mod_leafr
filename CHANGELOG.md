@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.3.0 (2026-10-22)
+## 1.3.0 (2026-10-21)
 
 ### Changed
 - PDF.js updated from 3.11.174 to 6.4.299 (legacy build), a version that still receives fixes
