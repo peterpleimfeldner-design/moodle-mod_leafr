@@ -41,7 +41,9 @@ require_once($CFG->dirroot . '/group/lib.php');
 use mod_leafr\local\bookmarks;
 use mod_leafr\local\progress;
 
-global $DB;
+global $CFG, $DB;
+// Test data only: no welcome or notification mails to the generated users.
+$CFG->noemailever = true;
 \core\session\manager::set_user(get_admin());
 
 if ($DB->record_exists('course', ['shortname' => 'LEAFRUPG'])) {
