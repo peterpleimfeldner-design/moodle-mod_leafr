@@ -313,15 +313,15 @@ jobs:
 
       - name: Install the Moodle site
         # moodle-plugin-ci only prepares the PHPUnit and Behat test sites; the upgrade needs a real site.
-        run: |
-          dirroot=$(php -r "define('CLI_SCRIPT', true); define('CACHE_DISABLE_ALL', true); define('ABORT_AFTER_CONFIG', true);
-            require('moodle/config.php'); echo \$CFG->dirroot;")
-          php "$dirroot/admin/cli/install_database.php" --agree-license --fullname="Upgrade check"             --shortname=upgrade --adminpass="$(openssl rand -hex 16)Aa1!" --adminemail=admin@example.com
+        # The command line scripts stay in moodle/admin/cli also since Moodle 5.1 (public/ layout).
+        run: >-
+          php moodle/admin/cli/install_database.php --agree-license --fullname="Upgrade check"
+          --shortname=upgrade --adminpass="$(openssl rand -hex 16)Aa1!" --adminemail=admin@example.com
 
       - name: Create data with the previous release and take a snapshot
         run: |
           php plugin/.github/scripts/upgrade-check/seed.php moodle/config.php
-          php plugin/.github/scripts/upgrade-check/snapshot.php moodle/config.php before.json
+          php plugin/.github/scripts/upgrade-check/snapshot.php moodle/config.php "$GITHUB_WORKSPACE/before.json"
 
       - name: Upgrade to this commit
         run: |
@@ -330,9 +330,9 @@ jobs:
           rm -rf "$dirroot/mod/leafr"
           mkdir -p "$dirroot/mod/leafr"
           git -C plugin archive HEAD | tar -x -C "$dirroot/mod/leafr"
-          php "$dirroot/admin/cli/upgrade.php" --non-interactive
+          php moodle/admin/cli/upgrade.php --non-interactive
 
       - name: Compare the data before and after the upgrade
         run: |
-          php plugin/.github/scripts/upgrade-check/snapshot.php moodle/config.php after.json
-          php plugin/.github/scripts/upgrade-check/compare.php before.json after.json
+          php plugin/.github/scripts/upgrade-check/snapshot.php moodle/config.php "$GITHUB_WORKSPACE/after.json"
+          php plugin/.github/scripts/upgrade-check/compare.php "$GITHUB_WORKSPACE/before.json" "$GITHUB_WORKSPACE/after.json"

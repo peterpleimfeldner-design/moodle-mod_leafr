@@ -32,6 +32,8 @@ define('CLI_SCRIPT', true);
 if (count($argv) < 3) {
     die("Usage: php snapshot.php /path/to/moodle/config.php /path/to/output.json\n");
 }
+// Moodle may change the working directory while it starts, so the output path is fixed first.
+$outfile = preg_match('~^([a-zA-Z]:)?[/\\\\]~', $argv[2]) ? $argv[2] : getcwd() . '/' . $argv[2];
 require($argv[1]);
 
 global $DB;
@@ -87,7 +89,7 @@ foreach ($tables as $name => $rows) {
     }
     $out[$name] = $clean;
 }
-file_put_contents($argv[2], json_encode($out, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+file_put_contents($outfile, json_encode($out, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 foreach ($out as $name => $rows) {
     printf("%-36s %6d rows\n", $name, count($rows));
 }
