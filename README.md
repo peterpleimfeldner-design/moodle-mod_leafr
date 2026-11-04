@@ -55,7 +55,7 @@ For teachers:
 
 ## Requirements
 
-- Moodle 4.5 to 5.2 (tested with 4.5, 5.0, 5.1 and 5.2)
+- Moodle 4.5 to 5.3 (tested with 4.5, 5.0, 5.1, 5.2 and 5.3, on PostgreSQL and MySQL)
 - PHP 8.1 or later
 - For students and teachers, a browser supported by PDF.js 6.4: Chrome or Edge 125 or later, Firefox ESR or later, Safari 18 or later (iOS/iPadOS 18). Browsers that lack features PDF.js needs (for example Safari before 17.4, Chrome before 119, Firefox before 122) show a message instead of the document, with the download button if downloading is allowed.
 
@@ -95,7 +95,7 @@ Yes, as a printable page or PDF — useful for keeping a record of what was mark
 German, English and Spanish for the interface.
 
 **Which Moodle and PHP versions are supported?**
-Moodle 4.5 to 5.2 (tested with 4.5, 5.0, 5.1 and 5.2), PHP 8.1 or later.
+Moodle 4.5 to 5.3 (tested with 4.5, 5.0, 5.1, 5.2 and 5.3, on PostgreSQL and MySQL), PHP 8.1 or later.
 
 **Which browsers are supported?**
 Chrome or Edge 125 or later, Firefox ESR or later, Safari 18 or later (iOS/iPadOS 18) – the browsers supported by the bundled PDF.js. Older iPads that cannot be updated to iPadOS 18 are not supported. Browsers that lack features PDF.js needs show a message instead of the document.

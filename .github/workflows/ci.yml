@@ -46,7 +46,8 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        # Moodle 5.3 requires PostgreSQL 17; older branches accept it as well.
+        image: postgres:17
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -58,6 +59,18 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      mysql:
+        # Moodle 5.3 requires MySQL 8.4. Only the matrix legs with database 'mysqli' use it.
+        image: mysql:8.4
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     strategy:
       fail-fast: false
@@ -65,12 +78,25 @@ jobs:
         include:
           - php: '8.2'
             moodle-branch: 'MOODLE_405_STABLE'
+            database: 'pgsql'
+          - php: '8.2'
+            moodle-branch: 'MOODLE_405_STABLE'
+            database: 'mysqli'
           - php: '8.3'
             moodle-branch: 'MOODLE_500_STABLE'
+            database: 'pgsql'
           - php: '8.3'
             moodle-branch: 'MOODLE_501_STABLE'
+            database: 'pgsql'
           - php: '8.3'
             moodle-branch: 'MOODLE_502_STABLE'
+            database: 'pgsql'
+          - php: '8.3'
+            moodle-branch: 'MOODLE_503_STABLE'
+            database: 'pgsql'
+          - php: '8.4'
+            moodle-branch: 'MOODLE_503_STABLE'
+            database: 'mysqli'
 
     steps:
       - name: Check out repository code
@@ -82,7 +108,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: mbstring, pgsql, zip, gd, intl, soap, curl, xml, dom
+          extensions: mbstring, pgsql, mysqli, zip, gd, intl, soap, curl, xml, dom
           ini-values: max_input_vars=5000
           coverage: none
 
@@ -98,7 +124,7 @@ jobs:
       - name: Install moodle-plugin-ci
         run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
         env:
-          DB: pgsql
+          DB: ${{ matrix.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
 
       - name: PHP Lint
@@ -176,7 +202,7 @@ jobs:
         if: ${{ always() && steps.behat.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
-          name: behat-faildump-${{ matrix.moodle-branch }}
+          name: behat-faildump-${{ matrix.moodle-branch }}-${{ matrix.database }}
           path: ${{ github.workspace }}/moodledata/behat_dump
           retention-days: 7
           if-no-files-found: ignore
