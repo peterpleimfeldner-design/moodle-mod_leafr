@@ -71,6 +71,18 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
+      mariadb:
+        # Moodle 5.3 requires MariaDB 11.4. On port 3307, as port 3306 belongs to MySQL above.
+        image: mariadb:11.4
+        env:
+          MARIADB_ALLOW_EMPTY_ROOT_PASSWORD: 'yes'
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     strategy:
       fail-fast: false
@@ -97,6 +109,10 @@ jobs:
           - php: '8.4'
             moodle-branch: 'MOODLE_503_STABLE'
             database: 'mysqli'
+          - php: '8.3'
+            moodle-branch: 'MOODLE_503_STABLE'
+            database: 'mariadb'
+            db-port: '3307'
 
     steps:
       - name: Check out repository code
@@ -122,7 +138,7 @@ jobs:
           COMPOSER_NO_INTERACTION: 1
 
       - name: Install moodle-plugin-ci
-        run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
+        run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1 ${{ matrix.db-port && format('--db-port={0}', matrix.db-port) || '' }}
         env:
           DB: ${{ matrix.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
@@ -215,3 +231,101 @@ jobs:
           path: ${{ github.workspace }}/moodledata/behat_dump
           retention-days: 7
           if-no-files-found: ignore
+
+  upgrade:
+    # Installs the previous release, creates data with it, upgrades to this commit and checks that
+    # no data was lost or changed (see .github/scripts/upgrade-check/README.md).
+    name: Upgrade check (${{ matrix.moodle-branch }}, ${{ matrix.database }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      PREVIOUS_RELEASE: v1.3.0
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: 'yes'
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.2'
+            moodle-branch: 'MOODLE_405_STABLE'
+            database: 'pgsql'
+          - php: '8.3'
+            moodle-branch: 'MOODLE_503_STABLE'
+            database: 'mysqli'
+
+    steps:
+      - name: Check out this commit
+        uses: actions/checkout@v4
+        with:
+          path: plugin
+          fetch-depth: 0
+
+      - name: Check out the previous release
+        run: git -C plugin worktree add "$GITHUB_WORKSPACE/plugin-previous" "$PREVIOUS_RELEASE"
+
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, pgsql, mysqli, zip, gd, intl, soap, curl, xml, dom
+          ini-values: max_input_vars=5000
+          coverage: none
+
+      - name: Initialise moodle-plugin-ci
+        run: |
+          composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
+          echo $(cd ci && pwd)/bin >> $GITHUB_PATH
+          echo $(cd ci && pwd)/vendor/bin >> $GITHUB_PATH
+          sudo locale-gen en_AU.UTF-8
+        env:
+          COMPOSER_NO_INTERACTION: 1
+
+      - name: Install Moodle with the previous release
+        run: moodle-plugin-ci install --plugin ./plugin-previous --db-host=127.0.0.1 --no-init
+        env:
+          DB: ${{ matrix.database }}
+          MOODLE_BRANCH: ${{ matrix.moodle-branch }}
+
+      - name: Create data with the previous release and take a snapshot
+        run: |
+          php plugin/.github/scripts/upgrade-check/seed.php moodle/config.php
+          php plugin/.github/scripts/upgrade-check/snapshot.php moodle/config.php before.json
+
+      - name: Upgrade to this commit
+        run: |
+          # Since Moodle 5.1 the code lives in moodle/public, so the paths come from $CFG->dirroot.
+          dirroot=$(php -r "define('CLI_SCRIPT', true); require('moodle/config.php'); echo \$CFG->dirroot;")
+          rm -rf "$dirroot/mod/leafr"
+          mkdir -p "$dirroot/mod/leafr"
+          git -C plugin archive HEAD | tar -x -C "$dirroot/mod/leafr"
+          php "$dirroot/admin/cli/upgrade.php" --non-interactive
+
+      - name: Compare the data before and after the upgrade
+        run: |
+          php plugin/.github/scripts/upgrade-check/snapshot.php moodle/config.php after.json
+          php plugin/.github/scripts/upgrade-check/compare.php before.json after.json
