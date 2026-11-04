@@ -221,13 +221,92 @@ jobs:
       - name: Behat features
         id: behat
         if: ${{ !cancelled() }}
-        run: moodle-plugin-ci behat --profile chrome
+        # Scenarios tagged @leafr_themecheck need a theme that is only installed in the job "Theme check".
+        run: moodle-plugin-ci behat --profile chrome --tags="@mod_leafr&&~@leafr_themecheck"
 
       - name: Upload Behat faildump
         if: ${{ always() && steps.behat.outcome == 'failure' }}
         uses: actions/upload-artifact@v4
         with:
           name: behat-faildump-${{ matrix.moodle-branch }}-${{ matrix.database }}
+          path: ${{ github.workspace }}/moodledata/behat_dump
+          retention-days: 7
+          if-no-files-found: ignore
+
+  themes:
+    # Runs the full screen scenarios with Boost Union, one of the most used themes (GitHub issue #16:
+    # with Moodle 5.3 and Boost Union, toolbar and menu reacted hardly at all in full screen mode).
+    # The reader covers the page in full screen mode, so a theme's layers and scripts can get in the way.
+    name: Theme check (Boost Union, ${{ matrix.moodle-branch }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.2'
+            moodle-branch: 'MOODLE_405_STABLE'
+          - php: '8.3'
+            moodle-branch: 'MOODLE_503_STABLE'
+
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+        with:
+          path: plugin
+
+      - name: Setup PHP ${{ matrix.php }}
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: mbstring, pgsql, zip, gd, intl, soap, curl, xml, dom
+          ini-values: max_input_vars=5000
+          coverage: none
+
+      - name: Initialise moodle-plugin-ci
+        run: |
+          composer create-project -n --no-dev --prefer-dist moodlehq/moodle-plugin-ci ci ^4
+          echo $(cd ci && pwd)/bin >> $GITHUB_PATH
+          echo $(cd ci && pwd)/vendor/bin >> $GITHUB_PATH
+          sudo locale-gen en_AU.UTF-8
+        env:
+          COMPOSER_NO_INTERACTION: 1
+
+      - name: Add Boost Union
+        # The theme's branches are named like Moodle's.
+        run: moodle-plugin-ci add-plugin --branch ${{ matrix.moodle-branch }} moodle-an-hochschulen/moodle-theme_boost_union
+
+      - name: Install moodle-plugin-ci
+        run: moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
+        env:
+          DB: pgsql
+          MOODLE_BRANCH: ${{ matrix.moodle-branch }}
+
+      - name: Behat with Boost Union
+        id: behat
+        run: moodle-plugin-ci behat --profile chrome --tags="@leafr_themecheck"
+
+      - name: Upload Behat faildump
+        if: ${{ always() && steps.behat.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: behat-faildump-boostunion-${{ matrix.moodle-branch }}
           path: ${{ github.workspace }}/moodledata/behat_dump
           retention-days: 7
           if-no-files-found: ignore

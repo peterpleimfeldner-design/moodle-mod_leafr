@@ -259,4 +259,48 @@ class behat_mod_leafr extends behat_base {
             $this->wait_for_pending_js();
         }
     }
+
+    /**
+     * Checks that the page is shown with the given theme, so a scenario for another theme cannot
+     * silently run with Boost when that theme is missing.
+     *
+     * @Then /^the page should use the "(?P<theme_string>[^"]*)" theme$/
+     * @param string $theme Theme name, e.g. "boost_union"
+     */
+    public function the_page_should_use_the_theme(string $theme): void {
+        $this->require_javascript();
+        $actual = $this->evaluate_script('return M.cfg.theme;');
+        if ($actual !== $theme) {
+            throw new ExpectationException("The page uses the theme \"{$actual}\", not \"{$theme}\"", $this->getSession());
+        }
+    }
+
+    /**
+     * Checks that a click in the middle of every visible button of the reader reaches that button,
+     * i.e. that no element of the theme or of Moodle lies on top of it (relevant in full screen
+     * mode, where the reader covers the page).
+     *
+     * @Then /^every visible control of the Leafr reader should be clickable$/
+     */
+    public function every_visible_control_of_the_leafr_reader_should_be_clickable(): void {
+        $this->require_javascript();
+        $blocked = $this->evaluate_script('return (function() {
+            var result = [];
+            document.querySelectorAll(".leafr-reader [data-action]").forEach(function(button) {
+                var rect = button.getBoundingClientRect();
+                if (!rect.width || !rect.height || button.closest("[hidden]")) {
+                    return;
+                }
+                var hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+                if (hit !== button && !button.contains(hit)) {
+                    result.push(button.dataset.action + " (covered by " +
+                        (hit ? hit.tagName.toLowerCase() + (hit.id ? "#" + hit.id : "") + "." + hit.className : "nothing") + ")");
+                }
+            });
+            return result;
+        })();');
+        if ($blocked) {
+            throw new ExpectationException('Controls that cannot be clicked: ' . implode(', ', $blocked), $this->getSession());
+        }
+    }
 }
