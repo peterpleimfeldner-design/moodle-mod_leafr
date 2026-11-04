@@ -22,7 +22,8 @@
 - Two labels that were put together from separate words are now complete, translatable sentences.
 - New automatic tests: backup and restore with user data, privacy with two activities and for the
   read confirmation, course reset, the page count rules, and Behat scenarios for full screen mode
-  and for PDFs with a landscape cover. The CI now also runs the tests of the subplugins.
+  and for PDFs with a landscape cover. The CI now also runs the tests of the subplugins, tests
+  MariaDB, and checks that upgrading from the previous release keeps all data.
 
 ## 1.3.0 (2026-10-21)
 
