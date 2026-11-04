@@ -1,6 +1,6 @@
 # Leafr flipbook (mod_leafr)
 
-Leafr is a Moodle activity that turns a PDF document into a book students can leaf through, directly inside the course — no external service, no extra login. The PDF stays in Moodle, is rendered in the browser, and every reading action (page turned, bookmark set, document read) is tracked the same way as any other Moodle activity.
+Leafr is a Moodle activity that turns a PDF document into a book students can leaf through, directly inside the course — no external service, no extra login. The PDF stays in Moodle and is rendered in the browser. Opening the activity and the first view of each page are recorded in Moodle's standard log, and completion works like in any other Moodle activity.
 
 Leafr is free and available in the [Moodle Plugins directory](https://marketplace.moodle.com/plugins/mod_leafr).
 
@@ -11,7 +11,7 @@ Moodle already lets you attach a PDF as a plain file. Leafr is for the cases whe
 - **A book, not a scroll**: real page-turning, chapters, a table of contents and bookmarks with your own notes — read a long document the way you'd read a book, not the way you scroll a file. Bookmarks and notes can be exported as a PDF.
 - **Proof of reading, not just a tick-box**: mark certain pages or chapters as required, and ask for an active read confirmation with a timestamp — for material people actually have to read, like safety briefings and policies.
 - **Accessible from the ground up**: a simple, scrollable view that's fully accessible to screen readers sits alongside the book view as an equal alternative.
-- **Privacy by design**: no external service, no analytics tool, full support for Moodle's Privacy API, and deliberately no tracking of reading times or how long someone lingered on a page.
+- **Privacy by design**: no external service, no analytics tool, full support for Moodle's Privacy API. Leafr does not measure how long someone reads or stays on a page. Moodle's standard log shows when a person first opened each page, as it does for other activities.
 - **Built for teaching, not just IT**: an overview report per participant, flexible completion rules, manual chapters for PDFs without an outline, and an interface available in German, English and Spanish.
 
 If none of that applies and a plain file or a "Resource" activity is enough for your PDF, you don't need Leafr — and that's a fine outcome.

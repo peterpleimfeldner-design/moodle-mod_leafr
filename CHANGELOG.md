@@ -18,6 +18,9 @@
 - Restoring an activity without user data no longer restores read confirmations.
 
 ### Improved
+- More precise texts about what is recorded: the README and the notice below the teacher overview
+  now say that Leafr measures no reading time and that Moodle's standard log records the first view
+  of each page; bookmarks are not logged.
 - Screen reader texts use the class `visually-hidden` (Bootstrap 5) instead of `sr-only`.
 - Two labels that were put together from separate words are now complete, translatable sentences.
 - New automatic tests: backup and restore with user data, privacy with two activities and for the
