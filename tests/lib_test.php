@@ -16,6 +16,8 @@
 
 namespace mod_leafr;
 
+use leafrtool_confirm\local\confirm;
+use mod_leafr\local\bookmarks;
 use mod_leafr\local\progress;
 
 /**
@@ -107,6 +109,101 @@ final class lib_test extends \advanced_testcase {
         $this->assertCount(1, $status);
         $this->assertFalse($DB->record_exists('leafr_progress', ['leafrid' => $leafr->id]));
         $this->assertTrue($DB->record_exists('leafr_progress', ['leafrid' => $keep->id]));
+    }
+
+    /**
+     * Each reset option removes only its own kind of user data, only in the reset course, and keeps
+     * the settings of the read confirmation tool.
+     *
+     * @covers ::leafr_reset_userdata
+     * @covers ::leafr_reset_course_form_defaults
+     * @covers \mod_leafr\local\tool_manager::reset_userdata
+     * @covers ::leafrtool_confirm_reset_userdata
+     */
+    public function test_reset_userdata_options(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $other = $this->getDataGenerator()->create_course();
+        $leafr = $this->getDataGenerator()->create_module('leafr', ['course' => $course->id]);
+        $keep = $this->getDataGenerator()->create_module('leafr', ['course' => $other->id]);
+        $student = $this->getDataGenerator()->create_user();
+        foreach ([(int)$leafr->id, (int)$keep->id] as $leafrid) {
+            progress::record($leafrid, (int)$student->id, [1, 2], 2);
+            bookmarks::set($leafrid, (int)$student->id, 2, 'Note');
+            confirm::save_settings($leafrid, true, 'Confirm text');
+            confirm::record_confirmation($leafrid, (int)$student->id);
+        }
+        $counts = function (int $leafrid) use ($DB): array {
+            return [
+                $DB->count_records('leafr_progress', ['leafrid' => $leafrid]),
+                $DB->count_records('leafr_bookmarks', ['leafrid' => $leafrid]),
+                $DB->count_records('leafrtool_confirm_log', ['leafrid' => $leafrid]),
+            ];
+        };
+
+        // All three options are offered and switched on by default.
+        $defaults = leafr_reset_course_form_defaults($course);
+        $this->assertEquals(1, $defaults['reset_leafr_progress']);
+        $this->assertEquals(1, $defaults['reset_leafr_bookmarks']);
+        $this->assertEquals(1, $defaults['reset_leafrtool_confirm']);
+
+        // No option set: nothing is removed.
+        $this->assertSame([], leafr_reset_userdata((object)['courseid' => $course->id]));
+        $this->assertEquals([1, 1, 1], $counts((int)$leafr->id));
+
+        // Only bookmarks.
+        $status = leafr_reset_userdata((object)['courseid' => $course->id, 'reset_leafr_bookmarks' => 1]);
+        $this->assertCount(1, $status);
+        $this->assertEquals(get_string('resetbookmarks', 'leafr'), $status[0]['item']);
+        $this->assertEquals([1, 0, 1], $counts((int)$leafr->id));
+
+        // Only confirmations.
+        $status = leafr_reset_userdata((object)['courseid' => $course->id, 'reset_leafrtool_confirm' => 1]);
+        $this->assertCount(1, $status);
+        $this->assertEquals(get_string('resetconfirmations', 'leafrtool_confirm'), $status[0]['item']);
+        $this->assertEquals([1, 0, 0], $counts((int)$leafr->id));
+        $this->assertTrue(confirm::get_settings((int)$leafr->id)->requireconfirm);
+
+        // Only progress.
+        $status = leafr_reset_userdata((object)['courseid' => $course->id, 'reset_leafr_progress' => 1]);
+        $this->assertCount(1, $status);
+        $this->assertEquals([0, 0, 0], $counts((int)$leafr->id));
+
+        // The activity in the other course keeps everything.
+        $this->assertEquals([1, 1, 1], $counts((int)$keep->id));
+    }
+
+    /**
+     * Resetting with all options at once removes progress, bookmarks and confirmations of the course.
+     *
+     * @covers ::leafr_reset_userdata
+     */
+    public function test_reset_userdata_all_options(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $other = $this->getDataGenerator()->create_course();
+        $leafr = $this->getDataGenerator()->create_module('leafr', ['course' => $course->id]);
+        $keep = $this->getDataGenerator()->create_module('leafr', ['course' => $other->id]);
+        $student = $this->getDataGenerator()->create_user();
+        foreach ([(int)$leafr->id, (int)$keep->id] as $leafrid) {
+            progress::record($leafrid, (int)$student->id, [1], 1);
+            bookmarks::set($leafrid, (int)$student->id, 1, '');
+            confirm::record_confirmation($leafrid, (int)$student->id);
+        }
+
+        $data = (object)array_merge(['courseid' => $course->id], leafr_reset_course_form_defaults($course));
+        $status = leafr_reset_userdata($data);
+        $this->assertCount(3, $status);
+        foreach (['leafr_progress', 'leafr_bookmarks', 'leafrtool_confirm_log'] as $table) {
+            $this->assertFalse($DB->record_exists($table, ['leafrid' => $leafr->id]), $table);
+            $this->assertTrue($DB->record_exists($table, ['leafrid' => $keep->id]), $table);
+        }
     }
 
     /**
