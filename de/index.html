@@ -11,7 +11,7 @@
 <link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/">
 <link rel="alternate" hreflang="x-default" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Leafr – PDF Reader & Flipbook","alternateName":"mod_leafr","applicationCategory":"EducationalApplication","applicationSubCategory":"Moodle plugin","operatingSystem":"Moodle 4.5–5.2","inLanguage":"de","description":"Leafr ist ein kostenloses, quelloffenes Moodle-Plugin, das PDFs als Flipbook zum Durchblättern anzeigt: mit Kapiteln, Lesezeichen und Suche, dazu Pflichtseiten und eine optionale Lesebestätigung.","url":"https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/","downloadUrl":"https://marketplace.moodle.com/plugins/mod_leafr","codeRepository":"https://github.com/peterpleimfeldner-design/moodle-mod_leafr","license":"https://www.gnu.org/licenses/gpl-3.0.html","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"author":{"@type":"Person","name":"Peter Pleimfeldner"},"image":"https://peterpleimfeldner-design.github.io/moodle-mod_leafr/assets/social-preview.png"}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Leafr – PDF Reader & Flipbook","alternateName":"mod_leafr","applicationCategory":"EducationalApplication","applicationSubCategory":"Moodle plugin","operatingSystem":"Moodle 4.5–5.3","inLanguage":"de","description":"Leafr ist ein kostenloses, quelloffenes Moodle-Plugin, das PDFs als Flipbook zum Durchblättern anzeigt: mit Kapiteln, Lesezeichen und Suche, dazu Pflichtseiten und eine optionale Lesebestätigung.","url":"https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/","downloadUrl":"https://marketplace.moodle.com/plugins/mod_leafr","codeRepository":"https://github.com/peterpleimfeldner-design/moodle-mod_leafr","license":"https://www.gnu.org/licenses/gpl-3.0.html","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"author":{"@type":"Person","name":"Peter Pleimfeldner"},"image":"https://peterpleimfeldner-design.github.io/moodle-mod_leafr/assets/social-preview.png"}
 </script>
 <meta property="og:type" content="website">
 <meta property="og:title" content="Leafr – kostenloses PDF-Flipbook und PDF-Viewer für Moodle">
@@ -231,7 +231,7 @@
       </div>
       <div class="card">
         <h3>Datensparsamkeit von Anfang an</h3>
-        <p>Kein externer Dienst, kein Analyse-Tool, volle Unterstützung der Moodle-Privacy-API — und bewusst keine Erfassung von Lesezeiten oder Verweildauer je Seite.</p>
+        <p>Kein externer Dienst, kein Analyse-Tool, volle Unterstützung der Moodle-Privacy-API. Leafr misst nicht, wie lange jemand liest oder auf einer Seite bleibt; im Moodle-Protokoll steht, wann eine Person jede Seite zum ersten Mal geöffnet hat, wie bei anderen Aktivitäten.</p>
       </div>
       <div class="card">
         <h3>Für den Unterricht gemacht, nicht nur für die IT</h3>
@@ -277,12 +277,13 @@
         <li>welche Seiten angesehen wurden, und die zuletzt gelesene Position</li>
         <li>Lesezeichen (Seitenzahl und Notiz)</li>
         <li>den Zeitpunkt einer Lesebestätigung, falls aktiviert</li>
+        <li>die Seitenzahl, die der Browser gemeldet hat</li>
         <li>zwei Oberflächen-Einstellungen (einfache Ansicht, Seitenlayout)</li>
       </ul>
       <p style="margin-top:16px;">
-        All das kann über die Standard-Privacy-API von Moodle exportiert und gelöscht werden. Keine Lesezeiten,
-        keine Verweildauer je Seite, keine Daten an externe Dienste — alles bleibt in deiner eigenen
-        Moodle-Installation.
+        All das kann über die Standard-Privacy-API von Moodle exportiert und gelöscht werden. Leafr misst keine
+        Lesedauer und keine Zeit je Seite; im Moodle-Protokoll steht, wann eine Seite zum ersten Mal geöffnet
+        wurde. Keine Daten an externe Dienste — alles bleibt in deiner eigenen Moodle-Installation.
       </p>
     </div>
   </section>
@@ -316,7 +317,7 @@
       </details>
       <details class="faq">
         <summary>Welche Moodle- und PHP-Versionen werden unterstützt?</summary>
-        <p>Moodle 4.5 bis 5.2 (getestet mit 4.5, 5.0, 5.1 und 5.2), PHP 8.1 oder neuer.</p>
+        <p>Moodle 4.5 bis 5.3 (getestet mit 4.5, 5.0, 5.1, 5.2 und 5.3, auf PostgreSQL, MySQL und MariaDB), PHP 8.1 oder neuer, je nach Moodle-Version.</p>
       </details>
       <details class="faq">
         <summary>Welche Browser werden unterstützt?</summary>
