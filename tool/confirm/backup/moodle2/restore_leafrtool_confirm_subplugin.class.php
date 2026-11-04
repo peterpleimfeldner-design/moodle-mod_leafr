@@ -38,10 +38,15 @@ class restore_leafrtool_confirm_subplugin extends restore_subplugin {
      * @return restore_path_element[]
      */
     protected function define_leafr_subplugin_structure() {
-        return [
+        $paths = [
             new restore_path_element($this->get_namefor('settings'), $this->get_pathfor('/settings')),
-            new restore_path_element($this->get_namefor('log'), $this->get_pathfor('/logs/log')),
         ];
+        // Confirmations are user data: a backup may contain them although the restore excludes
+        // user data for this activity.
+        if ($this->get_setting_value('userinfo')) {
+            $paths[] = new restore_path_element($this->get_namefor('log'), $this->get_pathfor('/logs/log'));
+        }
+        return $paths;
     }
 
     /**
