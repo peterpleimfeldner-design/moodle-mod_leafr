@@ -85,6 +85,8 @@ class Reader {
      */
     constructor(root) {
         this.root = root;
+        this.fullscreenRequested = false;
+        this.scrollBeforeFullscreen = null;
         this.cmid = parseInt(root.dataset.cmid, 10);
         this.fileurl = root.dataset.fileurl;
         this.page = Math.max(1, parseInt(root.dataset.startpage, 10) || 1);
@@ -249,7 +251,7 @@ class Reader {
                 el.disabled = false;
             });
             const fullscreenButton = this.root.querySelector('[data-action="fullscreen"]');
-            fullscreenButton.hidden = !this.root.requestFullscreen;
+            fullscreenButton.hidden = !Reader.canFullscreen();
 
             this.initSidebar();
             await this.showView();
@@ -291,7 +293,7 @@ class Reader {
      * 24.09.2026: the page still needed scrolling to see the heading or the toolbar).
      */
     fitHeight() {
-        if (document.fullscreenElement === this.root) {
+        if (this.isFullscreen()) {
             this.root.style.removeProperty('--leafr-height');
             return;
         }
@@ -798,8 +800,7 @@ class Reader {
      * inside the "View" menu. Skipped when the "continue reading" notice is already showing.
      */
     showFullscreenTip() {
-        if (!this.fullscreenTip || !this.root.requestFullscreen || !this.continueToast.hidden ||
-                document.fullscreenElement === this.root) {
+        if (!this.fullscreenTip || !Reader.canFullscreen() || !this.continueToast.hidden || this.isFullscreen()) {
             return;
         }
         try {
@@ -872,10 +873,17 @@ class Reader {
         this.progressBar.addEventListener('keydown', (event) => this.handleProgressKey(event));
 
         document.addEventListener('fullscreenchange', () => {
-            const active = document.fullscreenElement === this.root;
+            if (!document.fullscreenElement) {
+                this.fullscreenRequested = false;
+            }
+            const active = this.isFullscreen();
             this.root.classList.toggle('is-fullscreen', active);
+            document.documentElement.classList.toggle('leafr-fullscreen', active);
             if (active) {
                 this.hideFullscreenTip();
+            } else if (this.scrollBeforeFullscreen !== null) {
+                window.scrollTo({top: this.scrollBeforeFullscreen, behavior: 'instant'});
+                this.scrollBeforeFullscreen = null;
             }
             const button = this.root.querySelector('[data-action="fullscreen"]');
             const label = active ? this.strings.fullscreen_exit : this.strings.fullscreen_enter;
@@ -1229,16 +1237,45 @@ class Reader {
     }
 
     /**
+     * Whether the browser can show the page in full screen mode.
+     *
+     * @returns {boolean}
+     */
+    static canFullscreen() {
+        return Boolean(document.documentElement.requestFullscreen && document.fullscreenEnabled !== false);
+    }
+
+    /**
+     * Whether the reader is shown in full screen mode.
+     *
+     * @returns {boolean}
+     */
+    isFullscreen() {
+        return this.fullscreenRequested && document.fullscreenElement === document.documentElement;
+    }
+
+    /**
      * Enters or leaves full screen mode.
+     *
+     * The whole page (the html element) goes full screen and the reader covers it (class
+     * is-fullscreen), rather than the reader element itself. Moodle's drawers attach the click
+     * handler that closes them to the full screen element; for the reader element, every click
+     * into the book closed the course index, even after leaving full screen (issue #16). Moodle
+     * handles a full screen html element as a normal page (core/modal_backdrop).
      */
     toggleFullscreen() {
-        if (!this.root.requestFullscreen) {
+        if (!Reader.canFullscreen()) {
             return;
         }
-        if (document.fullscreenElement === this.root) {
+        if (this.isFullscreen()) {
             document.exitFullscreen().catch(() => null);
-        } else {
-            this.root.requestFullscreen().catch(() => null);
+        } else if (!document.fullscreenElement) {
+            this.fullscreenRequested = true;
+            this.scrollBeforeFullscreen = window.scrollY;
+            document.documentElement.requestFullscreen().catch(() => {
+                this.fullscreenRequested = false;
+                this.scrollBeforeFullscreen = null;
+            });
         }
     }
 

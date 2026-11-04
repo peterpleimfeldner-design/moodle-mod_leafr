@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Behat steps for mod_leafr: checks on the rendered PDF pages and on JavaScript errors.
+ * Behat steps for mod_leafr: checks on the rendered PDF pages, JavaScript errors, full screen and drawers.
  *
  * @package   mod_leafr
  * @category  test
@@ -182,5 +182,68 @@ class behat_mod_leafr extends behat_base {
             return $this->evaluate_script($shown);
         }, false, self::get_extended_timeout(), $exception);
         $this->wait_for_pending_js();
+    }
+
+    /**
+     * Opens Moodle's course index drawer (Boost based themes) if it is closed.
+     *
+     * @Given /^I open the course index drawer if it is closed$/
+     */
+    public function i_open_the_course_index_drawer_if_it_is_closed(): void {
+        $this->require_javascript();
+        if (!$this->is_course_index_open()) {
+            $this->execute_script(
+                'document.querySelector(\'[data-toggler="drawers"][data-target="theme_boost-drawers-courseindex"]\').click();'
+            );
+        }
+        $this->spin(function () {
+            return $this->is_course_index_open();
+        }, false, self::get_extended_timeout(), new ExpectationException('The course index did not open', $this->getSession()));
+        $this->wait_for_pending_js();
+    }
+
+    /**
+     * Checks whether Moodle's course index drawer is open or closed.
+     *
+     * @Then /^the course index drawer should be (open|closed)$/
+     * @param string $state "open" or "closed"
+     */
+    public function the_course_index_drawer_should_be(string $state): void {
+        $this->require_javascript();
+        $this->wait_for_pending_js();
+        if ($this->is_course_index_open() !== ($state === 'open')) {
+            throw new ExpectationException("The course index drawer is not {$state}", $this->getSession());
+        }
+    }
+
+    /**
+     * Whether Moodle's course index drawer is shown.
+     *
+     * @return bool
+     */
+    protected function is_course_index_open(): bool {
+        return (bool)$this->evaluate_script(
+            'return document.getElementById("theme_boost-drawers-courseindex").classList.contains("show");'
+        );
+    }
+
+    /**
+     * Checks whether the Leafr reader is shown in full screen mode.
+     *
+     * @Then /^the Leafr reader should (be|not be) in full screen mode$/
+     * @param string $be "be" or "not be"
+     */
+    public function the_leafr_reader_should_be_in_full_screen_mode(string $be): void {
+        $this->require_javascript();
+        $script = 'return document.fullscreenElement !== null
+            && document.querySelector(".leafr-reader").classList.contains("is-fullscreen");';
+        $expected = $be === 'be';
+        $exception = new ExpectationException(
+            $expected ? 'The reader is not in full screen mode' : 'The reader is still in full screen mode',
+            $this->getSession()
+        );
+        $this->spin(function () use ($script, $expected) {
+            return (bool)$this->evaluate_script($script) === $expected;
+        }, false, self::get_extended_timeout(), $exception);
     }
 }
