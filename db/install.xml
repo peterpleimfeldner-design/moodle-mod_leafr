@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="mod/leafr/db" VERSION="20260924" COMMENT="XMLDB file for Moodle mod/leafr"
+<XMLDB PATH="mod/leafr/db" VERSION="20261104" COMMENT="XMLDB file for Moodle mod/leafr"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -20,6 +20,7 @@
         <FIELD NAME="showtoc" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="initialpage" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="1" SEQUENCE="false"/>
         <FIELD NAME="totalpages" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Number of pages in the PDF, 0 while unknown"/>
+        <FIELD NAME="totalpagesconfirmed" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="1 if the page count was reported by a user who can edit the activity, 0 if it is the count most learners reported"/>
         <FIELD NAME="manualchapters" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Manually defined chapters as JSON [{title,page}], used when the PDF has no outline"/>
         <FIELD NAME="usemanualchapters" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Always use the manual chapter list, even if the PDF has an outline"/>
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
@@ -37,6 +38,7 @@
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false"/>
         <FIELD NAME="seenpages" TYPE="text" NOTNULL="false" SEQUENCE="false" COMMENT="Seen page numbers as compact ranges, e.g. 1-12,15"/>
         <FIELD NAME="lastpage" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Last reading position, 0 if none"/>
+        <FIELD NAME="reportedtotal" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="Page count of the PDF as reported by this user's viewer, 0 if none"/>
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0" SEQUENCE="false"/>
       </FIELDS>
       <KEYS>

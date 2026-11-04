@@ -59,6 +59,10 @@ class restore_leafr_activity_structure_step extends restore_activity_structure_s
         $data->course = $this->get_courseid();
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
+        if (!isset($data->totalpagesconfirmed)) {
+            // Backups before Leafr 1.4.0: a known count was fixed for learners, as after the upgrade.
+            $data->totalpagesconfirmed = empty($data->totalpages) ? 0 : 1;
+        }
 
         $newitemid = $DB->insert_record('leafr', $data);
         $this->apply_activity_instance($newitemid);

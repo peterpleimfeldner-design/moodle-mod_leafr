@@ -189,5 +189,25 @@ function xmldb_leafr_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2026092400, 'leafr');
     }
 
+    if ($oldversion < 2026110400) {
+        // The page count is now decided by the count most learners report, unless a user who can edit
+        // the activity reported it (confirmed). Each learner's report is kept with their progress.
+        $table = new xmldb_table('leafr');
+        $field = new xmldb_field('totalpagesconfirmed', XMLDB_TYPE_INTEGER, '1', null, XMLDB_NOTNULL, null, '0', 'totalpages');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        // Counts known so far stay fixed, as before: learners could not change them.
+        $DB->set_field_select('leafr', 'totalpagesconfirmed', 1, 'totalpages > 0');
+
+        $table = new xmldb_table('leafr_progress');
+        $field = new xmldb_field('reportedtotal', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0', 'lastpage');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2026110400, 'leafr');
+    }
+
     return true;
 }

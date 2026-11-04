@@ -95,7 +95,11 @@ class report {
                 $requiredseen = in_array($total, $seen, true);
                 $requiredpercent = $requiredseen ? 100 : 0;
             } else if ($leafr->completiontype == progress::COMPLETION_PERCENT && $total > 0) {
-                $requiredpercent = (int)round(100 * count($seen) / $total);
+                // Pages beyond the page count (e.g. reported while it was lower) do not count.
+                $seenwithin = array_filter($seen, function ($p) use ($total) {
+                    return $p <= $total;
+                });
+                $requiredpercent = (int)round(100 * count($seenwithin) / $total);
                 $requiredseen = progress::is_complete($leafr, (int)$user->id);
             } else {
                 $requiredseen = null;

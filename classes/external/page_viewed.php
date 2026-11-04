@@ -21,6 +21,7 @@ use core_external\external_function_parameters;
 use core_external\external_multiple_structure;
 use core_external\external_single_structure;
 use core_external\external_value;
+use mod_leafr\local\page_count;
 use mod_leafr\local\progress;
 
 /**
@@ -91,22 +92,28 @@ class page_viewed extends external_api {
 
         $leafr = $DB->get_record('leafr', ['id' => $cm->instance], '*', MUST_EXIST);
 
-        // The PDF itself is only available in the browser, so the viewer reports its page count.
-        // It is stored once per PDF and corrected by users who can edit the activity.
-        $reported = min((int)$params['totalpages'], progress::MAX_PAGES);
-        $totalchanged = false;
-        if (
-            $reported > 0 && $reported != $leafr->totalpages
-                && (empty($leafr->totalpages) || has_capability('moodle/course:manageactivities', $context))
-        ) {
-            $leafr->totalpages = $reported;
-            $DB->set_field('leafr', 'totalpages', $reported, ['id' => $leafr->id]);
-            $totalchanged = true;
+        // The PDF itself is only available in the browser, so the viewer reports its page count
+        // (see page_count for who decides it).
+        $previous = (int)$leafr->totalpages;
+        $totalchanged = page_count::report(
+            $leafr,
+            (int)$USER->id,
+            (int)$params['totalpages'],
+            has_capability('moodle/course:manageactivities', $context)
+        );
+        if ($totalchanged && $previous > 0) {
+            // A corrected count can complete or un-complete other users. Not after a new PDF (count
+            // 0): completion states from the previous PDF are kept, as before the count is known.
+            \mod_leafr\task\recalculate_completion::queue((int)$cm->id);
         }
 
         $limit = (int)$leafr->totalpages ?: progress::MAX_PAGES;
-        $valid = array_filter($params['pages'], function ($p) use ($limit) {
-            return $p >= 1 && $p <= $limit;
+        // Pages up to the user's own page count are kept even while the count that applies is lower
+        // (before most learners agree on it): otherwise they would be lost, as the viewer does not
+        // send them again. Completion only counts pages up to the count that applies.
+        $pagelimit = max($limit, min((int)$params['totalpages'], progress::MAX_PAGES));
+        $valid = array_filter($params['pages'], function ($p) use ($pagelimit) {
+            return $p >= 1 && $p <= $pagelimit;
         });
         $position = ($params['currentpage'] >= 1 && $params['currentpage'] <= $limit) ? $params['currentpage'] : 0;
         $newpages = progress::record((int)$leafr->id, (int)$USER->id, $valid, $position);

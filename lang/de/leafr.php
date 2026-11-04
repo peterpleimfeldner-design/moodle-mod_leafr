@@ -127,6 +127,7 @@ $string['privacy:metadata:leafr_bookmarks:timemodified'] = 'Der Zeitpunkt der le
 $string['privacy:metadata:leafr_bookmarks:userid'] = 'Die ID der Person.';
 $string['privacy:metadata:leafr_progress'] = 'Der Lesefortschritt einer Person in einem Leafr-Flipbook.';
 $string['privacy:metadata:leafr_progress:lastpage'] = 'Die zuletzt gelesene Seite.';
+$string['privacy:metadata:leafr_progress:reportedtotal'] = 'Die Seitenzahl des PDFs, die der Browser der Person gemeldet hat.';
 $string['privacy:metadata:leafr_progress:seenpages'] = 'Die angesehenen Seiten.';
 $string['privacy:metadata:leafr_progress:timemodified'] = 'Der Zeitpunkt der letzten Aktualisierung.';
 $string['privacy:metadata:leafr_progress:userid'] = 'Die ID der Person.';

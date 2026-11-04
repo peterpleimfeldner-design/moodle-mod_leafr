@@ -50,6 +50,7 @@ class provider implements
             'userid' => 'privacy:metadata:leafr_progress:userid',
             'seenpages' => 'privacy:metadata:leafr_progress:seenpages',
             'lastpage' => 'privacy:metadata:leafr_progress:lastpage',
+            'reportedtotal' => 'privacy:metadata:leafr_progress:reportedtotal',
             'timemodified' => 'privacy:metadata:leafr_progress:timemodified',
         ], 'privacy:metadata:leafr_progress');
         $collection->add_database_table('leafr_bookmarks', [
@@ -142,6 +143,7 @@ class provider implements
                 if ($record) {
                     $data->seenpages = $record->seenpages;
                     $data->lastpage = (int)$record->lastpage;
+                    $data->reportedtotal = (int)$record->reportedtotal;
                     $data->timemodified = transform::datetime($record->timemodified);
                 }
                 writer::with_context($context)->export_data([], $data);

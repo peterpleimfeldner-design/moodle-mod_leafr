@@ -24,6 +24,7 @@
 
 use mod_leafr\local\bookmarks;
 use mod_leafr\local\chapters;
+use mod_leafr\local\page_count;
 use mod_leafr\local\progress;
 use mod_leafr\local\tool_manager;
 
@@ -153,11 +154,15 @@ function leafr_update_instance($data, $mform = null) {
     $data->id = $data->instance;
     $data->timemodified = time();
 
-    if (leafr_save_pdf($data)) {
+    $pdfchanged = leafr_save_pdf($data);
+    if ($pdfchanged) {
         // A different PDF may have a different number of pages. It is measured again on the next view.
         $data->totalpages = 0;
     }
     $DB->update_record('leafr', $data);
+    if ($pdfchanged) {
+        page_count::reset((int)$data->id);
+    }
     tool_manager::save_settings($data, $data->id);
 
     \core_completion\api::update_completion_date_event(
