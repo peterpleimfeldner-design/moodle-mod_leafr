@@ -124,7 +124,11 @@ final class report_test extends \advanced_testcase {
         $lastnames = ['Juh', 'Ana', 'Zoe', 'Ben', 'Ida', 'Max', 'Eva', 'Tom', 'Uwe', 'Cai'];
         $completion = new \completion_info($course);
         foreach ($lastnames as $index => $lastname) {
-            $student = $this->getDataGenerator()->create_and_enrol($course, 'student', ['lastname' => $lastname]);
+            $student = $this->getDataGenerator()->create_and_enrol(
+                $course,
+                'student',
+                ['firstname' => 'Student', 'lastname' => $lastname]
+            );
             $students[$lastname] = $student;
             progress::record((int)$leafr->id, (int)$student->id, range(1, ($index + 1) * 2));
             // Mirrors what the page_viewed webservice does after recording progress: recording
@@ -137,11 +141,14 @@ final class report_test extends \advanced_testcase {
         $this->assertCount(10, $rows);
 
         // Sorted by full name (which starts with the fixed firstname "Student" here, so the
-        // deciding part is the lastname), independent of enrolment order.
-        $sortednames = array_column($rows, 'fullname');
-        $expectednames = $sortednames;
-        sort($expectednames, SORT_STRING | SORT_FLAG_CASE);
-        $this->assertSame($expectednames, $sortednames);
+        // deciding part is the lastname), independent of enrolment order. The names are plain
+        // letters, so the locale aware sorting of the report and sort() agree on every server.
+        $expectednames = $lastnames;
+        sort($expectednames);
+        $expectednames = array_map(function ($lastname) {
+            return 'Student ' . $lastname;
+        }, $expectednames);
+        $this->assertSame($expectednames, array_column($rows, 'fullname'));
 
         $byuserid = array_column($rows, null, 'userid');
         foreach ($lastnames as $index => $lastname) {
