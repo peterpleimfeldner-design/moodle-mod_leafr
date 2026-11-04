@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.4.0 (unreleased)
+## 1.4.0 (2026-11-04)
 
 ### New
 - Supports Moodle 5.3. Tested on Moodle 4.5, 5.0, 5.1, 5.2 and 5.3, on PostgreSQL, MySQL and MariaDB.
