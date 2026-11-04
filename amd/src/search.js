@@ -65,7 +65,7 @@ export default class Search {
         form.setAttribute('role', 'search');
 
         const label = document.createElement('label');
-        label.className = 'sr-only';
+        label.className = 'visually-hidden';
         label.setAttribute('for', 'leafr-search-input-' + Math.random().toString(36).slice(2));
         label.textContent = this.strings.search_label;
         this.input = document.createElement('input');
@@ -170,7 +170,7 @@ export default class Search {
         button.title = label;
         button.disabled = true;
         const text = document.createElement('span');
-        text.className = 'sr-only';
+        text.className = 'visually-hidden';
         text.textContent = label;
         // Same line icons as the toolbar's page navigation, pointing up for the previous match.
         const path = action === 'search-prev'

@@ -91,7 +91,7 @@ export default class ScrollView {
             canvas.className = 'leafr-page-canvas';
             canvas.setAttribute('aria-hidden', 'true');
             const text = document.createElement('div');
-            text.className = 'sr-only leafr-page-text';
+            text.className = 'visually-hidden leafr-page-text';
             pageEl.appendChild(canvas);
             pageEl.appendChild(text);
             this.list.appendChild(pageEl);

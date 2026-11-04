@@ -74,11 +74,8 @@ export default class Thumbnails {
             if (isRequired) {
                 button.classList.add('is-required');
             }
-            let label = this.strings.pagelabel.replaceAll('{$a}', i);
-            if (isRequired) {
-                label += ', ' + this.strings.required_badge;
-            }
-            button.setAttribute('aria-label', label);
+            const label = isRequired ? this.strings.thumb_label_required : this.strings.pagelabel;
+            button.setAttribute('aria-label', label.replaceAll('{$a}', i));
             const canvas = document.createElement('canvas');
             canvas.className = 'leafr-thumb-canvas';
             const check = document.createElement('span');

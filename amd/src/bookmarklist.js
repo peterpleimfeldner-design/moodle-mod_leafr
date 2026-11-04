@@ -173,9 +173,9 @@ export default class BookmarkList {
         pageButton.addEventListener('click', () => this.onNavigate(page));
 
         const label = document.createElement('label');
-        label.className = 'sr-only';
+        label.className = 'visually-hidden';
         label.setAttribute('for', 'leafr-bookmark-note-' + page + '-' + Math.random().toString(36).slice(2));
-        label.textContent = this.strings.bookmark_note_label + ' ' + pageButton.textContent;
+        label.textContent = this.strings.bookmark_note_for_page.replaceAll('{$a}', page);
 
         const textarea = document.createElement('textarea');
         textarea.id = label.htmlFor;
