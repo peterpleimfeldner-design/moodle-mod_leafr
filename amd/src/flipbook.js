@@ -33,6 +33,9 @@ const KEEP_RENDERED = 6;
 /** Viewports narrower than this show one page at a time. */
 const SPREAD_MIN_WIDTH = 768;
 
+/** Pages (from the start of the document) whose sizes decide the layout, see getLayoutPageSize(). */
+const SIZE_SAMPLE_PAGES = 6;
+
 /** Space around the book in CSS pixels. */
 const PADDING = 16;
 
@@ -112,10 +115,42 @@ export default class FlipbookView {
      * @returns {Promise<void>}
      */
     async init() {
-        this.pageSize = await getPageSize(this.pdfDoc, 1);
+        this.pageSize = await this.getLayoutPageSize();
         this.build();
         this.resizeObserver = new ResizeObserver(this.handleResize);
         this.resizeObserver.observe(this.stage);
+    }
+
+    /**
+     * Returns the page size the book is laid out for. This is the size of the first page, except
+     * when a landscape cover is followed by portrait content pages (a wide cover of a textbook):
+     * then the most common size among the next pages is used, so the content can still be shown
+     * as a two-page spread. The cover is fitted into the portrait page.
+     *
+     * @returns {Promise<{width: number, height: number}>}
+     */
+    async getLayoutPageSize() {
+        const first = await getPageSize(this.pdfDoc, 1);
+        const last = Math.min(this.total, SIZE_SAMPLE_PAGES);
+        if (first.width <= first.height || last < 2) {
+            return first;
+        }
+        const counts = new Map();
+        for (let pageNum = 2; pageNum <= last; pageNum++) {
+            const size = await getPageSize(this.pdfDoc, pageNum);
+            const key = Math.round(size.width) + 'x' + Math.round(size.height);
+            const entry = counts.get(key) || {size, count: 0};
+            entry.count++;
+            counts.set(key, entry);
+        }
+        // The most common size; on a tie the one that appears first.
+        let common = null;
+        counts.forEach((entry) => {
+            if (!common || entry.count > common.count) {
+                common = entry;
+            }
+        });
+        return common.size.width <= common.size.height ? common.size : first;
     }
 
     /**

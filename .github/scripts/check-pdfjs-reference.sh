@@ -4,7 +4,8 @@
 # every page and the position of every text item (tolerance 0.5 units). This is what the reader's
 # table of contents, search and search highlights rely on. The reference was recorded with
 # PDF.js 3.11.174, the version Leafr shipped before 6.4.299, so a PDF.js update that changes any
-# of it fails here instead of in a course.
+# of it fails here instead of in a course. landscapecover.pdf was added later (Leafr 1.4.0) and its
+# entry was recorded with PDF.js 6.4.299; the version field still names the original recording.
 #
 # Usage: bash .github/scripts/check-pdfjs-reference.sh            (needs Node.js 22 or later)
 #        bash .github/scripts/check-pdfjs-reference.sh --update   (records a new reference; only
