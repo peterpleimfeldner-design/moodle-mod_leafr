@@ -137,15 +137,14 @@ final class page_viewed_test extends \advanced_testcase {
         $this->assertTrue($this->call(['cmid' => $leafr->cmid, 'pages' => [1], 'totalpages' => 1])['completed']);
         $this->assertEquals(1, $DB->get_field('leafr', 'totalpages', ['id' => $leafr->id]));
 
-        // One other report is a tie: the current count stays. The learner's pages beyond it are
-        // kept all the same, the viewer does not send them again.
+        // One other report is a tie, which the higher count wins: a count that is too high only
+        // delays completion.
         $this->setUser($student1);
         $allpages = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
-        $this->call(['cmid' => $leafr->cmid, 'pages' => $allpages, 'totalpages' => 12]);
-        $this->assertEquals(1, $DB->get_field('leafr', 'totalpages', ['id' => $leafr->id]));
+        $this->assertTrue($this->call(['cmid' => $leafr->cmid, 'pages' => $allpages, 'totalpages' => 12])['completed']);
+        $this->assertEquals(12, $DB->get_field('leafr', 'totalpages', ['id' => $leafr->id]));
         $this->assertSame($allpages, progress::get_seen_pages((int)$leafr->id, (int)$student1->id));
 
-        // The second one is a majority.
         $this->setUser($student2);
         $this->assertFalse($this->call(['cmid' => $leafr->cmid, 'pages' => [1], 'totalpages' => 12])['completed']);
         $this->assertEquals(12, $DB->get_field('leafr', 'totalpages', ['id' => $leafr->id]));
@@ -167,6 +166,45 @@ final class page_viewed_test extends \advanced_testcase {
         $this->assertEmpty(\core\task\manager::get_adhoc_tasks(recalculate_completion::class));
         // Such a page is stored for the cheater alone and does not count for completion.
         $this->assertFalse(progress::is_complete($DB->get_record('leafr', ['id' => $leafr->id]), (int)$cheater->id));
+    }
+
+    /**
+     * While the page count is not confirmed, a learner's pages up to their own count are kept, even
+     * beyond the count that applies (they would be lost otherwise). Once a teacher confirmed the
+     * count, pages beyond it are not stored, and one call stores a limited number of pages.
+     */
+    public function test_pages_beyond_the_page_count(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $cheater1 = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $cheater2 = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'editingteacher');
+        $leafr = $this->getDataGenerator()->create_module('leafr', ['course' => $course->id]);
+
+        // Two learners agree on a count that is too low.
+        foreach ([$cheater1, $cheater2] as $user) {
+            $this->setUser($user);
+            $this->call(['cmid' => $leafr->cmid, 'pages' => [1], 'totalpages' => 2]);
+        }
+        $this->setUser($student);
+        $this->call(['cmid' => $leafr->cmid, 'pages' => [1, 2, 3, 4], 'totalpages' => 12]);
+        $this->assertSame([1, 2, 3, 4], progress::get_seen_pages((int)$leafr->id, (int)$student->id));
+
+        $this->setUser($teacher);
+        $this->call(['cmid' => $leafr->cmid, 'pages' => [1], 'totalpages' => 12]);
+        $this->setUser($student);
+        $this->call(['cmid' => $leafr->cmid, 'pages' => [5, 13, 500], 'totalpages' => 500]);
+        $this->assertSame([1, 2, 3, 4, 5], progress::get_seen_pages((int)$leafr->id, (int)$student->id));
+
+        $this->setUser($cheater1);
+        // Only the first 1000 different pages of a call count: page 7 comes after 1000 others.
+        $this->call(['cmid' => $leafr->cmid, 'pages' => array_merge(range(13, 1012), [7]), 'totalpages' => 12]);
+        $this->assertSame([1], progress::get_seen_pages((int)$leafr->id, (int)$cheater1->id));
+        $this->call(['cmid' => $leafr->cmid, 'pages' => array_merge(array_fill(0, 1500, 3), [7]), 'totalpages' => 12]);
+        $this->assertSame([1, 3, 7], progress::get_seen_pages((int)$leafr->id, (int)$cheater1->id));
     }
 
     /**
@@ -248,6 +286,46 @@ final class page_viewed_test extends \advanced_testcase {
         $this->setAdminUser();
         $this->runAdhocTasks(recalculate_completion::class);
         $this->assertEquals(COMPLETION_COMPLETE, $completion->get_data($cm, false, $student->id)->completionstate);
+    }
+
+    /**
+     * The recalculation leaves out users who are no longer enrolled.
+     */
+    public function test_recalculation_skips_unenrolled_users(): void {
+        global $CFG, $DB;
+        require_once($CFG->libdir . '/completionlib.php');
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course(['enablecompletion' => 1]);
+        $former = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'editingteacher');
+        $leafr = $this->getDataGenerator()->create_module('leafr', [
+            'course' => $course->id,
+            'completion' => COMPLETION_TRACKING_AUTOMATIC,
+            'completionpageseen' => 1,
+            'completiontype' => progress::COMPLETION_LASTPAGE,
+        ]);
+
+        $this->setUser($teacher);
+        $this->call(['cmid' => $leafr->cmid, 'pages' => [1], 'totalpages' => 14]);
+        $this->setUser($former);
+        $this->call(['cmid' => $leafr->cmid, 'pages' => range(1, 12), 'totalpages' => 14]);
+        $this->assertFalse($DB->record_exists('course_modules_completion', ['coursemoduleid' => $leafr->cmid,
+            'userid' => $former->id, 'completionstate' => COMPLETION_COMPLETE]));
+
+        $this->setAdminUser();
+        $enrol = enrol_get_plugin('manual');
+        $instance = $DB->get_record('enrol', ['courseid' => $course->id, 'enrol' => 'manual'], '*', MUST_EXIST);
+        $enrol->unenrol_user($instance, $former->id);
+
+        // With 12 pages the former learner would be complete, but is no longer enrolled.
+        $this->setUser($teacher);
+        $this->call(['cmid' => $leafr->cmid, 'pages' => [1], 'totalpages' => 12]);
+        $this->setAdminUser();
+        $this->runAdhocTasks(recalculate_completion::class);
+        $this->assertFalse($DB->record_exists('course_modules_completion', ['coursemoduleid' => $leafr->cmid,
+            'userid' => $former->id, 'completionstate' => COMPLETION_COMPLETE]));
     }
 
     /**

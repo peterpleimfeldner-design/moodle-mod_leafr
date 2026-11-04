@@ -131,6 +131,7 @@ $string['privacy:metadata:leafr_progress:reportedtotal'] = 'El número de págin
 $string['privacy:metadata:leafr_progress:seenpages'] = 'Las páginas que el usuario ha visto.';
 $string['privacy:metadata:leafr_progress:timemodified'] = 'La fecha de la última actualización del progreso.';
 $string['privacy:metadata:leafr_progress:userid'] = 'El identificador del usuario.';
+$string['privacy:metadata:leafrtool'] = 'Las herramientas que amplían los flipbooks de Leafr (p. ej., la confirmación de lectura) guardan sus propios datos, descritos en cada herramienta.';
 $string['privacy:metadata:preference:simpleview'] = 'Si el usuario prefiere la vista simple sin animación de paso de página.';
 $string['privacy:metadata:preference:spreadmode'] = 'Si el usuario prefiere página única, doble página o cambio automático en la vista de libro.';
 $string['progresssummary'] = '{$a->seen} de {$a->total} páginas leídas';

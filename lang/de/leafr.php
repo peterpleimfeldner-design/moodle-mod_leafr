@@ -131,6 +131,7 @@ $string['privacy:metadata:leafr_progress:reportedtotal'] = 'Die Seitenzahl des P
 $string['privacy:metadata:leafr_progress:seenpages'] = 'Die angesehenen Seiten.';
 $string['privacy:metadata:leafr_progress:timemodified'] = 'Der Zeitpunkt der letzten Aktualisierung.';
 $string['privacy:metadata:leafr_progress:userid'] = 'Die ID der Person.';
+$string['privacy:metadata:leafrtool'] = 'Werkzeuge, die Leafr-Flipbooks erweitern (z. B. die Lesebestätigung), speichern eigene Daten; sie sind beim jeweiligen Werkzeug beschrieben.';
 $string['privacy:metadata:preference:simpleview'] = 'Ob die Person die einfache Ansicht ohne Blätteranimation bevorzugt.';
 $string['privacy:metadata:preference:spreadmode'] = 'Ob die Person in der Buchansicht Einzelseite, Doppelseite oder automatisches Umschalten bevorzugt.';
 $string['progresssummary'] = '{$a->seen} von {$a->total} Seiten gelesen';

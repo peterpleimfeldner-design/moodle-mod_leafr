@@ -131,6 +131,7 @@ $string['privacy:metadata:leafr_progress:reportedtotal'] = 'The number of pages 
 $string['privacy:metadata:leafr_progress:seenpages'] = 'The pages the user has viewed.';
 $string['privacy:metadata:leafr_progress:timemodified'] = 'The time the progress was last updated.';
 $string['privacy:metadata:leafr_progress:userid'] = 'The ID of the user.';
+$string['privacy:metadata:leafrtool'] = 'Tools that extend Leafr flipbooks (e.g. the read confirmation) store their own data, described with each tool.';
 $string['privacy:metadata:preference:simpleview'] = 'Whether the user prefers the simple view without page-turning animation.';
 $string['privacy:metadata:preference:spreadmode'] = 'Whether the user prefers single pages, double pages or automatic switching in the flipbook view.';
 $string['progresssummary'] = '{$a->seen} of {$a->total} pages read';

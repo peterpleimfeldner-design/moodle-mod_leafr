@@ -41,8 +41,7 @@ final class page_count_test extends \advanced_testcase {
     }
 
     /**
-     * The count most learners reported wins; a tie keeps the current count or, if the current
-     * count is not among the most reported, takes the highest of them.
+     * The count most learners reported wins, the highest one on a tie.
      */
     public function test_most_reported(): void {
         global $DB;
@@ -54,8 +53,8 @@ final class page_count_test extends \advanced_testcase {
         page_count::report($leafr, 101, 10, false);
         $this->assertSame(10, page_count::most_reported($id, 0));
         page_count::report($leafr, 102, 12, false);
-        $this->assertSame(10, page_count::most_reported($id, 10), 'A tie keeps the current count');
-        $this->assertSame(12, page_count::most_reported($id, 0), 'A tie without the current count takes the highest');
+        $this->assertSame(12, page_count::most_reported($id, 10), 'A tie takes the highest count');
+        $this->assertSame(12, page_count::most_reported($id, 0));
         page_count::report($leafr, 103, 12, false);
         $this->assertSame(12, page_count::most_reported($id, 10));
 
@@ -78,6 +77,9 @@ final class page_count_test extends \advanced_testcase {
 
         page_count::report($leafr, 101, 5, false);
         $this->assertSame(16, page_count::most_reported($id, 16));
+        page_count::report($leafr, 101, 900, false);
+        $this->assertSame(16, page_count::most_reported($id, 16), 'It wins a tie, also against a higher count');
+        page_count::report($leafr, 101, 5, false);
         page_count::report($leafr, 102, 5, false);
         $this->assertSame(5, page_count::most_reported($id, 16));
     }

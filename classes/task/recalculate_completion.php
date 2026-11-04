@@ -20,9 +20,9 @@ namespace mod_leafr\task;
  * Recalculates the activity completion of the users of an activity after its page count changed.
  *
  * The page based completion rules depend on the page count, so a corrected count can complete
- * or un-complete users who are not reading at that moment. Only users who have reading progress
- * or a completion state in the activity can be affected. Each of them is recalculated with
- * completion_info::update_state(), which keeps states that a teacher has overridden and updates
+ * or un-complete users who are not reading at that moment. Only enrolled users who have reading
+ * progress or a completion state in the activity can be affected. Each of them is recalculated with
+ * completion_info::update_state(), which keeps a completion a teacher has set by hand and updates
  * course completion as usual (unlike completion_info::reset_all_state(), which deletes them).
  * This runs in the background because it can take a while in large courses.
  *
@@ -75,14 +75,18 @@ class recalculate_completion extends \core\task\adhoc_task {
         }
         $totalpages = $DB->get_field('leafr', 'totalpages', ['id' => $cm->instance]);
 
-        $sql = "SELECT userid
-                  FROM {leafr_progress}
-                 WHERE leafrid = :leafrid
-                 UNION
-                SELECT userid
-                  FROM {course_modules_completion}
-                 WHERE coursemoduleid = :cmid";
-        $users = $DB->get_recordset_sql($sql, ['leafrid' => $cm->instance, 'cmid' => $cm->id]);
+        [$enrolledsql, $params] = get_enrolled_sql(\context_module::instance($cm->id), '', 0, true);
+        $sql = "SELECT a.userid
+                  FROM (SELECT userid
+                          FROM {leafr_progress}
+                         WHERE leafrid = :leafrid
+                         UNION
+                        SELECT userid
+                          FROM {course_modules_completion}
+                         WHERE coursemoduleid = :cmid) a
+                  JOIN ($enrolledsql) e ON e.id = a.userid";
+        $params += ['leafrid' => $cm->instance, 'cmid' => $cm->id];
+        $users = $DB->get_recordset_sql($sql, $params);
         foreach ($users as $user) {
             $completion->update_state($cm, COMPLETION_UNKNOWN, (int)$user->userid);
         }

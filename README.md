@@ -2,6 +2,8 @@
 
 Leafr is a Moodle activity that turns a PDF document into a book students can leaf through, directly inside the course — no external service, no extra login. The PDF stays in Moodle, is rendered in the browser, and every reading action (page turned, bookmark set, document read) is tracked the same way as any other Moodle activity.
 
+Leafr is free and available in the [Moodle Plugins directory](https://marketplace.moodle.com/plugins/mod_leafr).
+
 ## What Leafr is for
 
 Moodle already lets you attach a PDF as a plain file. Leafr is for the cases where that is not enough:
@@ -22,13 +24,13 @@ The page-turning book view exists because for longer structured documents (handb
 
 | | |
 |---|---|
-| ![Sidebar with page thumbnails, read/required-page markers](docs/screenshots/sidebar-thumbnails.png) | ![Sidebar with the table of contents](docs/screenshots/sidebar-contents.png) |
+| ![Sidebar with page thumbnails, read/required-page markers](https://raw.githubusercontent.com/peterpleimfeldner-design/moodle-mod_leafr/main/docs/screenshots/sidebar-thumbnails.png) | ![Sidebar with the table of contents](https://raw.githubusercontent.com/peterpleimfeldner-design/moodle-mod_leafr/main/docs/screenshots/sidebar-contents.png) |
 | Sidebar: page thumbnails, with a checkmark for pages already read and a dot for required pages | Sidebar: table of contents, automatic from the PDF or defined by the teacher, required chapters marked |
-| ![Sidebar with full-text search results](docs/screenshots/sidebar-search.png) | ![Sidebar with a bookmark and note](docs/screenshots/sidebar-bookmarks.png) |
+| ![Sidebar with full-text search results](https://raw.githubusercontent.com/peterpleimfeldner-design/moodle-mod_leafr/main/docs/screenshots/sidebar-search.png) | ![Sidebar with a bookmark and note](https://raw.githubusercontent.com/peterpleimfeldner-design/moodle-mod_leafr/main/docs/screenshots/sidebar-bookmarks.png) |
 | Sidebar: full-text search with highlighted matches | Sidebar: bookmarks with a personal note |
-| ![View menu with page layout and zoom options](docs/screenshots/view-menu.png) | ![Read confirmation card](docs/screenshots/confirm-card.png) |
+| ![View menu with page layout and zoom options](https://raw.githubusercontent.com/peterpleimfeldner-design/moodle-mod_leafr/main/docs/screenshots/view-menu.png) | ![Read confirmation card](https://raw.githubusercontent.com/peterpleimfeldner-design/moodle-mod_leafr/main/docs/screenshots/confirm-card.png) |
 | View menu: page layout, simple view, zoom, full screen | Read confirmation, shown once the required pages have been read |
-| ![Activity settings form with completion conditions](docs/screenshots/settings-form.png) | ![Teacher overview report with group filter](docs/screenshots/overview-report.png) |
+| ![Activity settings form with completion conditions](https://raw.githubusercontent.com/peterpleimfeldner-design/moodle-mod_leafr/main/docs/screenshots/settings-form.png) | ![Teacher overview report with group filter](https://raw.githubusercontent.com/peterpleimfeldner-design/moodle-mod_leafr/main/docs/screenshots/overview-report.png) |
 | Activity settings: required pages/chapters combined with the read confirmation | Overview report for teachers, with group filter and CSV export |
 
 ## Features
@@ -55,24 +57,24 @@ For teachers:
 
 ## Requirements
 
-- Moodle 4.5 to 5.3 (tested with 4.5, 5.0, 5.1, 5.2 and 5.3, on PostgreSQL and MySQL)
-- PHP 8.1 or later
+- Moodle 4.5 to 5.3 (tested with 4.5, 5.0, 5.1, 5.2 and 5.3, on PostgreSQL, MySQL and MariaDB)
+- PHP as required by your Moodle version (8.1 or later for Moodle 4.5, 8.2 or later for 5.0 to 5.2, 8.3 or later for 5.3); tested with PHP 8.2, 8.3 and 8.4
 - For students and teachers, a browser supported by PDF.js 6.4: Chrome or Edge 125 or later, Firefox ESR or later, Safari 18 or later (iOS/iPadOS 18). Browsers that lack features PDF.js needs (for example Safari before 17.4, Chrome before 119, Firefox before 122) show a message instead of the document, with the download button if downloading is allowed.
 
 ## Installation
 
-1. Download the ZIP file or clone this repository into the folder `mod/leafr` of your Moodle installation.
+1. Install Leafr from the [Moodle Plugins directory](https://marketplace.moodle.com/plugins/mod_leafr) (in Moodle: *Site administration > Plugins > Install plugins*), or download the ZIP file or clone this repository into the folder `mod/leafr` of your Moodle installation.
 2. Log in as administrator and follow the upgrade notification, or run `php admin/cli/upgrade.php`.
 
 ## Usage
 
 Add the activity "Leafr flipbook" to a course, upload a PDF file and save. Optionally define chapters, the start page and whether the PDF may be downloaded. Under "Completion conditions" choose which pages must be viewed and whether a read confirmation is required.
 
-The number of pages is determined by the browser when the document is opened for the first time.
+The number of pages is reported by the browser when the document is opened. When a teacher (a user who can edit the activity) opens it, that count is used; until then, the count reported by most learners applies.
 
 ## Privacy
 
-Leafr stores, per user and activity, the pages that were viewed and the last reading position, the bookmarks (page number and note), the time of a read confirmation, and two user preferences (simple view, page layout). All of this can be exported and deleted with the Moodle privacy tools. The first view of each page is also written to the standard Moodle log as an event, subject to the site's log retention settings. The browser additionally remembers locally that the one-time full screen tip has been shown. No data is sent to external services.
+Leafr stores, per user and activity, the pages that were viewed, the last reading position and the page count the browser reported, the bookmarks (page number and note), the time of a read confirmation, and two user preferences (simple view, page layout). All of this can be exported and deleted with the Moodle privacy tools. The first view of each page is also written to the standard Moodle log as an event, subject to the site's log retention settings. The browser additionally remembers locally that the one-time full screen tip has been shown. No data is sent to external services.
 
 ## FAQ
 
@@ -95,7 +97,7 @@ Yes, as a printable page or PDF — useful for keeping a record of what was mark
 German, English and Spanish for the interface.
 
 **Which Moodle and PHP versions are supported?**
-Moodle 4.5 to 5.3 (tested with 4.5, 5.0, 5.1, 5.2 and 5.3, on PostgreSQL and MySQL), PHP 8.1 or later.
+Moodle 4.5 to 5.3 (tested with 4.5, 5.0, 5.1, 5.2 and 5.3, on PostgreSQL, MySQL and MariaDB), PHP 8.1 or later as required by your Moodle version.
 
 **Which browsers are supported?**
 Chrome or Edge 125 or later, Firefox ESR or later, Safari 18 or later (iOS/iPadOS 18) – the browsers supported by the bundled PDF.js. Older iPads that cannot be updated to iPadOS 18 are not supported. Browsers that lack features PDF.js needs show a message instead of the document.

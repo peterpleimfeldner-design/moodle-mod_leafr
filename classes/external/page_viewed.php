@@ -32,6 +32,9 @@ use mod_leafr\local\progress;
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class page_viewed extends external_api {
+    /** @var int Pages accepted per call; the viewer sends the pages seen since its last call. */
+    public const MAX_PAGES_PER_CALL = 1000;
+
     /**
      * Describes the parameters.
      *
@@ -108,14 +111,17 @@ class page_viewed extends external_api {
         }
 
         $limit = (int)$leafr->totalpages ?: progress::MAX_PAGES;
-        // Pages up to the user's own page count are kept even while the count that applies is lower
-        // (before most learners agree on it): otherwise they would be lost, as the viewer does not
-        // send them again. Completion only counts pages up to the count that applies.
-        $pagelimit = max($limit, min((int)$params['totalpages'], progress::MAX_PAGES));
-        $valid = array_filter($params['pages'], function ($p) use ($pagelimit) {
+        // While the count is not confirmed, pages up to the user's own page count are kept even if the
+        // count that applies is lower: otherwise they would be lost, as the viewer does not send them
+        // again. Completion only counts pages up to the count that applies.
+        $pagelimit = empty($leafr->totalpagesconfirmed)
+            ? max($limit, min((int)$params['totalpages'], progress::MAX_PAGES))
+            : $limit;
+        $pages = array_slice(array_unique($params['pages']), 0, self::MAX_PAGES_PER_CALL);
+        $valid = array_filter($pages, function ($p) use ($pagelimit) {
             return $p >= 1 && $p <= $pagelimit;
         });
-        $position = ($params['currentpage'] >= 1 && $params['currentpage'] <= $limit) ? $params['currentpage'] : 0;
+        $position = ($params['currentpage'] >= 1 && $params['currentpage'] <= $pagelimit) ? $params['currentpage'] : 0;
         $newpages = progress::record((int)$leafr->id, (int)$USER->id, $valid, $position);
 
         foreach ($newpages as $pageno) {

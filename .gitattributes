@@ -19,3 +19,5 @@
 .gitattributes export-ignore
 .gitignore export-ignore
 .github export-ignore
+# Screenshots for the README on GitHub; the README links them with absolute URLs.
+docs export-ignore

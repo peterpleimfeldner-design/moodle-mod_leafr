@@ -62,6 +62,7 @@ class provider implements
         ], 'privacy:metadata:leafr_bookmarks');
         $collection->add_user_preference('mod_leafr_simpleview', 'privacy:metadata:preference:simpleview');
         $collection->add_user_preference('mod_leafr_spreadmode', 'privacy:metadata:preference:spreadmode');
+        $collection->add_plugintype_link('leafrtool', [], 'privacy:metadata:leafrtool');
         return $collection;
     }
 

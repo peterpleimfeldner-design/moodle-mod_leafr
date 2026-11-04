@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.4.0 (unreleased)
+
+### New
+- Supports Moodle 5.3. Tested on Moodle 4.5, 5.0, 5.1, 5.2 and 5.3, on PostgreSQL, MySQL and MariaDB.
+
+### Fixed
+- Full screen mode no longer closes Moodle's course index: clicking into the book after full screen
+  mode closed the course index, also after leaving full screen mode (GitHub issue #16). The whole
+  page now goes full screen and the reader covers it.
+- PDFs with a landscape first page (a wide cover) followed by portrait pages can now be shown as
+  double pages (GitHub issue #16). The page layout follows the size of the content pages.
+- The page count of a PDF can no longer be set wrongly by one learner. Until a user who can edit
+  the activity has opened it, the page count reported by most learners applies (the higher one on a
+  tie). When the page count changes, completion is recalculated for the enrolled learners in the
+  background; completion set by hand is kept.
+- Restoring an activity without user data no longer restores read confirmations.
+
+### Improved
+- Screen reader texts use the class `visually-hidden` (Bootstrap 5) instead of `sr-only`.
+- Two labels that were put together from separate words are now complete, translatable sentences.
+- New automatic tests: backup and restore with user data, privacy with two activities and for the
+  read confirmation, course reset, the page count rules, and Behat scenarios for full screen mode
+  and for PDFs with a landscape cover. The CI now also runs the tests of the subplugins.
+
 ## 1.3.0 (2026-10-21)
 
 ### Changed

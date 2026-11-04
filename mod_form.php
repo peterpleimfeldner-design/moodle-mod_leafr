@@ -262,7 +262,7 @@ class mod_leafr_mod_form extends moodleform_mod {
         $mform->hideIf($pageel, $typeel, 'neq', progress::COMPLETION_SPECIFICPAGE);
 
         $mform->addElement('text', $pagesel, get_string('completionpages', 'leafr'), ['size' => '30']);
-        $mform->setType($pagesel, PARAM_RAW_TRIMMED);
+        $mform->setType($pagesel, PARAM_NOTAGS);
         $mform->addHelpButton($pagesel, 'completionpages', 'leafr');
         $mform->hideIf($pagesel, $enabledel, 'notchecked');
         $mform->hideIf($pagesel, $typeel, 'neq', progress::COMPLETION_SPECIFICRANGE);

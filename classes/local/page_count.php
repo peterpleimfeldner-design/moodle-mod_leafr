@@ -25,7 +25,8 @@ use stdClass;
  * reported by a user who can edit the activity is trusted and confirmed. Until then, the count
  * that most learners reported is used, so a single learner who sends a wrong count (too low to
  * complete "last page" early, or too high to block everybody) is overruled by the real count of
- * the others. On a tie the current count stays. Each learner's report is kept in their progress
+ * the others. On a tie the higher count wins: a count that is too high only delays completion, one
+ * that is too low completes users who have not read everything. Each learner's report is kept in their progress
  * record (`leafr_progress.reportedtotal`). A learner can still claim to have seen every page (the
  * server cannot check reading), but cannot change the count that applies to everybody else.
  *
@@ -82,9 +83,8 @@ class page_count {
     }
 
     /**
-     * Returns the page count reported by most learners. On a tie the current count wins if it is
-     * one of the most reported; otherwise the highest of them (a count that is too high only
-     * delays completion, one that is too low completes users who have not read everything).
+     * Returns the page count reported by most learners, the highest of them on a tie (unless the
+     * current count was taken over without reports, see below).
      *
      * @param int $leafrid Leafr instance id
      * @param int $current Current page count
@@ -98,9 +98,10 @@ class page_count {
                  WHERE leafrid = :leafrid AND reportedtotal > 0
               GROUP BY reportedtotal";
         $counts = $DB->get_records_sql_menu($sql, ['leafrid' => $leafrid]);
-        if ($current > 0 && !isset($counts[$current])) {
+        $unreported = $current > 0 && !isset($counts[$current]);
+        if ($unreported) {
             // A count nobody reported yet (from an older version or a restore without user data)
-            // counts as one report, so a single learner cannot replace it.
+            // counts as one report and wins a tie, so a single learner cannot replace it.
             $counts[$current] = 1;
         }
         if (!$counts) {
@@ -111,7 +112,7 @@ class page_count {
             return (int)$reports === (int)$max;
         }));
         $top = array_map('intval', $top);
-        return in_array($current, $top, true) ? $current : max($top);
+        return $unreported && in_array($current, $top, true) ? $current : max($top);
     }
 
     /**
@@ -138,15 +139,23 @@ class page_count {
 
         $record = $DB->get_record('leafr_progress', ['leafrid' => $leafrid, 'userid' => $userid], 'id, reportedtotal');
         if (!$record) {
-            $DB->insert_record('leafr_progress', (object)[
-                'leafrid' => $leafrid,
-                'userid' => $userid,
-                'seenpages' => '',
-                'lastpage' => 0,
-                'reportedtotal' => $reported,
-                'timemodified' => time(),
-            ]);
-            return true;
+            try {
+                $DB->insert_record('leafr_progress', (object)[
+                    'leafrid' => $leafrid,
+                    'userid' => $userid,
+                    'seenpages' => '',
+                    'lastpage' => 0,
+                    'reportedtotal' => $reported,
+                    'timemodified' => time(),
+                ]);
+                return true;
+            } catch (\dml_write_exception $e) {
+                // A parallel request (e.g. a second tab) created the record in the meantime.
+                $record = $DB->get_record('leafr_progress', ['leafrid' => $leafrid, 'userid' => $userid], 'id, reportedtotal');
+                if (!$record) {
+                    throw $e;
+                }
+            }
         }
         if ((int)$record->reportedtotal === $reported) {
             return false;
