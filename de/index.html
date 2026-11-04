@@ -81,6 +81,9 @@
   .carousel-track { display: flex; align-items: flex-start; transition: transform 0.35s ease; }
   .carousel-slide { flex: 0 0 100%; margin: 0; }
   .carousel-slide img { width: 100%; display: block; cursor: zoom-in; }
+  .footnotes { margin-top: 22px; font-size: 0.9rem; color: var(--text-muted); }
+  .footnotes p { margin: 6px 0; }
+  .footnotes .tip { color: var(--text); }
   .carousel-slide figcaption { padding: 12px 18px; font-size: 0.88rem; color: var(--text-muted); text-align: left; }
   .carousel-arrow {
     position: absolute; top: 38%; transform: translateY(-50%); width: 40px; height: 40px;
@@ -251,7 +254,7 @@
           <p>
             Buchansicht mit realistischem Seitenumblättern oder eine einfache, scrollbare Ansicht, die vollständig
             für Screenreader zugänglich ist. „Weiterlesen“ springt zur zuletzt gelesenen Seite. Seitenleiste mit
-            Miniaturansichten, Inhaltsverzeichnis, Lesezeichen mit Notizen und Volltextsuche. Zoom, Vollbild und
+            Miniaturansichten, Inhaltsverzeichnis<sup>1</sup>, Lesezeichen mit Notizen und Volltextsuche<sup>2</sup>. Zoom, Vollbild und
             Tastaturkürzel. Funktioniert auf Smartphone und Tablet mit Wisch-Navigation.
           </p>
         </div>
@@ -264,6 +267,11 @@
             Kursreset und volle Unterstützung der Privacy-API.
           </p>
         </div>
+      </div>
+      <div class="footnotes">
+        <p class="tip"><strong>Tipp: So holst du alles aus deinem PDF heraus.</strong> Blättern, Lesezeichen, Pflichtseiten und Lesebestätigung funktionieren mit jedem PDF. Für das automatische Inhaltsverzeichnis und die Volltextsuche speicherst du dein Dokument mit Überschriften und Text, also nicht als reinen Scan.</p>
+        <p><sup>1</sup> Leafr übernimmt die Kapitel automatisch aus den Lesezeichen des PDFs, zum Beispiel aus Word mit Überschriften-Formatvorlagen (beim Speichern als PDF: „Optionen“ → „Textmarken erstellen mit: Überschriften“). Ohne Lesezeichen legst du die Kapitel einfach in Leafr selbst fest.</p>
+        <p><sup>2</sup> Für PDFs mit Text. Eingescannte Dokumente vorher mit Texterkennung (OCR) umwandeln, dann sind auch sie durchsuchbar.</p>
       </div>
     </div>
   </section>

@@ -87,6 +87,9 @@
   .carousel-track { display: flex; align-items: flex-start; transition: transform 0.35s ease; }
   .carousel-slide { flex: 0 0 100%; margin: 0; }
   .carousel-slide img { width: 100%; display: block; cursor: zoom-in; }
+  .footnotes { margin-top: 22px; font-size: 0.9rem; color: var(--text-muted); }
+  .footnotes p { margin: 6px 0; }
+  .footnotes .tip { color: var(--text); }
   .carousel-slide figcaption { padding: 12px 18px; font-size: 0.88rem; color: var(--text-muted); text-align: left; }
   .carousel-arrow {
     position: absolute; top: 38%; transform: translateY(-50%); width: 40px; height: 40px;
@@ -264,8 +267,8 @@
           <h3>For students</h3>
           <p>
             Book view with realistic page-turning, or a simple scrollable view that's fully accessible to screen readers.
-            Continue-reading picks up where you left off. Sidebar with thumbnails, contents, bookmarks with notes,
-            and full-text search. Zoom, fit-to-page, full screen, and keyboard shortcuts. Works on phones and tablets
+            Continue-reading picks up where you left off. Sidebar with thumbnails, contents<sup>1</sup>, bookmarks with notes,
+            and full-text search<sup>2</sup>. Zoom, fit-to-page, full screen, and keyboard shortcuts. Works on phones and tablets
             with swipe navigation.
           </p>
         </div>
@@ -277,6 +280,11 @@
             Optional PDF download. Backup, restore, duplication, course reset, and full Privacy API support.
           </p>
         </div>
+      </div>
+      <div class="footnotes">
+        <p class="tip"><strong>Tip: get the most out of your PDF.</strong> Page turning, bookmarks, required pages and the read confirmation work with every PDF. For the automatic table of contents and full-text search, save your document with headings and real text rather than as a plain scan.</p>
+        <p><sup>1</sup> Leafr takes the chapters from the PDF's bookmarks, for example from Word with heading styles (“Options” → “Create bookmarks using: Headings” when saving as PDF). No bookmarks? Simply define the chapters in Leafr.</p>
+        <p><sup>2</sup> For PDFs that contain text. Run scanned documents through text recognition (OCR) first and they become searchable too.</p>
       </div>
     </div>
   </section>
