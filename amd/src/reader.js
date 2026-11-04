@@ -71,9 +71,9 @@ const STRING_KEYS = [
     'fullscreen_enter', 'fullscreen_exit', 'zoomlevel', 'continuenotice', 'progresssummary', 'requiredsummary',
     'search_label', 'search_placeholder', 'search_indexing', 'search_noresults',
     'search_noresults_scan', 'search_next', 'search_prev', 'matchofmatches',
-    'bookmark_empty', 'bookmark_note_label', 'bookmark_note_placeholder', 'bookmark_remove',
+    'bookmark_empty', 'bookmark_note_for_page', 'bookmark_note_placeholder', 'bookmark_remove',
     'bookmark_page', 'bookmark_note_chars', 'bookmark_note_saved', 'bookmark_print', 'required_badge',
-    'search_hint', 'thumbs_legend_required', 'thumbs_legend_seen',
+    'search_hint', 'thumb_label_required', 'thumbs_legend_required', 'thumbs_legend_seen',
 ];
 
 class Reader {
@@ -86,6 +86,7 @@ class Reader {
     constructor(root) {
         this.root = root;
         this.fullscreenRequested = false;
+        this.fullscreenAdopted = false;
         this.scrollBeforeFullscreen = null;
         this.cmid = parseInt(root.dataset.cmid, 10);
         this.fileurl = root.dataset.fileurl;
@@ -875,23 +876,46 @@ class Reader {
         document.addEventListener('fullscreenchange', () => {
             if (!document.fullscreenElement) {
                 this.fullscreenRequested = false;
+                this.fullscreenAdopted = false;
             }
-            const active = this.isFullscreen();
-            this.root.classList.toggle('is-fullscreen', active);
-            document.documentElement.classList.toggle('leafr-fullscreen', active);
-            if (active) {
-                this.hideFullscreenTip();
-            } else if (this.scrollBeforeFullscreen !== null) {
-                window.scrollTo({top: this.scrollBeforeFullscreen, behavior: 'instant'});
-                this.scrollBeforeFullscreen = null;
-            }
-            const button = this.root.querySelector('[data-action="fullscreen"]');
-            const label = active ? this.strings.fullscreen_exit : this.strings.fullscreen_enter;
-            button.setAttribute('aria-checked', active ? 'true' : 'false');
-            button.title = label;
-            button.querySelector('[data-region="fullscreen-label"]').textContent = label;
-            this.fitHeight();
+            this.syncFullscreen();
         });
+        // A page restored from the browser's back/forward cache may have missed leaving full screen.
+        window.addEventListener('pageshow', () => {
+            if (!document.fullscreenElement) {
+                this.fullscreenRequested = false;
+                this.fullscreenAdopted = false;
+            }
+            this.syncFullscreen();
+        });
+    }
+
+    /**
+     * Shows or hides the full screen overlay and updates the menu item to match the current state.
+     */
+    syncFullscreen() {
+        const active = this.isFullscreen();
+        const wasActive = this.root.classList.contains('is-fullscreen');
+        this.root.classList.toggle('is-fullscreen', active);
+        if (active || wasActive) {
+            document.documentElement.classList.toggle('leafr-fullscreen', active);
+        }
+        if (active) {
+            this.hideFullscreenTip();
+        }
+        this.fitHeight();
+        if (!active && wasActive && this.scrollBeforeFullscreen !== null) {
+            window.scrollTo({top: this.scrollBeforeFullscreen, behavior: 'instant'});
+            this.scrollBeforeFullscreen = null;
+        }
+        if (!this.strings) {
+            return;
+        }
+        const button = this.root.querySelector('[data-action="fullscreen"]');
+        const label = active ? this.strings.fullscreen_exit : this.strings.fullscreen_enter;
+        button.setAttribute('aria-checked', active ? 'true' : 'false');
+        button.title = label;
+        button.querySelector('[data-region="fullscreen-label"]').textContent = label;
     }
 
     /**
@@ -1261,14 +1285,22 @@ class Reader {
      * is-fullscreen), rather than the reader element itself. Moodle's drawers attach the click
      * handler that closes them to the full screen element; for the reader element, every click
      * into the book closed the course index, even after leaving full screen (issue #16). Moodle
-     * handles a full screen html element as a normal page (core/modal_backdrop).
+     * handles a full screen html element as a normal page (core/modal_backdrop). If the page is
+     * already in full screen mode (e.g. through a theme's button), the reader only covers it and
+     * leaves the page in full screen mode when it is turned off again.
      */
     toggleFullscreen() {
         if (!Reader.canFullscreen()) {
             return;
         }
         if (this.isFullscreen()) {
-            document.exitFullscreen().catch(() => null);
+            if (this.fullscreenAdopted) {
+                this.fullscreenRequested = false;
+                this.fullscreenAdopted = false;
+                this.syncFullscreen();
+            } else {
+                document.exitFullscreen().catch(() => null);
+            }
         } else if (!document.fullscreenElement) {
             this.fullscreenRequested = true;
             this.scrollBeforeFullscreen = window.scrollY;
@@ -1276,6 +1308,11 @@ class Reader {
                 this.fullscreenRequested = false;
                 this.scrollBeforeFullscreen = null;
             });
+        } else if (document.fullscreenElement === document.documentElement) {
+            this.fullscreenRequested = true;
+            this.fullscreenAdopted = true;
+            this.scrollBeforeFullscreen = window.scrollY;
+            this.syncFullscreen();
         }
     }
 

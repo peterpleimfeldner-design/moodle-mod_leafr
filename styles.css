@@ -39,7 +39,7 @@
     --leafr-muted: #9ca3af;
 }
 
-.leafr-reader .sr-only {
+.leafr-reader .visually-hidden {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -56,21 +56,24 @@
 }
 
 /* Full screen: the whole page is in full screen mode and the reader covers it (see toggleFullscreen()
-   in amd/src/reader.js). Above Moodle's fixed navbar and drawers, below modal dialogs. */
-.leafr-reader.is-fullscreen {
+   in amd/src/reader.js). Above Moodle's fixed navbar and drawers, below modal dialogs. Only while the
+   page really is in full screen mode, so a class left over (e.g. after back/forward) does no harm. */
+html:fullscreen .leafr-reader.is-fullscreen {
     position: fixed;
     top: 0;
+    right: 0;
+    bottom: 0;
     left: 0;
     z-index: 1040;
-    width: 100vw;
-    height: 100vh;
+    height: auto;
+    min-height: 0;
     margin: 0;
     border: 0;
     border-radius: 0;
 }
 
-html.leafr-fullscreen,
-html.leafr-fullscreen body {
+html.leafr-fullscreen:fullscreen,
+html.leafr-fullscreen:fullscreen body {
     overflow: hidden;
 }
 
@@ -904,7 +907,7 @@ html.leafr-fullscreen body {
 }
 
 /* Visible label of the main toolbar functions (sidebar, view menu, bookmark), shown alongside the
-   icon from tablet width up; a tooltip (the button's title) and the sr-only fallback elsewhere
+   icon from tablet width up; a tooltip (the button's title) and the visually hidden fallback elsewhere
    still identify the button below that width. */
 .leafr-btn-label {
     position: absolute;

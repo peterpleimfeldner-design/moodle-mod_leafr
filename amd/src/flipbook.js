@@ -135,9 +135,13 @@ export default class FlipbookView {
         if (first.width <= first.height || last < 2) {
             return first;
         }
-        const counts = new Map();
+        const pageNums = [];
         for (let pageNum = 2; pageNum <= last; pageNum++) {
-            const size = await getPageSize(this.pdfDoc, pageNum);
+            pageNums.push(pageNum);
+        }
+        const sizes = await Promise.all(pageNums.map((pageNum) => getPageSize(this.pdfDoc, pageNum)));
+        const counts = new Map();
+        for (const size of sizes) {
             const key = Math.round(size.width) + 'x' + Math.round(size.height);
             const entry = counts.get(key) || {size, count: 0};
             entry.count++;

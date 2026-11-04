@@ -193,7 +193,8 @@ class behat_mod_leafr extends behat_base {
         $this->require_javascript();
         if (!$this->is_course_index_open()) {
             $this->execute_script(
-                'document.querySelector(\'[data-toggler="drawers"][data-target="theme_boost-drawers-courseindex"]\').click();'
+                'document.querySelector(\'[data-toggler="drawers"][data-action="toggle"]\'
+                    + \'[data-target="theme_boost-drawers-courseindex"]\').click();'
             );
         }
         $this->spin(function () {
@@ -235,15 +236,27 @@ class behat_mod_leafr extends behat_base {
      */
     public function the_leafr_reader_should_be_in_full_screen_mode(string $be): void {
         $this->require_javascript();
-        $script = 'return document.fullscreenElement !== null
-            && document.querySelector(".leafr-reader").classList.contains("is-fullscreen");';
-        $expected = $be === 'be';
+        if ($be === 'be') {
+            $script = 'return document.fullscreenElement !== null
+                && document.querySelector(".leafr-reader").classList.contains("is-fullscreen");';
+        } else {
+            $script = 'return document.fullscreenElement === null
+                && !document.querySelector(".leafr-reader").classList.contains("is-fullscreen")
+                && !document.documentElement.classList.contains("leafr-fullscreen");';
+        }
+        $expected = true;
         $exception = new ExpectationException(
-            $expected ? 'The reader is not in full screen mode' : 'The reader is still in full screen mode',
+            $be === 'be' ? 'The reader is not in full screen mode' : 'The reader is still in full screen mode',
             $this->getSession()
         );
         $this->spin(function () use ($script, $expected) {
             return (bool)$this->evaluate_script($script) === $expected;
         }, false, self::get_extended_timeout(), $exception);
+        if ($be === 'be') {
+            // Entering full screen resizes the window, which is when Moodle's drawers set up their
+            // backdrop. A headless browser may not resize, so the resize event is sent here.
+            $this->execute_script('window.dispatchEvent(new Event("resize"));');
+            $this->wait_for_pending_js();
+        }
     }
 }
