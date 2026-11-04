@@ -40,7 +40,7 @@ For students:
 - **Book view** with a realistic page-turning animation: two-page spread on large screens, single pages on phones and for landscape documents, or a fixed layout chosen in the view menu (remembered per user).
 - **Simple view** without animation: all pages below each other, scrollable, with the text of each page available to screen readers. It is used automatically when the operating system asks for reduced motion and can be switched on at any time.
 - **Continue reading**: the document opens at the page read last.
-- **Sidebar** with page thumbnails, contents (the PDF outline or chapters defined by the teacher), bookmarks and full-text search with highlighted matches.
+- **Sidebar** with page thumbnails, contents (the PDF outline¹ or chapters defined by the teacher), bookmarks and full-text search² with highlighted matches.
 - **Bookmarks with notes**: bookmark any page and add a personal note (up to 500 characters, saved automatically); print the list or save it as PDF.
 - **Zoom** (50 % to 300 %), fit to page or width, **full screen**, page number input and progress bar.
 - **Keyboard shortcuts** once the document has the focus: arrow keys, Page Up/Down, Home/End, `+`/`-`, `T` (contents), `B` (bookmark), `F` (full screen), `?` (help).
@@ -54,6 +54,12 @@ For teachers:
 - **Manual chapters** for PDFs without an outline, or instead of the PDF's own outline.
 - Optional **download** of the original PDF (per activity setting and capability `mod/leafr:download`).
 - Backup and restore, duplication, course reset, Privacy API (GDPR), events for page views.
+
+**Tip: get the most out of your PDF.** Page turning, bookmarks, required pages and the read confirmation work with every PDF. For the automatic table of contents and full-text search, save your document with headings and real text rather than as a plain scan.
+
+¹ Leafr takes the chapters from the PDF's bookmarks, for example from Word with heading styles ("Options" → "Create bookmarks using: Headings" when saving as PDF). No bookmarks? Simply define the chapters in Leafr.
+
+² For PDFs that contain text. Run scanned documents through text recognition (OCR) first and they become searchable too.
 
 ## Requirements
 
