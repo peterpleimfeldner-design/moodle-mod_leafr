@@ -193,6 +193,15 @@ jobs:
         if: ${{ !cancelled() }}
         run: moodle-plugin-ci phpunit --fail-on-warning
 
+      - name: PHPUnit tests of the leafrtool subplugins
+        # moodle-plugin-ci only runs the tests of mod_leafr itself (tests/), not those of the
+        # subplugins in tool/*/tests, which Moodle registers as test suites of their own.
+        if: ${{ !cancelled() }}
+        working-directory: moodle
+        run: |
+          vendor/bin/phpunit --fail-on-warning --testsuite leafrtool_confirm_testsuite
+          vendor/bin/phpunit --fail-on-warning --testsuite leafrtool_report_testsuite
+
       - name: Behat features
         id: behat
         if: ${{ !cancelled() }}
