@@ -4,6 +4,10 @@ Leafr is a Moodle activity that turns a PDF document into a book students can le
 
 Leafr is free and available in the [Moodle Plugins directory](https://marketplace.moodle.com/plugins/mod_leafr).
 
+[![Video: Leafr full tour on YouTube (4 min)](https://i.ytimg.com/vi/goHXcm4ORbc/maxresdefault.jpg)](https://www.youtube.com/watch?v=goHXcm4ORbc)
+
+**Video tour (4 min):** [English](https://www.youtube.com/watch?v=goHXcm4ORbc) · [Deutsch](https://www.youtube.com/watch?v=XD0Ty7JIdw8) · [Español](https://www.youtube.com/watch?v=3XNSd0r3jqw) · more on the [YouTube channel](https://www.youtube.com/@CourseToolbox) · [Website](https://peterpleimfeldner-design.github.io/moodle-mod_leafr/)
+
 ## What Leafr is for
 
 Moodle already lets you attach a PDF as a plain file. Leafr is for the cases where that is not enough:
