@@ -11,8 +11,13 @@
 <link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/">
 <link rel="alternate" hreflang="x-default" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Leafr – PDF Reader & Flipbook","alternateName":"mod_leafr","applicationCategory":"EducationalApplication","applicationSubCategory":"Moodle plugin","operatingSystem":"Moodle 4.5–5.3","inLanguage":"en","description":"Leafr is a free, open-source PDF viewer and flipbook plugin for Moodle. It turns a PDF into a page-turning book with chapters, bookmarks and search, plus required pages and an optional read confirmation.","url":"https://peterpleimfeldner-design.github.io/moodle-mod_leafr/","downloadUrl":"https://marketplace.moodle.com/plugins/mod_leafr","codeRepository":"https://github.com/peterpleimfeldner-design/moodle-mod_leafr","license":"https://www.gnu.org/licenses/gpl-3.0.html","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"author":{"@type":"Person","name":"Peter Pleimfeldner"},"image":"https://peterpleimfeldner-design.github.io/moodle-mod_leafr/assets/social-preview.png"}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Leafr – PDF Viewer & Flipbook","alternateName":"mod_leafr","applicationCategory":"EducationalApplication","applicationSubCategory":"Moodle plugin","operatingSystem":"Moodle 4.5–5.3","inLanguage":"en","description":"Leafr is a free, open-source PDF viewer and flipbook plugin for Moodle. It turns a PDF into a page-turning book with chapters, bookmarks and search, plus required pages and an optional read confirmation.","url":"https://peterpleimfeldner-design.github.io/moodle-mod_leafr/","downloadUrl":"https://marketplace.moodle.com/plugins/mod_leafr","sameAs":["https://marketplace.moodle.com/plugins/mod_leafr","https://github.com/peterpleimfeldner-design/moodle-mod_leafr","https://www.youtube.com/@CourseToolbox"],"codeRepository":"https://github.com/peterpleimfeldner-design/moodle-mod_leafr","license":"https://www.gnu.org/licenses/gpl-3.0.html","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"author":{"@type":"Person","name":"Peter Pleimfeldner"},"image":"https://peterpleimfeldner-design.github.io/moodle-mod_leafr/assets/social-preview.png"}
 </script>
+<!-- video-jsonld -->
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "VideoObject", "name": "Moodle PDF viewer & flipbook plugin: Leafr full tour", "description": "Leafr in under four minutes: page-turning PDF view, contents and full-text search, bookmarks with notes, required chapters with read confirmation, teacher overview with CSV export, simple view for screen readers, reading on a phone.", "thumbnailUrl": "https://i.ytimg.com/vi/goHXcm4ORbc/maxresdefault.jpg", "uploadDate": "2026-11-05", "duration": "PT3M58S", "inLanguage": "en", "embedUrl": "https://www.youtube-nocookie.com/embed/goHXcm4ORbc", "url": "https://www.youtube.com/watch?v=goHXcm4ORbc"}
+</script>
+<!-- /video-jsonld -->
 <meta property="og:type" content="website">
 <meta property="og:title" content="Leafr – free PDF viewer &amp; flipbook plugin for Moodle">
 <meta property="og:description" content="Free, open-source Moodle activity: a PDF becomes a book students can page through, with chapters, bookmarks and search — plus an optional read confirmation for material people actually have to read.">
@@ -158,6 +163,19 @@
   }
   footer.site a { color: var(--text-muted); }
   footer.site .foot-links { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px; }
+  /* Videos */
+  .loop-video { display: block; width: 100%; max-width: 720px; margin: 0 auto 40px; border-radius: 10px;
+    border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(14, 40, 36, 0.12); background: var(--bg-alt); }
+  .videos { text-align: center; padding-bottom: 48px; }
+  .videos .trailer { position: relative; max-width: 720px; margin: 0 auto; aspect-ratio: 16 / 9; border-radius: 10px;
+    overflow: hidden; border: 1px solid var(--border); background: #0b2f2b; }
+  .videos .trailer button { all: unset; cursor: pointer; display: block; width: 100%; height: 100%; position: relative; }
+  .videos .trailer img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .videos .trailer .play { position: absolute; right: 4%; bottom: 6%; background: rgba(14, 106, 98, 0.92);
+    color: #fff; font-weight: 600; padding: 14px 24px; border-radius: 999px; display: flex; gap: 10px; align-items: center; }
+  .videos .trailer button:focus-visible .play, .videos .trailer button:hover .play { background: #0a4f49; outline: 3px solid #6FC3B8; }
+  .videos .trailer iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .videos .note { font-size: 0.9rem; color: var(--text-muted); max-width: 640px; margin: 12px auto 0; }
 </style>
 </head>
 <body>
@@ -166,6 +184,7 @@
   <div class="wrap">
     <a class="brand" href="#top"><img src="assets/icon.svg" alt=""> Leafr</a>
     <nav class="site-nav">
+      <a href="#video">Video</a>
       <a href="#what">What it is</a>
       <a href="#features">Features</a>
       <a href="#screenshots">Screenshots</a>
@@ -187,6 +206,9 @@
       <a class="btn btn-primary" href="https://marketplace.moodle.com/plugins/mod_leafr">Get it on the Moodle Marketplace</a>
       <a class="btn btn-secondary" href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr">View on GitHub</a>
     </div>
+    <!-- video-loop -->
+    <video class="loop-video" autoplay muted loop playsinline preload="metadata" poster="assets/video/k1_en.jpg" aria-label="Short clip: turning the pages of a PDF in Leafr"><source src="assets/video/k1_en.mp4" type="video/mp4"></video>
+    <!-- /video-loop -->
     <div class="carousel" id="screenshots">
       <div class="carousel-viewport">
         <div class="carousel-track">
@@ -229,6 +251,19 @@
       <div class="carousel-dots"></div>
     </div>
   </section>
+
+  <!-- video-section -->
+  <section id="video" class="wrap videos">
+    <h2>See Leafr in action</h2>
+    <div class="trailer">
+      <button type="button" data-yt="goHXcm4ORbc" data-title="Leafr video on YouTube" aria-label="Watch the video (4 min)">
+        <img src="assets/video/haupt_en.jpg" alt="" loading="lazy">
+        <span class="play" aria-hidden="true">&#9654; Watch the video (4 min)</span>
+      </button>
+    </div>
+    <p class="note">The video is loaded from YouTube (youtube-nocookie.com) only after you click.</p>
+  </section>
+  <!-- /video-section -->
 
   <section id="what" class="wrap">
     <h2>What Leafr is for</h2>
@@ -362,6 +397,7 @@
       <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/releases/latest">Latest release</a>
       <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/issues">Report an issue</a>
       <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/blob/main/LICENSE">GPLv3 license</a>
+      <a href="https://www.youtube.com/@CourseToolbox">YouTube channel</a>
     </div>
     <p>Leafr is free and open-source software (GPLv3), with no paid tier — © 2026 Peter Pleimfeldner.</p>
   </div>
@@ -430,6 +466,24 @@
       if (e.key === 'ArrowRight') goTo(index + 1);
     }
   });
+})();
+</script>
+<script>
+/* Video: YouTube wird erst nach dem Klick geladen (youtube-nocookie.com). Schleife: ohne Bewegung bei „weniger Bewegung“. */
+(function () {
+  document.querySelectorAll('.trailer button[data-yt]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + b.dataset.yt + '?autoplay=1&rel=0';
+      f.title = b.dataset.title;
+      f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      f.allowFullscreen = true;
+      b.replaceWith(f);
+    });
+  });
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    document.querySelectorAll('video.loop-video').forEach(function (v) { v.removeAttribute('autoplay'); v.pause(); v.controls = true; });
+  }
 })();
 </script>
 </body>
