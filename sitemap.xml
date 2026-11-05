@@ -5,11 +5,104 @@
     <lastmod>2026-11-05</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/"/>
   </url>
   <url>
     <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/</loc>
     <lastmod>2026-11-05</lastmod>
     <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/"/>
     <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/"/>
+  </url>
+  <url>
+    <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/</loc>
+    <lastmod>2026-11-05</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/"/>
+  </url>
+  <url>
+    <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/</loc>
+    <lastmod>2026-11-05</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/"/>
+  </url>
+  <url>
+    <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/</loc>
+    <lastmod>2026-11-05</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/"/>
+  </url>
+  <url>
+    <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/</loc>
+    <lastmod>2026-11-05</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/"/>
+  </url>
+  <url>
+    <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/pdf-flipbook-moodle/</loc>
+    <lastmod>2026-11-05</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/pdf-flipbook-moodle/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/pdf-als-blaetterbuch-in-moodle/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/flipbook-pdf-en-moodle/"/>
+  </url>
+  <url>
+    <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/pdf-als-blaetterbuch-in-moodle/</loc>
+    <lastmod>2026-11-05</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/pdf-flipbook-moodle/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/pdf-als-blaetterbuch-in-moodle/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/flipbook-pdf-en-moodle/"/>
+  </url>
+  <url>
+    <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/flipbook-pdf-en-moodle/</loc>
+    <lastmod>2026-11-05</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/pdf-flipbook-moodle/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/pdf-als-blaetterbuch-in-moodle/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/flipbook-pdf-en-moodle/"/>
+  </url>
+  <url>
+    <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/moodle-read-confirmation/</loc>
+    <lastmod>2026-11-05</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/moodle-read-confirmation/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/lesebestaetigung-in-moodle/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/confirmacion-de-lectura-en-moodle/"/>
+  </url>
+  <url>
+    <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/lesebestaetigung-in-moodle/</loc>
+    <lastmod>2026-11-05</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/moodle-read-confirmation/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/lesebestaetigung-in-moodle/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/confirmacion-de-lectura-en-moodle/"/>
+  </url>
+  <url>
+    <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/confirmacion-de-lectura-en-moodle/</loc>
+    <lastmod>2026-11-05</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/moodle-read-confirmation/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/lesebestaetigung-in-moodle/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/confirmacion-de-lectura-en-moodle/"/>
+  </url>
+  <url>
+    <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/moodle-track-pdf-reading/</loc>
+    <lastmod>2026-11-05</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/moodle-track-pdf-reading/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/wer-hat-das-pdf-gelesen/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/quien-ha-leido-el-pdf/"/>
+  </url>
+  <url>
+    <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/wer-hat-das-pdf-gelesen/</loc>
+    <lastmod>2026-11-05</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/moodle-track-pdf-reading/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/wer-hat-das-pdf-gelesen/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/quien-ha-leido-el-pdf/"/>
+  </url>
+  <url>
+    <loc>https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/quien-ha-leido-el-pdf/</loc>
+    <lastmod>2026-11-05</lastmod>
+    <xhtml:link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/moodle-track-pdf-reading/"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/wer-hat-das-pdf-gelesen/"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/quien-ha-leido-el-pdf/"/>
   </url>
 </urlset>

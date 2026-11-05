@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>In Moodle sehen, wer ein PDF gelesen hat, mit CSV-Export (Schritt für Schritt) – Leafr</title>
+<meta name="description" content="Die Übersicht von Leafr zeigt je Teilnehmer/in, ob die Pflichtseiten eines PDFs gelesen wurden und wann das Lesen bestätigt wurde, mit CSV-Export. Drei Schritte mit Bildern.">
+<link rel="icon" type="image/svg+xml" href="../../../assets/icon.svg">
+<link rel="canonical" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/wer-hat-das-pdf-gelesen/">
+<link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/moodle-track-pdf-reading/">
+<link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/wer-hat-das-pdf-gelesen/">
+<link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/quien-ha-leido-el-pdf/">
+<link rel="alternate" hreflang="x-default" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/moodle-track-pdf-reading/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="In Moodle sehen, wer ein PDF gelesen hat, mit CSV-Export (Schritt für Schritt) – Leafr">
+<meta property="og:description" content="Die Übersicht von Leafr zeigt je Teilnehmer/in, ob die Pflichtseiten eines PDFs gelesen wurden und wann das Lesen bestätigt wurde, mit CSV-Export. Drei Schritte mit Bildern.">
+<meta property="og:url" content="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/wer-hat-das-pdf-gelesen/">
+<meta property="og:image" content="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/assets/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+[{"@context": "https://schema.org", "@type": "TechArticle", "headline": "In Moodle sehen, wer ein PDF gelesen hat", "description": "Die Übersicht von Leafr zeigt je Teilnehmer/in, ob die Pflichtseiten eines PDFs gelesen wurden und wann das Lesen bestätigt wurde, mit CSV-Export. Drei Schritte mit Bildern.", "inLanguage": "de", "datePublished": "2026-11-05", "dateModified": "2026-11-05", "url": "https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/wer-hat-das-pdf-gelesen/", "image": "https://peterpleimfeldner-design.github.io/moodle-mod_leafr/assets/guides/de/uebersicht_1_link.webp", "author": {"@type": "Person", "name": "Peter Pleimfeldner"}, "about": {"@type": "SoftwareApplication", "name": "Leafr – PDF Viewer & Flipbook", "applicationCategory": "EducationalApplication", "operatingSystem": "Moodle 4.5–5.3", "url": "https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/"}}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Leafr", "item": "https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/"}, {"@type": "ListItem", "position": 2, "name": "Anleitungen", "item": "https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/"}, {"@type": "ListItem", "position": 3, "name": "In Moodle sehen, wer ein PDF gelesen hat", "item": "https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/wer-hat-das-pdf-gelesen/"}]}]
+</script>
+<style>
+  :root { --teal-dark:#0E6A62; --teal-light:#6FC3B8; --bg:#ffffff; --bg-alt:#F4F8F7; --text:#182524; --text-muted:#4B5A58;
+    --border:#DCE6E4; --card-bg:#ffffff; --mark:#FFCD00; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#101716; --bg-alt:#16211F; --text:#EAF2F0; --text-muted:#A9BBB8;
+    --border:#26332F; --card-bg:#16211F; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  a { color:var(--teal-dark); }
+  @media (prefers-color-scheme: dark) { a { color:var(--teal-light); } }
+  .wrap { max-width:1040px; margin:0 auto; padding:0 20px; }
+  .narrow { max-width:760px; }
+  header.site { border-bottom:1px solid var(--border); padding:16px 0; }
+  header.site .wrap { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.15rem; text-decoration:none; color:var(--text); }
+  .brand img { width:28px; height:28px; }
+  nav.site-nav { display:flex; gap:20px; flex-wrap:wrap; font-size:0.95rem; }
+  nav.site-nav a { text-decoration:none; color:var(--text-muted); }
+  nav.site-nav a:hover, nav.site-nav a[aria-current] { color:var(--teal-dark); }
+  .lang-switch { font-size:0.85rem; } .lang-switch a { text-decoration:none; }
+  .crumbs { font-size:0.85rem; color:var(--text-muted); margin:24px 0 0; }
+  .crumbs a { color:var(--text-muted); }
+  h1 { font-size:clamp(1.7rem,3.6vw,2.4rem); line-height:1.2; margin:12px 0 16px; letter-spacing:-0.01em; }
+  h2 { font-size:1.4rem; margin:40px 0 12px; }
+  .lead { font-size:1.08rem; color:var(--text-muted); }
+  .updated { font-size:0.85rem; color:var(--text-muted); }
+  .need { background:var(--bg-alt); border:1px solid var(--border); border-radius:12px; padding:18px 22px; margin:24px 0 8px; }
+  .need h2 { margin:0 0 8px; font-size:1.05rem; }
+  .need ul { margin:0; padding-left:20px; } .need li { margin:4px 0; }
+  /* Schritte */
+  .steps { margin-top:12px; position:relative; width:min(1000px, calc(100vw - 40px)); left:50%; transform:translateX(-50%); }
+  .steps-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+  .steps-count { font-weight:600; color:var(--teal-dark); }
+  .steps-toggle { background:none; border:1px solid var(--border); border-radius:8px; padding:6px 12px; color:var(--text);
+    font:inherit; font-size:0.9rem; cursor:pointer; }
+  .steps-toggle:hover { border-color:var(--teal-dark); color:var(--teal-dark); }
+  .steps-view { overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--card-bg);
+    box-shadow:0 12px 32px rgba(14,106,98,0.12); transition:height 0.35s ease; }
+  .steps-track { display:flex; align-items:flex-start; transition:transform 0.35s ease; margin:0; padding:0; list-style:none; }
+  .step { flex:0 0 100%; margin:0; }
+  .step img { width:100%; height:auto; display:block; cursor:zoom-in; border-bottom:1px solid var(--border); }
+  .step .txt { padding:16px 22px 20px; }
+  .step .num { font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--teal-dark); }
+  .step h3 { margin:4px 0 6px; font-size:1.15rem; }
+  .step p { margin:0; }
+  .step b { background:linear-gradient(transparent 60%, rgba(255,205,0,0.45) 60%); font-weight:600; }
+  .steps-nav { display:flex; justify-content:center; align-items:center; gap:14px; margin-top:14px; }
+  .steps-nav button.arrow { width:42px; height:42px; border-radius:50%; border:1px solid var(--border); background:var(--card-bg);
+    color:var(--text); font-size:1.3rem; cursor:pointer; }
+  .steps-nav button.arrow:hover { border-color:var(--teal-dark); color:var(--teal-dark); }
+  .steps-nav button.arrow:disabled { opacity:0.35; cursor:default; }
+  .dots { display:flex; gap:8px; }
+  .dots button { width:9px; height:9px; border-radius:50%; border:none; padding:0; background:var(--border); cursor:pointer; }
+  .dots button.active { background:var(--teal-dark); }
+  .steps.all .steps-view { height:auto !important; box-shadow:none; border:none; background:none; overflow:visible; }
+  .steps.all .steps-track { display:block; transform:none !important; }
+  .steps.all .step { border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:22px; background:var(--card-bg); }
+  .steps.all .steps-nav, .steps.all .steps-count { visibility:hidden; }
+  .notes { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
+  .note { border:1px solid var(--border); border-radius:12px; padding:16px 18px; background:var(--card-bg); }
+  .note h3 { margin:0 0 6px; font-size:1rem; } .note p { margin:0; color:var(--text-muted); font-size:0.95rem; }
+  .cta { display:flex; gap:12px; flex-wrap:wrap; margin:36px 0 8px; }
+  .btn { display:inline-block; padding:11px 22px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.95rem;
+    border:1px solid transparent; }
+  .btn-primary { background:var(--teal-dark); color:#fff !important; } .btn-primary:hover { background:#0a5951; }
+  .btn-secondary { color:var(--text); border-color:var(--border); } .btn-secondary:hover { border-color:var(--teal-dark); color:var(--teal-dark); }
+  .more { list-style:none; padding:0; margin:0; display:grid; gap:12px; }
+  .more a, .guide-card { display:block; border:1px solid var(--border); border-radius:12px; padding:16px 18px; text-decoration:none;
+    color:var(--text); background:var(--card-bg); }
+  .more a:hover, .guide-card:hover { border-color:var(--teal-dark); }
+  .more strong, .guide-card strong { color:var(--teal-dark); display:block; margin-bottom:4px; }
+  .more span, .guide-card span { color:var(--text-muted); font-size:0.95rem; }
+  .lightbox { position:fixed; inset:0; background:rgba(10,20,19,0.9); z-index:100; display:flex; align-items:center;
+    justify-content:center; padding:24px; }
+  .lightbox[hidden] { display:none; }
+  .lightbox img { max-width:100%; max-height:100%; border-radius:8px; }
+  .lightbox button { position:absolute; top:14px; right:20px; background:none; border:none; color:#fff; font-size:2rem; cursor:pointer; }
+  footer.site { border-top:1px solid var(--border); padding:32px 0 48px; margin-top:56px; text-align:center; color:var(--text-muted);
+    font-size:0.9rem; }
+  footer.site a { color:var(--text-muted); }
+  footer.site .foot-links { display:flex; gap:18px; justify-content:center; flex-wrap:wrap; margin-bottom:14px; }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../../../de/"><img src="../../../assets/icon.svg" alt=""> Leafr</a>
+    <nav class="site-nav">
+      <a href="../../../de/anleitungen/">Anleitungen</a>
+      <a href="https://marketplace.moodle.com/plugins/mod_leafr">Marketplace</a>
+      <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr">GitHub</a>
+    </nav>
+    <span class="lang-switch"><a href="../../../guides/moodle-track-pdf-reading/" hreflang="en" lang="en">English</a> · <a href="../../../es/guias/quien-ha-leido-el-pdf/" hreflang="es" lang="es">Español</a></span>
+  </div>
+</header>
+
+<main class="wrap narrow">
+  <p class="crumbs"><a href="../../../de/">Leafr</a> › <a href="../../../de/anleitungen/">Anleitungen</a></p>
+  <h1>In Moodle sehen, wer ein PDF gelesen hat</h1>
+  <p class="lead">Moodles Bericht „Aktivitätsabschluss“ zeigt, ob eine Aktivität erledigt ist. Bei Pflichtunterlagen wollen Sie meist etwas mehr wissen: Wer hat die Pflichtseiten gelesen, und wann wurde bestätigt? Die <b>Übersicht</b> von Leafr zeigt genau das je Teilnehmer/in und speichert es als CSV-Datei.</p>
+  <p class="updated">Stand: 5. November 2026</p>
+  <section class="need">
+    <h2>Was Sie brauchen</h2>
+    <ul>
+      <li>Eine Leafr-Aktivität, am besten mit Pflichtseiten und Lesebestätigung (siehe <a href="../../../de/anleitungen/lesebestaetigung-in-moodle/">Pflichtlektüre und Lesebestätigung einrichten</a>)</li>
+      <li>Eine Trainer-Rolle im Kurs (Recht „Leafr-Leseübersicht ansehen“)</li>
+    </ul>
+  </section>
+
+  <h2 id="steps">Schritt für Schritt</h2>
+  <div class="steps" data-step="Schritt" data-of="von" data-goto="Zu Schritt" data-all="Alle Schritte untereinander" data-carousel="Als Bildfolge zeigen">
+    <div class="steps-bar"><span class="steps-count" aria-live="polite">Schritt 1 von 3</span>
+      <button type="button" class="steps-toggle">Alle Schritte untereinander</button></div>
+    <div class="steps-view">
+      <ol class="steps-track">
+        <li class="step" id="step-1">
+          <img src="../../../assets/guides/de/uebersicht_1_link.webp" width="1600" height="900" alt="Übersicht öffnen">
+          <div class="txt"><div class="num">Schritt 1 von 3</div><h3>Übersicht öffnen</h3><p>Öffnen Sie die Leafr-Aktivität und klicken Sie im Aktivitätsmenü auf <b>Übersicht</b>.</p></div>
+        </li>
+        <li class="step" id="step-2">
+          <img src="../../../assets/guides/de/uebersicht_2_tabelle.webp" width="1600" height="900" alt="Tabelle lesen" loading="lazy">
+          <div class="txt"><div class="num">Schritt 2 von 3</div><h3>Tabelle lesen</h3><p>Eine Zeile je Teilnehmer/in: <b>Abgeschlossen</b>, <b>Pflichtseiten gelesen</b> (oder der gelesene Anteil, je nach Regel) und <b>Bestätigt am</b> mit Datum und Uhrzeit. Nutzt der Kurs Gruppen, erscheint ein Gruppenfilter; bei getrennten Gruppen sehen Trainer/innen nur ihre eigenen Gruppen.</p></div>
+        </li>
+        <li class="step" id="step-3">
+          <img src="../../../assets/guides/de/uebersicht_3_csv.webp" width="1600" height="900" alt="Als CSV speichern" loading="lazy">
+          <div class="txt"><div class="num">Schritt 3 von 3</div><h3>Als CSV speichern</h3><p><b>Als CSV herunterladen</b> speichert dieselbe Tabelle, zum Beispiel als Nachweis einer Sicherheitsunterweisung. Die Datei öffnet sich in Excel, LibreOffice oder Numbers.</p></div>
+        </li>
+      </ol>
+    </div>
+    <div class="steps-nav">
+      <button type="button" class="arrow prev" aria-label="Vorheriger Schritt">‹</button>
+      <div class="dots"></div>
+      <button type="button" class="arrow next" aria-label="Nächster Schritt">›</button>
+    </div>
+  </div>
+
+  <h2>Gut zu wissen</h2>
+  <div class="notes">
+      <div class="note"><h3>Was die Übersicht weglässt</h3><p>Keine Lesezeiten, keine einzelnen Seitenaufrufe, keine Lesezeichen oder Notizen. Das ist Absicht: Die Übersicht zeigt nur, was als Nachweis nötig ist.</p></div>
+      <div class="note"><h3>Moodles eigenes Protokoll</h3><p>Moodles Standard-Protokoll hält trotzdem fest, wann eine Person eine Seite zum ersten Mal geöffnet hat, wie bei anderen Aktivitäten, und löscht diese Einträge nach den Aufbewahrungsregeln der Website.</p></div>
+      <div class="note"><h3>Andere Berichte</h3><p>Leafr erscheint auch in Moodles Bericht „Aktivitätsabschluss“ und im Kursabschluss.</p></div>
+  </div>
+
+  <div class="cta">
+    <a class="btn btn-primary" href="https://marketplace.moodle.com/plugins/mod_leafr">Leafr im Moodle Marketplace holen</a>
+    <a class="btn btn-secondary" href="https://www.youtube.com/watch?v=XD0Ty7JIdw8">Video ansehen (4 Min.)</a>
+  </div>
+
+  <h2>Weitere Anleitungen</h2>
+  <ul class="more">
+    <li><a href="../../../de/anleitungen/pdf-als-blaetterbuch-in-moodle/"><strong>PDF in Moodle als Blätterbuch anzeigen</strong><span>Ein PDF so in den Kurs stellen, dass es als Buch mit Inhaltsverzeichnis, Suche und Lesezeichen aufgeht.</span></a></li>
+    <li><a href="../../../de/anleitungen/lesebestaetigung-in-moodle/"><strong>Pflichtlektüre und Lesebestätigung in Moodle einrichten</strong><span>Pflichtkapitel festlegen und eine Bestätigung verlangen; erledigt ist die Aktivität erst, wenn beides erfüllt ist.</span></a></li>
+  </ul>
+</main>
+
+<div class="lightbox" id="lightbox" hidden><button type="button" aria-label="Schließen">×</button><img src="" alt=""></div>
+<footer class="site">
+  <div class="wrap">
+    <div class="foot-links">
+      <a href="https://marketplace.moodle.com/plugins/mod_leafr">Moodle Marketplace</a>
+      <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr">GitHub-Repository</a>
+      <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/issues">Fehler melden</a>
+      <a href="https://www.youtube.com/@CourseToolbox">YouTube</a>
+    </div>
+    <p>Leafr ist freie Open-Source-Software (GPLv3), ohne Bezahlversion. © 2026 Peter Pleimfeldner.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var box = document.querySelector('.steps');
+  if (!box) return;
+  var view = box.querySelector('.steps-view'), track = box.querySelector('.steps-track');
+  var steps = Array.prototype.slice.call(box.querySelectorAll('.step'));
+  var prev = box.querySelector('.prev'), next = box.querySelector('.next'), count = box.querySelector('.steps-count');
+  var dots = box.querySelector('.dots'), toggle = box.querySelector('.steps-toggle');
+  var lb = document.getElementById('lightbox'), lbImg = lb.querySelector('img'), i = 0;
+  steps.forEach(function (s, k) {
+    var d = document.createElement('button');
+    d.type = 'button'; d.setAttribute('aria-label', box.dataset.goto + ' ' + (k + 1));
+    d.addEventListener('click', function () { go(k); });
+    dots.appendChild(d);
+    s.querySelector('img').addEventListener('click', function () { lbImg.src = this.src; lbImg.alt = this.alt; lb.hidden = false; });
+  });
+  function height() { if (!box.classList.contains('all')) view.style.height = steps[i].offsetHeight + 'px'; }
+  function go(k) {
+    i = Math.max(0, Math.min(steps.length - 1, k));
+    track.style.transform = 'translateX(-' + (i * 100) + '%)';
+    Array.prototype.forEach.call(dots.children, function (d, n) { d.classList.toggle('active', n === i); d.setAttribute('aria-current', n === i ? 'step' : 'false'); });
+    steps.forEach(function (s, n) { s.setAttribute('aria-hidden', n === i || box.classList.contains('all') ? 'false' : 'true'); });
+    prev.disabled = i === 0; next.disabled = i === steps.length - 1;
+    count.textContent = box.dataset.step + ' ' + (i + 1) + ' ' + box.dataset.of + ' ' + steps.length;
+    height();
+  }
+  prev.addEventListener('click', function () { go(i - 1); });
+  next.addEventListener('click', function () { go(i + 1); });
+  toggle.addEventListener('click', function () {
+    var all = box.classList.toggle('all');
+    toggle.textContent = all ? box.dataset.carousel : box.dataset.all;
+    if (all) { view.style.height = ''; } go(i);
+  });
+  steps.forEach(function (s) { var im = s.querySelector('img'); if (!im.complete) im.addEventListener('load', height); });
+  window.addEventListener('resize', height);
+  var x0 = null;
+  view.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, {passive: true});
+  view.addEventListener('touchend', function (e) {
+    if (x0 === null || box.classList.contains('all')) return;
+    var dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) > 50) go(i + (dx < 0 ? 1 : -1));
+  });
+  document.addEventListener('keydown', function (e) {
+    if (!lb.hidden) { if (e.key === 'Escape') lb.hidden = true; return; }
+    if (box.classList.contains('all')) return;
+    if (e.key === 'ArrowRight') go(i + 1);
+    if (e.key === 'ArrowLeft') go(i - 1);
+  });
+  lb.addEventListener('click', function (e) { if (e.target !== lbImg) lb.hidden = true; });
+  go(0);
+})();
+</script>
+</body>
+</html>

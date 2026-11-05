@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cómo mostrar un PDF como flipbook en Moodle (paso a paso) – Leafr</title>
+<meta name="description" content="Añada un PDF a un curso de Moodle para que los estudiantes lo hojeen como un libro, con índice, búsqueda y marcadores. Seis pasos con capturas, plugin gratuito Leafr.">
+<link rel="icon" type="image/svg+xml" href="../../../assets/icon.svg">
+<link rel="canonical" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/flipbook-pdf-en-moodle/">
+<link rel="alternate" hreflang="en" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/pdf-flipbook-moodle/">
+<link rel="alternate" hreflang="de" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/de/anleitungen/pdf-als-blaetterbuch-in-moodle/">
+<link rel="alternate" hreflang="es" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/flipbook-pdf-en-moodle/">
+<link rel="alternate" hreflang="x-default" href="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/guides/pdf-flipbook-moodle/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Cómo mostrar un PDF como flipbook en Moodle (paso a paso) – Leafr">
+<meta property="og:description" content="Añada un PDF a un curso de Moodle para que los estudiantes lo hojeen como un libro, con índice, búsqueda y marcadores. Seis pasos con capturas, plugin gratuito Leafr.">
+<meta property="og:url" content="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/flipbook-pdf-en-moodle/">
+<meta property="og:image" content="https://peterpleimfeldner-design.github.io/moodle-mod_leafr/assets/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<script type="application/ld+json">
+[{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Cómo mostrar un PDF como flipbook en Moodle", "description": "Añada un PDF a un curso de Moodle para que los estudiantes lo hojeen como un libro, con índice, búsqueda y marcadores. Seis pasos con capturas, plugin gratuito Leafr.", "inLanguage": "es", "datePublished": "2026-11-05", "dateModified": "2026-11-05", "url": "https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/flipbook-pdf-en-moodle/", "image": "https://peterpleimfeldner-design.github.io/moodle-mod_leafr/assets/guides/es/einbinden_1_auswahl.webp", "author": {"@type": "Person", "name": "Peter Pleimfeldner"}, "about": {"@type": "SoftwareApplication", "name": "Leafr – PDF Viewer & Flipbook", "applicationCategory": "EducationalApplication", "operatingSystem": "Moodle 4.5–5.3", "url": "https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/"}}, {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Leafr", "item": "https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/"}, {"@type": "ListItem", "position": 2, "name": "Guías", "item": "https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/"}, {"@type": "ListItem", "position": 3, "name": "Cómo mostrar un PDF como flipbook en Moodle", "item": "https://peterpleimfeldner-design.github.io/moodle-mod_leafr/es/guias/flipbook-pdf-en-moodle/"}]}]
+</script>
+<style>
+  :root { --teal-dark:#0E6A62; --teal-light:#6FC3B8; --bg:#ffffff; --bg-alt:#F4F8F7; --text:#182524; --text-muted:#4B5A58;
+    --border:#DCE6E4; --card-bg:#ffffff; --mark:#FFCD00; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#101716; --bg-alt:#16211F; --text:#EAF2F0; --text-muted:#A9BBB8;
+    --border:#26332F; --card-bg:#16211F; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  a { color:var(--teal-dark); }
+  @media (prefers-color-scheme: dark) { a { color:var(--teal-light); } }
+  .wrap { max-width:1040px; margin:0 auto; padding:0 20px; }
+  .narrow { max-width:760px; }
+  header.site { border-bottom:1px solid var(--border); padding:16px 0; }
+  header.site .wrap { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.15rem; text-decoration:none; color:var(--text); }
+  .brand img { width:28px; height:28px; }
+  nav.site-nav { display:flex; gap:20px; flex-wrap:wrap; font-size:0.95rem; }
+  nav.site-nav a { text-decoration:none; color:var(--text-muted); }
+  nav.site-nav a:hover, nav.site-nav a[aria-current] { color:var(--teal-dark); }
+  .lang-switch { font-size:0.85rem; } .lang-switch a { text-decoration:none; }
+  .crumbs { font-size:0.85rem; color:var(--text-muted); margin:24px 0 0; }
+  .crumbs a { color:var(--text-muted); }
+  h1 { font-size:clamp(1.7rem,3.6vw,2.4rem); line-height:1.2; margin:12px 0 16px; letter-spacing:-0.01em; }
+  h2 { font-size:1.4rem; margin:40px 0 12px; }
+  .lead { font-size:1.08rem; color:var(--text-muted); }
+  .updated { font-size:0.85rem; color:var(--text-muted); }
+  .need { background:var(--bg-alt); border:1px solid var(--border); border-radius:12px; padding:18px 22px; margin:24px 0 8px; }
+  .need h2 { margin:0 0 8px; font-size:1.05rem; }
+  .need ul { margin:0; padding-left:20px; } .need li { margin:4px 0; }
+  /* Schritte */
+  .steps { margin-top:12px; position:relative; width:min(1000px, calc(100vw - 40px)); left:50%; transform:translateX(-50%); }
+  .steps-bar { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+  .steps-count { font-weight:600; color:var(--teal-dark); }
+  .steps-toggle { background:none; border:1px solid var(--border); border-radius:8px; padding:6px 12px; color:var(--text);
+    font:inherit; font-size:0.9rem; cursor:pointer; }
+  .steps-toggle:hover { border-color:var(--teal-dark); color:var(--teal-dark); }
+  .steps-view { overflow:hidden; border-radius:12px; border:1px solid var(--border); background:var(--card-bg);
+    box-shadow:0 12px 32px rgba(14,106,98,0.12); transition:height 0.35s ease; }
+  .steps-track { display:flex; align-items:flex-start; transition:transform 0.35s ease; margin:0; padding:0; list-style:none; }
+  .step { flex:0 0 100%; margin:0; }
+  .step img { width:100%; height:auto; display:block; cursor:zoom-in; border-bottom:1px solid var(--border); }
+  .step .txt { padding:16px 22px 20px; }
+  .step .num { font-size:0.8rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--teal-dark); }
+  .step h3 { margin:4px 0 6px; font-size:1.15rem; }
+  .step p { margin:0; }
+  .step b { background:linear-gradient(transparent 60%, rgba(255,205,0,0.45) 60%); font-weight:600; }
+  .steps-nav { display:flex; justify-content:center; align-items:center; gap:14px; margin-top:14px; }
+  .steps-nav button.arrow { width:42px; height:42px; border-radius:50%; border:1px solid var(--border); background:var(--card-bg);
+    color:var(--text); font-size:1.3rem; cursor:pointer; }
+  .steps-nav button.arrow:hover { border-color:var(--teal-dark); color:var(--teal-dark); }
+  .steps-nav button.arrow:disabled { opacity:0.35; cursor:default; }
+  .dots { display:flex; gap:8px; }
+  .dots button { width:9px; height:9px; border-radius:50%; border:none; padding:0; background:var(--border); cursor:pointer; }
+  .dots button.active { background:var(--teal-dark); }
+  .steps.all .steps-view { height:auto !important; box-shadow:none; border:none; background:none; overflow:visible; }
+  .steps.all .steps-track { display:block; transform:none !important; }
+  .steps.all .step { border:1px solid var(--border); border-radius:12px; overflow:hidden; margin-bottom:22px; background:var(--card-bg); }
+  .steps.all .steps-nav, .steps.all .steps-count { visibility:hidden; }
+  .notes { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; }
+  .note { border:1px solid var(--border); border-radius:12px; padding:16px 18px; background:var(--card-bg); }
+  .note h3 { margin:0 0 6px; font-size:1rem; } .note p { margin:0; color:var(--text-muted); font-size:0.95rem; }
+  .cta { display:flex; gap:12px; flex-wrap:wrap; margin:36px 0 8px; }
+  .btn { display:inline-block; padding:11px 22px; border-radius:8px; text-decoration:none; font-weight:600; font-size:0.95rem;
+    border:1px solid transparent; }
+  .btn-primary { background:var(--teal-dark); color:#fff !important; } .btn-primary:hover { background:#0a5951; }
+  .btn-secondary { color:var(--text); border-color:var(--border); } .btn-secondary:hover { border-color:var(--teal-dark); color:var(--teal-dark); }
+  .more { list-style:none; padding:0; margin:0; display:grid; gap:12px; }
+  .more a, .guide-card { display:block; border:1px solid var(--border); border-radius:12px; padding:16px 18px; text-decoration:none;
+    color:var(--text); background:var(--card-bg); }
+  .more a:hover, .guide-card:hover { border-color:var(--teal-dark); }
+  .more strong, .guide-card strong { color:var(--teal-dark); display:block; margin-bottom:4px; }
+  .more span, .guide-card span { color:var(--text-muted); font-size:0.95rem; }
+  .lightbox { position:fixed; inset:0; background:rgba(10,20,19,0.9); z-index:100; display:flex; align-items:center;
+    justify-content:center; padding:24px; }
+  .lightbox[hidden] { display:none; }
+  .lightbox img { max-width:100%; max-height:100%; border-radius:8px; }
+  .lightbox button { position:absolute; top:14px; right:20px; background:none; border:none; color:#fff; font-size:2rem; cursor:pointer; }
+  footer.site { border-top:1px solid var(--border); padding:32px 0 48px; margin-top:56px; text-align:center; color:var(--text-muted);
+    font-size:0.9rem; }
+  footer.site a { color:var(--text-muted); }
+  footer.site .foot-links { display:flex; gap:18px; justify-content:center; flex-wrap:wrap; margin-bottom:14px; }
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="../../../es/"><img src="../../../assets/icon.svg" alt=""> Leafr</a>
+    <nav class="site-nav">
+      <a href="../../../es/guias/">Guías</a>
+      <a href="https://marketplace.moodle.com/plugins/mod_leafr">Marketplace</a>
+      <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr">GitHub</a>
+    </nav>
+    <span class="lang-switch"><a href="../../../guides/pdf-flipbook-moodle/" hreflang="en" lang="en">English</a> · <a href="../../../de/anleitungen/pdf-als-blaetterbuch-in-moodle/" hreflang="de" lang="de">Deutsch</a></span>
+  </div>
+</header>
+
+<main class="wrap narrow">
+  <p class="crumbs"><a href="../../../es/">Leafr</a> › <a href="../../../es/guias/">Guías</a></p>
+  <h1>Cómo mostrar un PDF como flipbook en Moodle</h1>
+  <p class="lead">Por defecto, Moodle ofrece un PDF como un simple archivo: según la configuración, se muestra en el visor de PDF del navegador, en una ventana nueva o como descarga, y el curso solo sabe que se abrió. Con el plugin de actividad gratuito Leafr, el PDF se abre dentro del curso como un libro: los estudiantes pasan páginas, saltan a los capítulos y buscan en el texto, y Leafr registra qué páginas han visto.</p>
+  <p class="updated">Actualizado el 5 de noviembre de 2026</p>
+  <section class="need">
+    <h2>Qué necesita</h2>
+    <ul>
+      <li>Moodle 4.5 a 5.3, con Leafr instalado por un administrador (desde <a href="https://marketplace.moodle.com/plugins/mod_leafr">Moodle Marketplace</a>)</li>
+      <li>Permisos de edición en el curso, por ejemplo como profesor</li>
+      <li>Un archivo PDF</li>
+    </ul>
+  </section>
+
+  <h2 id="steps">Paso a paso</h2>
+  <div class="steps" data-step="Paso" data-of="de" data-goto="Ir al paso" data-all="Ver todos los pasos" data-carousel="Ver como presentación">
+    <div class="steps-bar"><span class="steps-count" aria-live="polite">Paso 1 de 6</span>
+      <button type="button" class="steps-toggle">Ver todos los pasos</button></div>
+    <div class="steps-view">
+      <ol class="steps-track">
+        <li class="step" id="step-1">
+          <img src="../../../assets/guides/es/einbinden_1_auswahl.webp" width="1600" height="900" alt="Añadir Leafr a una sección">
+          <div class="txt"><div class="num">Paso 1 de 6</div><h3>Añadir Leafr a una sección</h3><p>Active el <b>Modo de edición</b> arriba a la derecha. En la sección, haga clic en <b>Añadir una actividad o un recurso</b>, escriba «Leafr» en el buscador y elija <b>Flipbook Leafr</b>.</p></div>
+        </li>
+        <li class="step" id="step-2">
+          <img src="../../../assets/guides/es/einbinden_2_pdf.webp" width="1600" height="900" alt="Subir el PDF" loading="lazy">
+          <div class="txt"><div class="num">Paso 2 de 6</div><h3>Subir el PDF</h3><p>Escriba un nombre y arrastre el PDF al campo <b>Archivo PDF</b>. La descripción es opcional; aparece en la página del curso si marca «Muestra la descripción en la página del curso».</p></div>
+        </li>
+        <li class="step" id="step-3">
+          <img src="../../../assets/guides/es/einbinden_3_kapitel.webp" width="1600" height="900" alt="Revisar los capítulos" loading="lazy">
+          <div class="txt"><div class="num">Paso 3 de 6</div><h3>Revisar los capítulos</h3><p>Leafr toma el índice de los marcadores del PDF. Si el PDF no los tiene, escriba el título y la página inicial de cada capítulo en <b>Capítulos</b>. En <b>Visualización</b> se elige la <b>Página inicial</b> y si los estudiantes pueden descargar el archivo original (<b>Permitir descarga</b>).</p></div>
+        </li>
+        <li class="step" id="step-4">
+          <img src="../../../assets/guides/es/einbinden_4_kurs.webp" width="1600" height="900" alt="Guardar y abrir" loading="lazy">
+          <div class="txt"><div class="num">Paso 4 de 6</div><h3>Guardar y abrir</h3><p>Haga clic en <b>Guardar cambios y regresar al curso</b>. El flipbook ya aparece en la sección y se abre con un clic.</p></div>
+        </li>
+        <li class="step" id="step-5">
+          <img src="../../../assets/guides/es/einbinden_5_buch.webp" width="1600" height="900" alt="Los estudiantes pasan las páginas" loading="lazy">
+          <div class="txt"><div class="num">Paso 5 de 6</div><h3>Los estudiantes pasan las páginas</h3><p>En una pantalla grande Leafr muestra dos páginas a la vez; en el móvil, una. Se pasa página con las flechas, con el campo del número de página, con el teclado o arrastrando una esquina. La próxima vez, el PDF se abre en la última página leída.</p></div>
+        </li>
+        <li class="step" id="step-6">
+          <img src="../../../assets/guides/es/einbinden_6_inhalt.webp" width="1600" height="900" alt="Índice, búsqueda y marcadores" loading="lazy">
+          <div class="txt"><div class="num">Paso 6 de 6</div><h3>Índice, búsqueda y marcadores</h3><p>El botón <b>Barra lateral</b> abre las miniaturas, el índice, los marcadores con notas y la búsqueda en todo el texto. Quien prefiera desplazarse elige la <b>Vista simple</b> en el menú <b>Vista</b>; también funciona con lectores de pantalla.</p></div>
+        </li>
+      </ol>
+    </div>
+    <div class="steps-nav">
+      <button type="button" class="arrow prev" aria-label="Paso anterior">‹</button>
+      <div class="dots"></div>
+      <button type="button" class="arrow next" aria-label="Paso siguiente">›</button>
+    </div>
+  </div>
+
+  <h2>Conviene saber</h2>
+  <div class="notes">
+      <div class="note"><h3>Descarga desactivada</h3><p>Con <b>Permitir descarga</b> desactivado, Leafr no muestra ningún botón de descarga. Aun así, el navegador tiene que recibir el PDF para mostrarlo, así que quien se lo proponga puede guardarlo. Leafr no ofrece protección anticopia.</p></div>
+      <div class="note"><h3>Índice y búsqueda</h3><p>El índice automático necesita marcadores en el PDF, por ejemplo a partir de los títulos de Word. La búsqueda necesita texto real; aplique antes un reconocimiento de texto (OCR) a los documentos escaneados.</p></div>
+      <div class="note"><h3>Navegadores</h3><p>Chrome o Edge 125 o superior, Firefox ESR y Safari 18 o superior. Los navegadores más antiguos muestran un aviso en lugar del documento.</p></div>
+  </div>
+
+  <div class="cta">
+    <a class="btn btn-primary" href="https://marketplace.moodle.com/plugins/mod_leafr">Instalar Leafr desde Moodle Marketplace</a>
+    <a class="btn btn-secondary" href="https://www.youtube.com/watch?v=3XNSd0r3jqw">Ver el vídeo (4 min)</a>
+  </div>
+
+  <h2>Más guías</h2>
+  <ul class="more">
+    <li><a href="../../../es/guias/confirmacion-de-lectura-en-moodle/"><strong>Cómo exigir la lectura y una confirmación de lectura en Moodle</strong><span>Marque los capítulos obligatorios y pida una confirmación; la actividad solo se completa cuando se cumplen ambas cosas.</span></a></li>
+    <li><a href="../../../es/guias/quien-ha-leido-el-pdf/"><strong>Cómo ver en Moodle quién ha leído un PDF</strong><span>Una tabla por actividad: quién ha leído las páginas obligatorias y cuándo confirmó. Se exporta a CSV.</span></a></li>
+  </ul>
+</main>
+
+<div class="lightbox" id="lightbox" hidden><button type="button" aria-label="Cerrar">×</button><img src="" alt=""></div>
+<footer class="site">
+  <div class="wrap">
+    <div class="foot-links">
+      <a href="https://marketplace.moodle.com/plugins/mod_leafr">Moodle Marketplace</a>
+      <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr">Repositorio en GitHub</a>
+      <a href="https://github.com/peterpleimfeldner-design/moodle-mod_leafr/issues">Informar de un error</a>
+      <a href="https://www.youtube.com/@CourseToolbox">YouTube</a>
+    </div>
+    <p>Leafr es software libre y de código abierto (GPLv3), sin versión de pago. © 2026 Peter Pleimfeldner.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var box = document.querySelector('.steps');
+  if (!box) return;
+  var view = box.querySelector('.steps-view'), track = box.querySelector('.steps-track');
+  var steps = Array.prototype.slice.call(box.querySelectorAll('.step'));
+  var prev = box.querySelector('.prev'), next = box.querySelector('.next'), count = box.querySelector('.steps-count');
+  var dots = box.querySelector('.dots'), toggle = box.querySelector('.steps-toggle');
+  var lb = document.getElementById('lightbox'), lbImg = lb.querySelector('img'), i = 0;
+  steps.forEach(function (s, k) {
+    var d = document.createElement('button');
+    d.type = 'button'; d.setAttribute('aria-label', box.dataset.goto + ' ' + (k + 1));
+    d.addEventListener('click', function () { go(k); });
+    dots.appendChild(d);
+    s.querySelector('img').addEventListener('click', function () { lbImg.src = this.src; lbImg.alt = this.alt; lb.hidden = false; });
+  });
+  function height() { if (!box.classList.contains('all')) view.style.height = steps[i].offsetHeight + 'px'; }
+  function go(k) {
+    i = Math.max(0, Math.min(steps.length - 1, k));
+    track.style.transform = 'translateX(-' + (i * 100) + '%)';
+    Array.prototype.forEach.call(dots.children, function (d, n) { d.classList.toggle('active', n === i); d.setAttribute('aria-current', n === i ? 'step' : 'false'); });
+    steps.forEach(function (s, n) { s.setAttribute('aria-hidden', n === i || box.classList.contains('all') ? 'false' : 'true'); });
+    prev.disabled = i === 0; next.disabled = i === steps.length - 1;
+    count.textContent = box.dataset.step + ' ' + (i + 1) + ' ' + box.dataset.of + ' ' + steps.length;
+    height();
+  }
+  prev.addEventListener('click', function () { go(i - 1); });
+  next.addEventListener('click', function () { go(i + 1); });
+  toggle.addEventListener('click', function () {
+    var all = box.classList.toggle('all');
+    toggle.textContent = all ? box.dataset.carousel : box.dataset.all;
+    if (all) { view.style.height = ''; } go(i);
+  });
+  steps.forEach(function (s) { var im = s.querySelector('img'); if (!im.complete) im.addEventListener('load', height); });
+  window.addEventListener('resize', height);
+  var x0 = null;
+  view.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, {passive: true});
+  view.addEventListener('touchend', function (e) {
+    if (x0 === null || box.classList.contains('all')) return;
+    var dx = e.changedTouches[0].clientX - x0; x0 = null;
+    if (Math.abs(dx) > 50) go(i + (dx < 0 ? 1 : -1));
+  });
+  document.addEventListener('keydown', function (e) {
+    if (!lb.hidden) { if (e.key === 'Escape') lb.hidden = true; return; }
+    if (box.classList.contains('all')) return;
+    if (e.key === 'ArrowRight') go(i + 1);
+    if (e.key === 'ArrowLeft') go(i - 1);
+  });
+  lb.addEventListener('click', function (e) { if (e.target !== lbImg) lb.hidden = true; });
+  go(0);
+})();
+</script>
+</body>
+</html>
